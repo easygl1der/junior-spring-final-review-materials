@@ -1,0 +1,364 @@
+\chapter{Solutions to Chapter 26: Principal Stratification}\label{sol:chapter26}
+
+\begin{exercisesolution}{Complete the proof of \cref{thm::identification-PCEs-pscore}}{strong monotonicity 下 $\tau(0,0)$ 的 principal score 识别}
+本题补全 \cref{thm::identification-PCEs-pscore} 中第二个 principal causal effect 的证明。与正文已经证明的 $\tau(1,0)$ 一样，关键不是直接观察 principal stratum，而是用 principal score 在 control group 中重构该 stratum 的 $Y(0)$ 均值。
+
+在 \cref{assume::strong-monotonicity} 下，$M(0)=0$，所以 principal stratum 只由 $M(1)$ 决定：
+\[
+M(1)=1 \quad \text{对应 stratum } (1,0),
+\qquad
+M(1)=0 \quad \text{对应 stratum } (0,0).
+\]
+由 \cref{assume::complete-randomization-withM} 和 consistency，
+\[
+\pi(X)=\mathbb{P}\{M(1)=1\mid X\}
+=\mathbb{P}(M=1\mid Z=1,X),
+\]
+且
+\[
+\pi=\mathbb{P}\{M(1)=1\}=\mathbb{P}(M=1\mid Z=1).
+\]
+因此 $1-\pi(X)=\mathbb{P}\{M(1)=0\mid X\}$，$1-\pi=\mathbb{P}\{M(1)=0\}$。
+
+先看 treated potential outcome 的部分。由于 $Z=1,M=0$ 等价于 $Z=1,M(1)=0$，随机化给出
+\[
+E(Y\mid Z=1,M=0)
+=E\{Y(1)\mid Z=1,M(1)=0\}
+=E\{Y(1)\mid M(1)=0\}.
+\]
+这正是 $\tau(0,0)$ 中的 treated mean。
+
+接下来识别 control potential outcome 的部分。我们要证明
+\[
+\frac{E\{(1-\pi(X))Y\mid Z=0\}}{1-\pi}
+=E\{Y(0)\mid M(1)=0\}.
+\]
+由 consistency 与 \cref{assume::complete-randomization-withM}，
+\[
+E\{(1-\pi(X))Y\mid Z=0\}
+=E\{(1-\pi(X))Y(0)\}.
+\]
+再对 $X$ 条件化，并使用 \cref{assume::principal-ignorability-SM} 所蕴含的
+\[
+E\{Y(0)\mid M(1),X\}=E\{Y(0)\mid X\},
+\]
+得到
+\begin{align*}
+E\{(1-\pi(X))Y(0)\}
+&=
+E\left[(1-\pi(X))E\{Y(0)\mid X\}\right]\\
+&=
+E\left[\mathbb{P}\{M(1)=0\mid X\}E\{Y(0)\mid X\}\right]\\
+&=
+E\left[E\{(1-M(1))Y(0)\mid X\}\right]\\
+&=
+E\{(1-M(1))Y(0)\}.
+\end{align*}
+两边除以 $1-\pi=\mathbb{P}\{M(1)=0\}$，即得
+\[
+\frac{E\{(1-\pi(X))Y\mid Z=0\}}{1-\pi}
+=E\{Y(0)\mid M(1)=0\}.
+\]
+于是
+\[
+\tau(0,0)
+=E\{Y(1)-Y(0)\mid M(1)=0\}
+=E(Y\mid Z=1,M=0)
+-\frac{E\{(1-\pi(X))Y\mid Z=0\}}{1-\pi},
+\]
+这证明了 \cref{thm::identification-PCEs-pscore} 中关于 $\tau(0,0)$ 的公式。
+
+\paragraph{Remark.}
+这道题说明 principal score 的作用与 propensity score 平行：它把一个 latent principal stratum 的分布信息压缩为一个 conditional probability。不同之处在于，propensity score 平衡 treatment assignment，而 principal score 平衡不可直接观测的 principal strata。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Principal score method under monotonicity}{一般 monotonicity 下三个 principal causal effects 的识别}
+本题把 \cref{thm::identification-PCEs-pscore} 从 strong monotonicity 推广到 ordinary monotonicity。此时 $M(1)\geq M(0)$，所以 latent principal strata 为
+\[
+(1,1),\qquad (1,0),\qquad (0,0),
+\]
+分别对应 always survivors、protected units 和 never survivors。困难在于 $(Z=1,M=1)$ 是 $(1,1)$ 与 $(1,0)$ 的 mixture，而 $(Z=0,M=0)$ 是 $(1,0)$ 与 $(0,0)$ 的 mixture。权重 $w_{z,u}(X)$ 的作用正是从这些 observed mixtures 中抽取目标 principal stratum。
+
+先证明 principal scores 的识别。由 \cref{assume::complete-randomization-withM}、consistency 与 \cref{assume::monotonicity-ps}，
+\[
+\mathbb{P}(M=0\mid Z=1,X)
+=\mathbb{P}\{M(1)=0\mid X\}
+=\pi_{(0,0)}(X),
+\]
+\[
+\mathbb{P}(M=1\mid Z=0,X)
+=\mathbb{P}\{M(0)=1\mid X\}
+=\pi_{(1,1)}(X),
+\]
+并且
+\begin{align*}
+\mathbb{P}(M=1\mid Z=1,X)-\mathbb{P}(M=1\mid Z=0,X)
+&=\mathbb{P}\{M(1)=1\mid X\}-\mathbb{P}\{M(0)=1\mid X\}\\
+&=\pi_{(1,0)}(X).
+\end{align*}
+去掉对 $X$ 的条件即可得到 marginal principal scores 的三个公式。
+
+下面证明 causal effects 的识别。记 $U=(M(1),M(0))$。我们先处理 $\tau(1,0)$ 的 treated mean。令
+\[
+r_{1,(1,0)}(X)
+=\frac{\pi_{(1,0)}(X)}{\pi_{(1,0)}(X)+\pi_{(1,1)}(X)}.
+\]
+它是在给定 $X$ 且 $M(1)=1$ 时，unit 属于 stratum $(1,0)$ 的 conditional probability。由 \cref{assume::principal-ignorability-M} 的第一部分，
+\[
+E\{Y(1)\mid U=(1,0),X\}
+=E\{Y(1)\mid U=(1,1),X\}.
+\]
+因此给定 $X$，在 observed mixture $Z=1,M=1$ 中，$Y(1)$ 的 conditional mean 不随 $(1,0)$ 与 $(1,1)$ 的 stratum membership 改变。于是
+\begin{align*}
+&E\{w_{1,(1,0)}(X)Y\mid Z=1,M=1\}\\
+&\quad =
+\frac{\pi_{(1,0)}+\pi_{(1,1)}}{\pi_{(1,0)}}
+E\{r_{1,(1,0)}(X)Y(1)\mid M(1)=1\}\\
+&\quad =
+\frac{1}{\pi_{(1,0)}}
+E\left[\pi_{(1,0)}(X)E\{Y(1)\mid U=(1,0),X\}\right]\\
+&\quad =
+E\{Y(1)\mid U=(1,0)\}.
+\end{align*}
+同理，令
+\[
+r_{0,(1,0)}(X)
+=\frac{\pi_{(1,0)}(X)}{\pi_{(1,0)}(X)+\pi_{(0,0)}(X)}.
+\]
+由 \cref{assume::principal-ignorability-M} 的第二部分，
+\[
+E\{Y(0)\mid U=(1,0),X\}
+=E\{Y(0)\mid U=(0,0),X\}.
+\]
+在 observed mixture $Z=0,M=0$ 中加权得到
+\[
+E\{w_{0,(1,0)}(X)Y\mid Z=0,M=0\}
+=E\{Y(0)\mid U=(1,0)\}.
+\]
+两式相减，即得 \cref{thm::identification-PCEs-pscore-general-ding-lu} 中 $\tau(1,0)$ 的公式。
+
+再看 $\tau(0,0)$。当 $Z=1,M=0$ 时，由 monotonicity 必有 $U=(0,0)$，所以
+\[
+E(Y\mid Z=1,M=0)=E\{Y(1)\mid U=(0,0)\}.
+\]
+另一方面，在 $Z=0,M=0$ 的 mixture 中使用
+\[
+r_{0,(0,0)}(X)
+=\frac{\pi_{(0,0)}(X)}{\pi_{(1,0)}(X)+\pi_{(0,0)}(X)}
+\]
+并重复上面的条件化论证，得到
+\[
+E\{w_{0,(0,0)}(X)Y\mid Z=0,M=0\}
+=E\{Y(0)\mid U=(0,0)\}.
+\]
+这给出 $\tau(0,0)$ 的识别公式。
+
+最后看 $\tau(1,1)$。当 $Z=0,M=1$ 时，由 monotonicity 必有 $U=(1,1)$，所以
+\[
+E(Y\mid Z=0,M=1)=E\{Y(0)\mid U=(1,1)\}.
+\]
+在 $Z=1,M=1$ 的 mixture 中使用
+\[
+r_{1,(1,1)}(X)
+=\frac{\pi_{(1,1)}(X)}{\pi_{(1,0)}(X)+\pi_{(1,1)}(X)}
+\]
+并利用 \cref{assume::principal-ignorability-M} 的第一部分，得到
+\[
+E\{w_{1,(1,1)}(X)Y\mid Z=1,M=1\}
+=E\{Y(1)\mid U=(1,1)\}.
+\]
+两式相减，即得 $\tau(1,1)$ 的识别公式。
+
+\paragraph{Remark.}
+这一定理的形式看起来比 \cref{thm::identification-PCEs-pscore} 复杂，但底层逻辑没有变：pure observed cells 直接给出某些 stratum-specific means，mixture cells 则通过 principal score weights 拆开。principal ignorability 是让这种拆分可以只依赖 $X$ 的核心不可检验假设。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Principal score method in observational studies}{observational studies 中 strong monotonicity 版本的 IPW 识别}
+本题把 \cref{thm::identification-PCEs-pscore} 从 randomized experiment 推广到 observational study。新的难点是 $Z$ 不再边际随机化，而只在给定 $X$ 后满足 \cref{assume::ignorabilitywithM}。因此除了 principal score $\pi(X)$，还必须使用 propensity score
+\[
+e(X)=\mathbb{P}(Z=1\mid X)
+\]
+来校正 treatment assignment 的选择偏差。下面默认 standard positivity：$0<e(X)<1$，且 $0<\pi<1$。
+
+先证明 principal score 的识别。在 \cref{assume::strong-monotonicity} 下，$M=M(1)$ when $Z=1$。由 consistency 与 \cref{assume::ignorabilitywithM}，
+\[
+\mathbb{P}(M=1\mid Z=1,X)
+=\mathbb{P}\{M(1)=1\mid Z=1,X\}
+=\mathbb{P}\{M(1)=1\mid X\}
+=\pi(X).
+\]
+因此
+\[
+\pi=E\{\pi(X)\}=E\{\mathbb{P}(M=1\mid Z=1,X)\}.
+\]
+注意这里一般不能把 $\pi$ 写成 $\mathbb{P}(M=1\mid Z=1)$，因为 observational treated group 的 $X$ 分布不等于总体 $X$ 分布。
+
+接下来证明 $\tau(1,0)$ 的公式。由 inverse probability weighting，
+\begin{align*}
+E\left\{\frac{M}{\pi}\frac{Z}{e(X)}Y\right\}
+&=
+\frac{1}{\pi}
+E\left[E\left\{\frac{Z}{e(X)}M Y\mid X,M(1),Y(1)\right\}\right]\\
+&=
+\frac{1}{\pi}E\{M(1)Y(1)\}\\
+&=
+E\{Y(1)\mid M(1)=1\}.
+\end{align*}
+这里第一步使用 observed data 中 $Z=1$ 时 $M=M(1)$ 且 $Y=Y(1)$。对于 control potential outcome，
+\begin{align*}
+E\left\{\frac{\pi(X)}{\pi}\frac{1-Z}{1-e(X)}Y\right\}
+&=
+\frac{1}{\pi}E\{\pi(X)Y(0)\}\\
+&=
+\frac{1}{\pi}E\left[\pi(X)E\{Y(0)\mid X\}\right]\\
+&=
+\frac{1}{\pi}E\left[E\{M(1)Y(0)\mid X\}\right]\\
+&=
+E\{Y(0)\mid M(1)=1\},
+\end{align*}
+其中第三步使用 \cref{assume::principal-ignorability-SM}。两式相减得到 $\tau(1,0)$ 的识别公式。
+
+对 $\tau(0,0)$ 完全类似。treated mean 为
+\begin{align*}
+E\left\{\frac{1-M}{1-\pi}\frac{Z}{e(X)}Y\right\}
+&=
+\frac{1}{1-\pi}E\{(1-M(1))Y(1)\}\\
+&=
+E\{Y(1)\mid M(1)=0\}.
+\end{align*}
+control mean 为
+\begin{align*}
+E\left\{\frac{1-\pi(X)}{1-\pi}\frac{1-Z}{1-e(X)}Y\right\}
+&=
+\frac{1}{1-\pi}E\{(1-\pi(X))Y(0)\}\\
+&=
+\frac{1}{1-\pi}E\{(1-M(1))Y(0)\}\\
+&=
+E\{Y(0)\mid M(1)=0\},
+\end{align*}
+其中第二步仍然由 \cref{assume::principal-ignorability-SM} 推出。于是
+\[
+\tau(0,0)
+=E\left\{\frac{1-M}{1-\pi}\frac{Z}{e(X)}Y\right\}
+-E\left\{\frac{1-\pi(X)}{1-\pi}\frac{1-Z}{1-e(X)}Y\right\}.
+\]
+这完成了 \cref{thm::identification-PCEs-pscore-obs} 的证明。
+
+\paragraph{Remark.}
+observational study 版本有两个权重层次：$Z/e(X)$ 与 $(1-Z)/(1-e(X))$ 负责把 observational data 变回目标总体下的 potential outcomes；$\pi(X)$ 与 $1-\pi(X)$ 负责把总体中的 control potential outcomes 分配到 latent principal strata。
+\end{exercisesolution}
+
+\begin{exercisesolution}{General principal score method}{observational studies 中 monotonicity 版本的统一公式}
+本题要求把 \cref{thm::identification-PCEs-pscore-general-ding-lu} 与 \cref{thm::identification-PCEs-pscore-obs} 合并。也就是说，我们同时允许 ordinary monotonicity 下的三个 principal strata，并允许 treatment assignment 只在给定 $X$ 后满足 ignorability。最终公式就是：在 randomized theorem 的 principal-score weights 外，再乘上 propensity-score 的 inverse probability weights。
+
+令
+\[
+U=(M(1),M(0))\in\{(1,1),(1,0),(0,0)\},
+\]
+并定义
+\[
+\pi_u(X)=\mathbb{P}(U=u\mid X),
+\qquad
+\pi_u=E\{\pi_u(X)\}.
+\]
+在 \cref{assume::ignorabilitywithM,assume::monotonicity-ps} 下，
+\begin{align*}
+\pi_{(0,0)}(X)&=\mathbb{P}(M=0\mid Z=1,X),\\
+\pi_{(1,1)}(X)&=\mathbb{P}(M=1\mid Z=0,X),\\
+\pi_{(1,0)}(X)&=\mathbb{P}(M=1\mid Z=1,X)-\mathbb{P}(M=1\mid Z=0,X),
+\end{align*}
+且 marginal principal scores 由 $\pi_u=E\{\pi_u(X)\}$ 识别。
+
+在 standard positivity 条件下，三个 principal causal effects 可由下面的 formulas 识别：
+\begin{align*}
+\tau(1,0)
+&=
+\frac{1}{\pi_{(1,0)}}E\left\{
+\frac{Z}{e(X)}M
+\frac{\pi_{(1,0)}(X)}{\pi_{(1,0)}(X)+\pi_{(1,1)}(X)}
+Y\right\}\\
+&\quad -
+\frac{1}{\pi_{(1,0)}}E\left\{
+\frac{1-Z}{1-e(X)}(1-M)
+\frac{\pi_{(1,0)}(X)}{\pi_{(1,0)}(X)+\pi_{(0,0)}(X)}
+Y\right\},
+\end{align*}
+\begin{align*}
+\tau(0,0)
+&=
+\frac{1}{\pi_{(0,0)}}E\left\{
+\frac{Z}{e(X)}(1-M)Y\right\}\\
+&\quad -
+\frac{1}{\pi_{(0,0)}}E\left\{
+\frac{1-Z}{1-e(X)}(1-M)
+\frac{\pi_{(0,0)}(X)}{\pi_{(1,0)}(X)+\pi_{(0,0)}(X)}
+Y\right\},
+\end{align*}
+以及
+\begin{align*}
+\tau(1,1)
+&=
+\frac{1}{\pi_{(1,1)}}E\left\{
+\frac{Z}{e(X)}M
+\frac{\pi_{(1,1)}(X)}{\pi_{(1,0)}(X)+\pi_{(1,1)}(X)}
+Y\right\}\\
+&\quad -
+\frac{1}{\pi_{(1,1)}}E\left\{
+\frac{1-Z}{1-e(X)}MY\right\}.
+\end{align*}
+
+下面证明这些公式。先看 $\tau(1,0)$ 的 treated mean。由于 $Z=1,M=1$ 对应 $U=(1,0)$ 或 $U=(1,1)$，而 \cref{assume::principal-ignorability-M} 的第一部分使 $Y(1)$ 在这两个 strata 中给定 $X$ 后具有相同 conditional mean，
+\begin{align*}
+&E\left\{
+\frac{Z}{e(X)}M
+\frac{\pi_{(1,0)}(X)}{\pi_{(1,0)}(X)+\pi_{(1,1)}(X)}
+Y\right\}\\
+&\quad =
+E\left[\pi_{(1,0)}(X)E\{Y(1)\mid U=(1,0),X\}\right]\\
+&\quad =
+E\{1(U=(1,0))Y(1)\}.
+\end{align*}
+除以 $\pi_{(1,0)}$ 得到 $E\{Y(1)\mid U=(1,0)\}$。同理，使用 \cref{assume::principal-ignorability-M} 的第二部分，
+\begin{align*}
+&E\left\{
+\frac{1-Z}{1-e(X)}(1-M)
+\frac{\pi_{(1,0)}(X)}{\pi_{(1,0)}(X)+\pi_{(0,0)}(X)}
+Y\right\}\\
+&\quad =
+E\{1(U=(1,0))Y(0)\}.
+\end{align*}
+除以 $\pi_{(1,0)}$ 后得到 $E\{Y(0)\mid U=(1,0)\}$，故 $\tau(1,0)$ 公式成立。
+
+对 $\tau(0,0)$，treated side 是 pure cell：
+\[
+E\left\{\frac{Z}{e(X)}(1-M)Y\right\}
+=E\{1(U=(0,0))Y(1)\}.
+\]
+control side 位于 mixture cell $Z=0,M=0$ 中；由 \cref{assume::principal-ignorability-M} 的第二部分，
+\[
+E\left\{
+\frac{1-Z}{1-e(X)}(1-M)
+\frac{\pi_{(0,0)}(X)}{\pi_{(1,0)}(X)+\pi_{(0,0)}(X)}
+Y\right\}
+=E\{1(U=(0,0))Y(0)\}.
+\]
+分别除以 $\pi_{(0,0)}$ 并相减，得到 $\tau(0,0)$。
+
+对 $\tau(1,1)$，control side 是 pure cell：
+\[
+E\left\{\frac{1-Z}{1-e(X)}MY\right\}
+=E\{1(U=(1,1))Y(0)\}.
+\]
+treated side 位于 mixture cell $Z=1,M=1$ 中；由 \cref{assume::principal-ignorability-M} 的第一部分，
+\[
+E\left\{
+\frac{Z}{e(X)}M
+\frac{\pi_{(1,1)}(X)}{\pi_{(1,0)}(X)+\pi_{(1,1)}(X)}
+Y\right\}
+=E\{1(U=(1,1))Y(1)\}.
+\]
+分别除以 $\pi_{(1,1)}$ 并相减，即得 $\tau(1,1)$。
+
+\paragraph{Remark.}
+这道题给出的是 principal score 方法的统一模板。随机实验中，$e(X)$ 是已知常数，公式会退化为 \cref{thm::identification-PCEs-pscore-general-ding-lu} 的条件均值版本；strong monotonicity 下，$(1,1)$ stratum 消失，公式又退化为 \cref{thm::identification-PCEs-pscore-obs}。
+\end{exercisesolution}

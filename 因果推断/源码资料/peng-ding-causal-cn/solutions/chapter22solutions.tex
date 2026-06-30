@@ -1,0 +1,867 @@
+\chapter{Solutions to Chapter 22: Disentangle Mixture Distributions and Instrumental Variable Inequalities}
+\label{sol:chapter22}
+
+\begin{exercisesolution}{More detailed data analysis}{binary IV examples 的 bootstrap confidence intervals}
+\cref{eg::1-iv-inequalities,eg::2-iv-inequalities} 只报告了 plug-in estimates。本题的关键不是重新估计 latent strata，而是把 \cref{thm::cace-mixture-components} 中的所有可识别量看作 observed multinomial probabilities 的 smooth functions，然后用 resampling 或 delta method 传播 sampling uncertainty。
+
+下面采用 stratified multinomial bootstrap：固定 $Z=1$ 和 $Z=0$ 两组样本量，在每个 assignment group 内按四个 $(D,Y)$ cell 的样本比例重新抽样。这样保持 randomized experiment 中 assignment group sizes 固定，也与正文中以 $Z$ 分层的 moments 平行。
+
+\begin{lstlisting}
+IVbinary = function(n111, n110, n101, n100,
+                    n011, n010, n001, n000){
+  n_tr = n111 + n110 + n101 + n100
+  n_co = n011 + n010 + n001 + n000
+
+  pi_n = (n101 + n100)/n_tr
+  pi_a = (n011 + n010)/n_co
+  pi_c = 1 - pi_n - pi_a
+
+  mean_y_11 = n111/(n111 + n110)
+  mean_y_10 = n101/(n101 + n100)
+  mean_y_01 = n011/(n011 + n010)
+  mean_y_00 = n001/(n001 + n000)
+
+  mu_n = mean_y_10
+  mu_a = mean_y_01
+  mu_c1 = ((pi_c + pi_a)*mean_y_11 - pi_a*mu_a)/pi_c
+  mu_c0 = ((pi_c + pi_n)*mean_y_00 - pi_n*mu_n)/pi_c
+
+  c(pi_c = pi_c, pi_n = pi_n, pi_a = pi_a,
+    mu_c1 = mu_c1, mu_c0 = mu_c0,
+    mu_n = mu_n, mu_a = mu_a,
+    tau_c = mu_c1 - mu_c0,
+    rr_c = mu_c1/mu_c0)
+}
+
+bootIVbinary = function(counts, B = 20000, seed = 20260607){
+  set.seed(seed)
+  n1 = sum(counts[1:4])
+  n0 = sum(counts[5:8])
+  p1 = counts[1:4]/n1
+  p0 = counts[5:8]/n0
+
+  out = replicate(B, {
+    c1 = as.vector(rmultinom(1, n1, p1))
+    c0 = as.vector(rmultinom(1, n0, p0))
+    IVbinary(c1[1], c1[2], c1[3], c1[4],
+             c0[1], c0[2], c0[3], c0[4])
+  })
+  t(apply(out, 1, quantile, c(0.025, 0.975), na.rm = TRUE))
+}
+\end{lstlisting}
+
+对 \citet{improve2014endovascular} 的数据，得到如下 percentile bootstrap intervals：
+\[
+\begin{array}{c|ccc}
+\hline
+\text{quantity} & \text{estimate} & 2.5\% & 97.5\%\\
+\hline
+\pi_\cp & 0.443 & 0.368 & 0.516\\
+\pi_\nt & 0.425 & 0.363 & 0.486\\
+\pi_\at & 0.132 & 0.091 & 0.178\\
+\mu_{1\cp} & 0.709 & 0.603 & 0.813\\
+\mu_{0\cp} & 0.629 & 0.472 & 0.785\\
+\tau_\cp & 0.079 & -0.112 & 0.269\\
+\textsc{rr}_\cp & 1.126 & 0.853 & 1.549\\
+\hline
+\end{array}
+\]
+这些 intervals 与正文结论一致：没有明显证据拒绝 IV assumptions，且 complier effect 的 uncertainty 很大。
+
+对 \citet{hirano2000assessing} 的 flu-shot 数据，得到
+\[
+\begin{array}{c|ccc}
+\hline
+\text{quantity} & \text{estimate} & 2.5\% & 97.5\%\\
+\hline
+\pi_\cp & 0.118 & 0.087 & 0.149\\
+\pi_\nt & 0.692 & 0.668 & 0.716\\
+\pi_\at & 0.189 & 0.169 & 0.210\\
+\mu_{1\cp} & -0.005 & -0.108 & 0.083\\
+\mu_{0\cp} & 0.120 & -0.033 & 0.278\\
+\tau_\cp & -0.125 & -0.317 & 0.050\\
+\textsc{rr}_\cp & -0.038 & -2.631 & 2.298\\
+\hline
+\end{array}
+\]
+这里的 plug-in estimate $\hat\mu_{1\cp}<0$ 落在参数空间外，说明 observed distribution 与 IV model 的 compatibility 很差。不过 bootstrap interval 跨过 $0$，所以小样本随机波动也必须被报告出来。
+
+\paragraph{Remark.}
+IV inequalities 的检验问题与普通参数估计略有不同：当估计量靠近参数空间边界时，normal approximation 往往不稳定。实际报告时，可以同时给出 plug-in violation、bootstrap uncertainty，以及基于 inequality-constrained model 的检验。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Risk ratio for compliers}{complier risk ratio 的 identification}
+本题只是把 \cref{thm::cace-mixture-components} 中的两个 mixture disentangling formulas 相除。对于 binary outcome，
+\[
+\textsc{rr}_\cp
+=
+\frac{\mathbb{P}\{Y(1)=1\mid U=\cp\}}
+     {\mathbb{P}\{Y(0)=1\mid U=\cp\}}
+=
+\frac{\mu_{1\cp}}{\mu_{0\cp}},
+\]
+其中分母假设为正。
+
+由 \cref{thm::cace-mixture-components}，
+\[
+\mu_{1\cp}
+=
+\pi_\cp^{-1}\{E(DY\mid Z=1)-E(DY\mid Z=0)\}.
+\]
+另一方面，
+\[
+D-1=-(1-D),
+\]
+所以
+\begin{align*}
+E\{(D-1)Y\mid Z=1\}-E\{(D-1)Y\mid Z=0\}
+&=
+E\{(1-D)Y\mid Z=0\}-E\{(1-D)Y\mid Z=1\}\\
+&=
+\pi_\cp\mu_{0\cp},
+\end{align*}
+其中最后一步再次使用 \cref{thm::cace-mixture-components}。两式相除，$\pi_\cp$ 抵消，得到
+\[
+\textsc{rr}_\cp
+=
+\frac{E(DY\mid Z=1)-E(DY\mid Z=0)}
+       {E\{(D-1)Y\mid Z=1\}-E\{(D-1)Y\mid Z=0\}}.
+\]
+
+\paragraph{Remark.}
+这一题的用途是提醒我们：一旦 $\mu_{1\cp}$ 和 $\mu_{0\cp}$ 被识别，compliers 内部的任意 smooth contrast 都可以被识别；risk difference、risk ratio 和 odds ratio 的差别只在于最后一步函数变换。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Disentangle the mixtures: distributional results}{latent density formulas 的证明}
+本题证明 \cref{thm::cace-mixture-components-distribution}。它是 \cref{thm::cace-mixture-components} 的 distributional 版本：把均值换成 density，mixture weights 完全不变。
+
+先看两个 pure observed groups。由 \cref{table::obs-latent}，在 monotonicity 下，$(Z=1,D=0)$ 组只包含 never takers。因此
+\[
+g_{10}(y)
+=
+\mathbb{P}(Y=y\mid Z=1,D=0)
+=
+\mathbb{P}\{Y(1)=y\mid U=\nt\}
+=f_{\nt}(y),
+\]
+其中最后一步使用 randomization 去掉 $Z$，并使用 exclusion restriction 把 never takers 的 $Y(1)$ 与 $Y(0)$ 视为同一个 outcome。类似地，$(Z=0,D=1)$ 组只包含 always takers，所以
+\[
+g_{01}(y)=f_{\at}(y).
+\]
+
+再看 mixture group $(Z=1,D=1)$。该组由 always takers 和 compliers 组成，权重分别为
+\[
+\frac{\pi_\at}{\pi_\at+\pi_\cp},
+\qquad
+\frac{\pi_\cp}{\pi_\at+\pi_\cp}.
+\]
+因此
+\[
+g_{11}(y)
+=
+\frac{\pi_\at}{\pi_\at+\pi_\cp}f_{\at}(y)
++
+\frac{\pi_\cp}{\pi_\at+\pi_\cp}f_{1\cp}(y).
+\]
+解这个线性方程，得到
+\[
+f_{1\cp}(y)
+=
+\pi_\cp^{-1}\{(\pi_\at+\pi_\cp)g_{11}(y)-\pi_\at f_{\at}(y)\}.
+\]
+又因为
+\[
+\pi_\at+\pi_\cp=\mathbb{P}(D=1\mid Z=1),
+\qquad
+\pi_\at=\mathbb{P}(D=1\mid Z=0),
+\qquad
+f_{\at}(y)=g_{01}(y),
+\]
+所以
+\[
+f_{1\cp}(y)
+=
+\pi_\cp^{-1}\{\mathbb{P}(D=1\mid Z=1)g_{11}(y)
+-\mathbb{P}(D=1\mid Z=0)g_{01}(y)\}.
+\]
+
+最后看 $(Z=0,D=0)$。该组由 never takers 和 compliers 组成，故
+\[
+g_{00}(y)
+=
+\frac{\pi_\nt}{\pi_\nt+\pi_\cp}f_{\nt}(y)
++
+\frac{\pi_\cp}{\pi_\nt+\pi_\cp}f_{0\cp}(y).
+\]
+解得
+\[
+f_{0\cp}(y)
+=
+\pi_\cp^{-1}\{(\pi_\nt+\pi_\cp)g_{00}(y)-\pi_\nt f_{\nt}(y)\}.
+\]
+将
+\[
+\pi_\nt+\pi_\cp=\mathbb{P}(D=0\mid Z=0),
+\qquad
+\pi_\nt=\mathbb{P}(D=0\mid Z=1),
+\qquad
+f_{\nt}(y)=g_{10}(y)
+\]
+代入，就得到 \cref{thm::cace-mixture-components-distribution} 的最后一个公式。
+
+\paragraph{Remark.}
+均值公式只是 density formula 对 $y$ 加权求和后的结果。distributional disentangling 更强，因为它允许我们研究 quantiles、tail probabilities 和 stochastic dominance，而不只研究 average effects。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Alternative form of \cref{thm::iv-inequality}}{binary IV inequalities 的 cell-probability 形式}
+本题证明 \cref{eq::iv-inequalities} 等价于四个 cell-probability inequalities。
+
+当 $Q=DY$ 时，
+\[
+E(Q\mid Z=z)=\mathbb{P}(D=1,Y=1\mid Z=z),
+\]
+所以 \cref{eq::iv-inequalities} 给出
+\[
+\mathbb{P}(D=1,Y=1\mid Z=1)
+\geq
+\mathbb{P}(D=1,Y=1\mid Z=0).
+\]
+当 $Q=D(1-Y)$ 时，同理得到
+\[
+\mathbb{P}(D=1,Y=0\mid Z=1)
+\geq
+\mathbb{P}(D=1,Y=0\mid Z=0).
+\]
+这两条合起来就是
+\[
+\mathbb{P}(D=1,Y=y\mid Z=1)
+\geq
+\mathbb{P}(D=1,Y=y\mid Z=0),
+\qquad y=0,1.
+\]
+
+接下来考虑 $D=0$ 的两个 cell。当 $Q=(D-1)Y$ 时，
+\[
+Q=-(1-D)Y,
+\]
+于是
+\[
+E(Q\mid Z=1)-E(Q\mid Z=0)\geq 0
+\]
+等价于
+\[
+\mathbb{P}(D=0,Y=1\mid Z=0)
+\geq
+\mathbb{P}(D=0,Y=1\mid Z=1).
+\]
+最后，当 $Q=D+Y-DY$ 时，binary algebra 给出
+\[
+D+Y-DY=1-(1-D)(1-Y).
+\]
+因此对应 inequality 等价于
+\[
+\mathbb{P}(D=0,Y=0\mid Z=0)
+\geq
+\mathbb{P}(D=0,Y=0\mid Z=1).
+\]
+这就证明了题目中的 alternative form。
+
+\paragraph{Remark.}
+这个形式最容易做实证检查：在 $D=1$ 的每个 outcome cell 中，$Z=1$ 的 sub-probability 不能小于 $Z=0$；在 $D=0$ 的每个 outcome cell 中，方向反过来。
+\end{exercisesolution}
+
+\begin{exercisesolution}{IV inequalities for a general outcome}{general outcome 的 subdistribution inequalities}
+本题的思路是把 general outcome 通过 threshold 变成 binary outcome，然后应用 \cref{thm::iv-inequality}。固定任意 $y$，定义两个 binary outcomes
+\[
+B_y^{+}=\mathbb{I}(Y\geq y),
+\qquad
+B_y^{-}=\mathbb{I}(Y<y).
+\]
+如果 original outcome 满足 exclusion restriction，那么对 always takers 和 never takers，$Y(1)=Y(0)$ 蕴含
+\[
+\mathbb{I}\{Y(1)\geq y\}=\mathbb{I}\{Y(0)\geq y\},
+\qquad
+\mathbb{I}\{Y(1)< y\}=\mathbb{I}\{Y(0)< y\}.
+\]
+因此 $B_y^{+}$ 和 $B_y^{-}$ 都满足 binary outcome 版本的 IV assumptions。
+
+对 $B_y^{+}$ 应用 \cref{hw::ivineq-binary} 的结论，得到
+\[
+\mathbb{P}(D=1,Y\geq y\mid Z=1)
+\geq
+\mathbb{P}(D=1,Y\geq y\mid Z=0),
+\]
+以及
+\[
+\mathbb{P}(D=0,Y\geq y\mid Z=0)
+\geq
+\mathbb{P}(D=0,Y\geq y\mid Z=1).
+\]
+对 $B_y^{-}$ 再应用同一个结论，得到
+\[
+\mathbb{P}(D=1,Y<y\mid Z=1)
+\geq
+\mathbb{P}(D=1,Y<y\mid Z=0),
+\]
+以及
+\[
+\mathbb{P}(D=0,Y<y\mid Z=0)
+\geq
+\mathbb{P}(D=0,Y<y\mid Z=1).
+\]
+由于 $y$ 是任意的，四条 inequalities 对所有 threshold 都成立。
+
+\paragraph{Remark.}
+general outcome 的 IV inequalities 是关于 subdistribution functions 的约束，而不是只关于 means 的约束。均值层面的 Wald estimand 可能看起来合理，但 distributional inequalities 已经可以暴露 IV assumptions 的失败。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Example for the IV inequalities}{两个 binary joint distributions}
+下面给出两个完全由 observed joint distribution 描述的例子。为简洁起见，令
+\[
+\mathbb{P}(Z=1)=\mathbb{P}(Z=0)=\frac{1}{2},
+\]
+并只列出 conditional distribution of $(D,Y)$ given $Z$。
+
+第一个例子满足所有 IV inequalities：
+\[
+\begin{array}{c|cccc}
+\hline
+& (D=1,Y=1) & (D=1,Y=0) & (D=0,Y=1) & (D=0,Y=0)\\
+\hline
+Z=1 & 0.43 & 0.27 & 0.06 & 0.24\\
+Z=0 & 0.08 & 0.12 & 0.31 & 0.49\\
+\hline
+\end{array}
+\]
+检查可知，$D=1$ 的两个 cells 在 $Z=1$ 下分别不小于 $Z=0$ 下的对应 cells，而 $D=0$ 的两个 cells 在 $Z=0$ 下分别不小于 $Z=1$ 下的对应 cells。因此 \cref{hw::ivineq-binary} 的四条 inequalities 都成立。
+
+这个分布可以由一个合法的 latent-strata model 生成。例如取
+\[
+\pi_\at=0.20,\qquad \pi_\nt=0.30,\qquad \pi_\cp=0.50,
+\]
+并取
+\[
+\mu_\at=0.40,\qquad \mu_\nt=0.20,\qquad
+\mu_{1\cp}=0.70,\qquad \mu_{0\cp}=0.50.
+\]
+把 always takers、never takers 和 compliers 混合起来，正好得到上表。
+
+第二个例子违反 IV inequalities：
+\[
+\begin{array}{c|cccc}
+\hline
+& (D=1,Y=1) & (D=1,Y=0) & (D=0,Y=1) & (D=0,Y=0)\\
+\hline
+Z=1 & 0.10 & 0.20 & 0.30 & 0.40\\
+Z=0 & 0.20 & 0.10 & 0.30 & 0.40\\
+\hline
+\end{array}
+\]
+因为
+\[
+\mathbb{P}(D=1,Y=1\mid Z=1)=0.10
+<
+0.20
+=\mathbb{P}(D=1,Y=1\mid Z=0),
+\]
+第一条 IV inequality 已经失败。因此这个 observed distribution 不能由 \cref{assume::random}--\cref{assume::ER} 同时生成。
+
+\paragraph{Remark.}
+这些例子说明 IV inequalities 是 model compatibility checks，而不是 effect-size statements。一个分布可以有很小的 Wald ratio 却违反 inequalities；也可以有较大的 complier effect 但仍满足所有 testable implications。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Violations of the key assumptions}{Wald estimand 偏离 CACE 的两个分解}
+本题证明 \cref{theorem::wald-violation-assumptions}。核心思想是把 Wald numerator 和 denominator 都按 latent compliance type 分解。
+
+先证明 (a)。在 randomization 和 monotonicity 下，latent types 只有 always takers、never takers 和 compliers。由于
+\[
+D(1)-D(0)=
+\begin{cases}
+0, & U=\at,\\
+0, & U=\nt,\\
+1, & U=\cp,
+\end{cases}
+\]
+有
+\[
+E(D\mid Z=1)-E(D\mid Z=0)=\pi_\cp.
+\]
+不要求 exclusion restriction 时，always takers 和 never takers 的 assignment effect 不必为零。按 latent type 分解 outcome contrast：
+\[
+E(Y\mid Z=1)-E(Y\mid Z=0)
+=
+\pi_\at\tau_\at+\pi_\nt\tau_\nt+\pi_\cp\tau_\cp.
+\]
+因此
+\[
+\frac{E(Y\mid Z=1)-E(Y\mid Z=0)}
+     {E(D\mid Z=1)-E(D\mid Z=0)}
+=
+\tau_\cp+\frac{\pi_\at\tau_\at+\pi_\nt\tau_\nt}{\pi_\cp},
+\]
+也就得到 \cref{theorem::wald-violation-assumptions}(a)。
+
+再证明 (b)。现在保留 randomization 和 exclusion restriction，但允许 defiers。此时
+\[
+D(1)-D(0)=
+\begin{cases}
+0, & U=\at,\\
+0, & U=\nt,\\
+1, & U=\cp,\\
+-1, & U=\df,
+\end{cases}
+\]
+所以
+\[
+E(D\mid Z=1)-E(D\mid Z=0)=\pi_\cp-\pi_\df.
+\]
+按照题目中 $\tau_u$ 的记号，exclusion restriction 使 always takers 和 never takers 的 assignment contrast 为零，而 compliers 与 defiers 对 numerator 的贡献分别为 $\pi_\cp\tau_\cp$ 和 $\pi_\df\tau_\df$。于是
+\[
+E(Y\mid Z=1)-E(Y\mid Z=0)
+=
+\pi_\cp\tau_\cp+\pi_\df\tau_\df.
+\]
+因此
+\begin{align*}
+\frac{E(Y\mid Z=1)-E(Y\mid Z=0)}
+     {E(D\mid Z=1)-E(D\mid Z=0)}
+-\tau_\cp
+&=
+\frac{\pi_\cp\tau_\cp+\pi_\df\tau_\df}
+     {\pi_\cp-\pi_\df}
+-\tau_\cp\\
+&=
+\frac{\pi_\df(\tau_\cp+\tau_\df)}
+     {\pi_\cp-\pi_\df}.
+\end{align*}
+这就是 (b)。
+
+\paragraph{Remark.}
+(a) 说明 exclusion restriction 失败时，Wald numerator 会混入 always takers 和 never takers 的 assignment effects。(b) 说明 monotonicity 失败时，first stage 变成 compliers 与 defiers 的差；即使 exclusion restriction 成立，Wald estimand 也不再是单纯的 complier average effect。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Problems of other analyses}{as-treated 与 per-protocol estimands 的 mixture decomposition}
+本题说明为什么一些看似自然的 analyses 并不识别 CACE。整个证明只需要把 conditioning event 写成 latent strata 的 mixture。
+
+先看 as-treated analysis。实际接受 treatment 的 units 包括所有 always takers，以及 assignment 为 $Z=1$ 的 compliers。因此
+\[
+\mathbb{P}(D=1)=\pi_\at+\mathbb{P}(Z=1)\pi_\cp.
+\]
+在 \cref{assume::random}--\cref{assume::ER} 下，
+\[
+E(Y\mid D=1)
+=
+\frac{\pi_\at\mu_\at+\mathbb{P}(Z=1)\pi_\cp\mu_{1\cp}}
+     {\mathbb{P}(D=1)}.
+\]
+类似地，实际未接受 treatment 的 units 包括所有 never takers，以及 assignment 为 $Z=0$ 的 compliers。故
+\[
+\mathbb{P}(D=0)=\pi_\nt+\mathbb{P}(Z=0)\pi_\cp,
+\]
+并且
+\[
+E(Y\mid D=0)
+=
+\frac{\pi_\nt\mu_\nt+\mathbb{P}(Z=0)\pi_\cp\mu_{0\cp}}
+     {\mathbb{P}(D=0)}.
+\]
+两式相减即得题目中 $\tau_\textsc{at}$ 的公式。
+
+再看 per-protocol analysis。事件 $(Z=1,D=1)$ 包括 always takers 和 compliers，权重分别为 $\pi_\at$ 和 $\pi_\cp$，所以
+\[
+E(Y\mid Z=1,D=1)
+=
+\frac{\pi_\at\mu_\at+\pi_\cp\mu_{1\cp}}
+     {\pi_\at+\pi_\cp}.
+\]
+事件 $(Z=0,D=0)$ 包括 never takers 和 compliers，故
+\[
+E(Y\mid Z=0,D=0)
+=
+\frac{\pi_\nt\mu_\nt+\pi_\cp\mu_{0\cp}}
+     {\pi_\nt+\pi_\cp}.
+\]
+相减得到 $\tau_\textsc{pp}$ 的公式。
+
+最后，在固定 assignment group 内比较 treated 和 control。对 $Z=1$，
+\[
+E(Y\mid Z=1,D=1)
+=
+\frac{\pi_\at\mu_\at+\pi_\cp\mu_{1\cp}}
+     {\pi_\at+\pi_\cp},
+\qquad
+E(Y\mid Z=1,D=0)=\mu_\nt,
+\]
+因此
+\[
+\tau_{Z=1}
+=
+\frac{\pi_\at\mu_\at+\pi_\cp\mu_{1\cp}}
+     {\pi_\at+\pi_\cp}
+-\mu_\nt.
+\]
+对 $Z=0$，
+\[
+E(Y\mid Z=0,D=1)=\mu_\at,
+\qquad
+E(Y\mid Z=0,D=0)
+=
+\frac{\pi_\nt\mu_\nt+\pi_\cp\mu_{0\cp}}
+     {\pi_\nt+\pi_\cp},
+\]
+所以
+\[
+\tau_{Z=0}
+=
+\mu_\at
+-
+\frac{\pi_\nt\mu_\nt+\pi_\cp\mu_{0\cp}}
+     {\pi_\nt+\pi_\cp}.
+\]
+
+\paragraph{Remark.}
+这些 estimands 的共同问题是比较了不同 latent strata 的 mixtures。CACE 比较的是同一 stratum，即 compliers，在两个 treatment states 下的 potential outcomes；as-treated 和 per-protocol analyses 则把 treatment effect 与 strata composition difference 混在一起。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Bounds on the average causal effect on the whole population}{whole-population ACE 的 sharp bounds}
+本题证明 \cref{thm::bound-on-ACE}。记号中 $m_{du}=E\{Y(d)\mid U=u\}$，则
+\[
+\delta
+=
+\pi_\at(m_{1\at}-m_{0\at})
++\pi_\nt(m_{1\nt}-m_{0\nt})
++\pi_\cp(m_{1\cp}-m_{0\cp}).
+\]
+在 monotonicity 和 exclusion restriction 下，可由 observed data 识别的是 $m_{1\at}$、$m_{0\nt}$、$m_{1\cp}$、$m_{0\cp}$ 以及三类 proportions；不可识别的是 $m_{0\at}$ 和 $m_{1\nt}$。
+
+先把 identified part 写成 observed moments。由 randomization 和 latent-strata decomposition，
+\[
+E(DY\mid Z=1)=\pi_\at m_{1\at}+\pi_\cp m_{1\cp},
+\]
+因为在 $Z=1$ 下，$D=1$ 的 units 正是 always takers 和 compliers。类似地，
+\[
+E(Y-DY\mid Z=0)
+=E\{(1-D)Y\mid Z=0\}
+=\pi_\nt m_{0\nt}+\pi_\cp m_{0\cp}.
+\]
+因此
+\[
+\delta'
+=
+E(DY\mid Z=1)-E(Y-DY\mid Z=0)
+=
+\pi_\at m_{1\at}+\pi_\cp m_{1\cp}
+-\pi_\nt m_{0\nt}-\pi_\cp m_{0\cp}.
+\]
+于是
+\[
+\delta
+=
+\delta' - \pi_\at m_{0\at}+\pi_\nt m_{1\nt}.
+\]
+又由 \cref{thm::cace-mixture-components}，
+\[
+\pi_\at=\mathbb{P}(D=1\mid Z=0),
+\qquad
+\pi_\nt=\mathbb{P}(D=0\mid Z=1).
+\]
+如果 $Y$ 有界于 $[\underline y,\overline y]$，则
+\[
+\underline y\leq m_{0\at}\leq \overline y,
+\qquad
+\underline y\leq m_{1\nt}\leq \overline y.
+\]
+由于 $\delta$ 中 $m_{0\at}$ 的系数为 $-\pi_\at$，$m_{1\nt}$ 的系数为 $+\pi_\nt$，下界取
+\[
+m_{0\at}=\overline y,
+\qquad
+m_{1\nt}=\underline y,
+\]
+上界取
+\[
+m_{0\at}=\underline y,
+\qquad
+m_{1\nt}=\overline y.
+\]
+代入得到
+\[
+\underline{\delta}
+=
+\delta' - \overline y\,\mathbb{P}(D=1\mid Z=0)
++\underline y\,\mathbb{P}(D=0\mid Z=1),
+\]
+以及
+\[
+\overline{\delta}
+=
+\delta' - \underline y\,\mathbb{P}(D=1\mid Z=0)
++\overline y\,\mathbb{P}(D=0\mid Z=1).
+\]
+这就是 \cref{thm::bound-on-ACE}。
+
+当 $Y$ 为 binary 时，$\underline y=0$ 且 $\overline y=1$。下界为
+\[
+E(DY\mid Z=1)-E(Y-DY\mid Z=0)-\mathbb{P}(D=1\mid Z=0).
+\]
+注意
+\[
+Y-DY+D=D+Y-DY,
+\]
+所以它等于
+\[
+E(DY\mid Z=1)-E(D+Y-DY\mid Z=0).
+\]
+上界为
+\[
+E(DY\mid Z=1)-E(Y-DY\mid Z=0)+\mathbb{P}(D=0\mid Z=1),
+\]
+也就是
+\[
+E(DY+1-D\mid Z=1)-E(Y-DY\mid Z=0).
+\]
+
+\paragraph{Remark.}
+这些 bounds 的宽度完全来自 always takers 的 untreated outcome 和 never takers 的 treated outcome。IV design 告诉我们 compliers 很多信息，但 whole-population ACE 还需要知道那些永远接受或永远不接受 treatment 的 units 在反事实 treatment state 下会怎样。
+\end{exercisesolution}
+
+\begin{exercisesolution}{One-sided noncompliance and statistical inference}{one-sided encouragement design 的识别与 vitamin A 数据}
+One-sided noncompliance 的结构是
+\[
+Z_i=0\Longrightarrow D_i=0.
+\]
+这等价于 $D_i(0)=0$ 对所有 units 成立。
+
+\paragraph{(1) Latent strata.}
+因为 $D(0)=0$，所以 monotonicity $D(1)\geq D(0)$ 自动成立。latent strata 只有两个：
+\[
+U=\cp \quad \text{if } \{D(1),D(0)\}=(1,0),
+\qquad
+U=\nt \quad \text{if } \{D(1),D(0)\}=(0,0).
+\]
+不存在 always takers 和 defiers。由 randomization，
+\[
+\pi_\cp=\mathbb{P}(D=1\mid Z=1),
+\qquad
+\pi_\nt=\mathbb{P}(D=0\mid Z=1).
+\]
+
+\paragraph{(2) Exclusion restriction and identification.}
+在 one-sided case 中，exclusion restriction 可陈述为：对 never takers，assignment 本身不影响 outcome，即
+\[
+Y(1)=Y(0)\quad \text{if } U=\nt.
+\]
+对 compliers，$Z=1$ 对应接受 treatment，$Z=0$ 对应不接受 treatment，因此不存在需要额外约束的 assignment-only effect。
+
+记
+\[
+\mu_{z u}=E\{Y(z)\mid U=u\}.
+\]
+则
+\[
+\mu_{1\cp}=E(Y\mid Z=1,D=1),
+\qquad
+\mu_{1\nt}=\mu_{0\nt}=E(Y\mid Z=1,D=0).
+\]
+在 $Z=0$ 下所有 units 都有 $D=0$，这是 compliers 和 never takers 的 mixture：
+\[
+E(Y\mid Z=0)
+=\pi_\cp\mu_{0\cp}+\pi_\nt\mu_{0\nt}.
+\]
+因此
+\[
+\mu_{0\cp}
+=
+\frac{E(Y\mid Z=0)-\pi_\nt\mu_{0\nt}}{\pi_\cp}.
+\]
+CACE 为
+\[
+\tau_\cp=\mu_{1\cp}-\mu_{0\cp}
+=
+\frac{E(Y\mid Z=1)-E(Y\mid Z=0)}
+       {E(D\mid Z=1)-E(D\mid Z=0)},
+\]
+这就是 one-sided noncompliance 下的 Bloom estimator。
+
+\paragraph{(3) Covariate adjustment.}
+若观测到 pretreatment covariates $X$，可以用 covariate-adjusted ITT ratio 提高效率。一个直接做法是分别估计
+\[
+\tau_Y=E(Y\mid Z=1)-E(Y\mid Z=0),
+\qquad
+\tau_D=E(D\mid Z=1)-E(D\mid Z=0),
+\]
+但用 outcome regression、ANCOVA、post-stratification 或 AIPW 形式对 $Y$ 和 $D$ 同时调整 $X$，最后取
+\[
+\hat\tau_\cp^{\mathrm{adj}}=\frac{\hat\tau_Y^{\mathrm{adj}}}{\hat\tau_D^{\mathrm{adj}}}.
+\]
+因为 $X$ 是 pretreatment covariates，调整不会破坏 randomization；它的作用是减少 outcome 和 compliance behavior 中由 baseline imbalance 或 prognostic variation 带来的 sampling variance。
+
+\paragraph{(4) One-sided IV inequalities.}
+由 \cref{hw::ivineq-binary}，一般 binary IV inequalities 包括 $D=1$ 与 $D=0$ 两组。one-sided case 中
+\[
+\mathbb{P}(D=1,Y=y\mid Z=0)=0,
+\]
+所以 $D=1$ 的 inequalities 退化为非负性。非平凡的部分是
+\[
+\mathbb{P}(D=0,Y=y\mid Z=0)
+\geq
+\mathbb{P}(D=0,Y=y\mid Z=1),
+\qquad y=0,1.
+\]
+等价地，因为 $Z=0$ 下必有 $D=0$，
+\[
+\mathbb{P}(Y=y\mid Z=0)
+\geq
+\mathbb{P}(D=0,Y=y\mid Z=1),
+\qquad y=0,1.
+\]
+
+\paragraph{(5) Vitamin A data.}
+Sommer 等人的数据为
+\[
+\begin{array}{c|cc|cc}
+\hline
+& \multicolumn{2}{c|}{Z=1} & \multicolumn{2}{c}{Z=0}\\
+& D=1 & D=0 & D=1 & D=0\\
+\hline
+Y=1 & 9663 & 2385 & 0 & 11514\\
+Y=0 & 12 & 34 & 0 & 74\\
+\hline
+\end{array}
+\]
+由表可得
+\[
+n_1=12094,\qquad n_0=11588.
+\]
+latent proportions 的 plug-in estimates 为
+\[
+\hat\pi_\cp=\frac{9663+12}{12094}=0.79998,
+\qquad
+\hat\pi_\nt=\frac{2385+34}{12094}=0.20002.
+\]
+treated potential outcome means 为
+\[
+\hat\mu_{1\cp}=\frac{9663}{9663+12}=0.99876,
+\qquad
+\hat\mu_\nt=\frac{2385}{2385+34}=0.98594.
+\]
+control outcome mean 为
+\[
+\hat E(Y\mid Z=0)=\frac{11514}{11588}=0.99361.
+\]
+因此
+\[
+\hat\mu_{0\cp}
+=
+\frac{0.99361-0.20002\times 0.98594}{0.79998}
+=0.99553.
+\]
+所以 estimated CACE on survival 为
+\[
+\hat\tau_\cp
+=0.99876-0.99553
+=0.00323.
+\]
+也就是说，在 compliers 中，vitamin A supplement 对 survival probability 的 estimated effect 约为 $0.32$ 个百分点。
+
+最后检查 one-sided IV inequalities：
+\[
+\frac{11514}{11588}=0.99361
+\geq
+\frac{2385}{12094}=0.19721,
+\qquad
+\frac{74}{11588}=0.00639
+\geq
+\frac{34}{12094}=0.00281.
+\]
+两条非平凡 inequalities 都成立。
+
+\paragraph{Remark.}
+这个例子中 compliance rate 很高，因此 Bloom denominator 接近 $0.8$，Wald ratio 不会被极小 first stage 放大。估计值很小并不表示设计无用；它说明在 survival 已经接近 $1$ 的 setting 中，risk difference scale 上的改善天然有限。
+\end{exercisesolution}
+
+\begin{exercisesolution}{One-sided noncompliance with partial adherence}{三水平 adherence 的 latent strata 与可识别量}
+本题仍是 one-sided noncompliance，但 treatment received 有三个水平：
+\[
+D(0)=0,\qquad D(1)\in\{0,0.5,1\}.
+\]
+因此 latent strata 有三个：
+\[
+U=0 \text{ if } D(1)=0,\qquad
+U=0.5 \text{ if } D(1)=0.5,\qquad
+U=1 \text{ if } D(1)=1.
+\]
+control assignment 下所有人都接受 $D=0$，所以这些 strata 的比例可由 treatment arm 中的 adherence distribution 识别：
+\[
+\hat\pi_0=\frac{35}{147}=0.2381,\qquad
+\hat\pi_{0.5}=\frac{42}{147}=0.2857,\qquad
+\hat\pi_1=\frac{70}{147}=0.4762.
+\]
+
+exclusion restriction 的自然推广是：assignment 本身不影响 outcome，outcome 只通过 received treatment level 变化。对 $U=0$ 的 units，$D(1)=D(0)=0$，因此
+\[
+Y(1)=Y(0)\quad \text{if } U=0.
+\]
+对 $U=0.5$ 和 $U=1$ 的 units，$Z=1$ 分别暴露于 partial 和 full treatment；$Z=0$ 暴露于 none。感兴趣的 causal effects 可以定义为
+\[
+\tau_{0.5}=E\{Y(0.5)-Y(0)\mid U=0.5\},
+\qquad
+\tau_1=E\{Y(1)-Y(0)\mid U=1\}.
+\]
+
+从 treatment arm 可以识别 treated-state means：
+\[
+\hat E\{Y(0)\mid U=0\}=\frac{7}{35}=0.2000,
+\]
+\[
+\hat E\{Y(0.5)\mid U=0.5\}=\frac{17}{42}=0.4048,
+\qquad
+\hat E\{Y(1)\mid U=1\}=\frac{40}{70}=0.5714.
+\]
+control arm 的 outcome mean 为
+\[
+\hat E(Y\mid Z=0)=\frac{25}{151}=0.1656.
+\]
+它满足 mixture equation
+\[
+E(Y\mid Z=0)
+=
+\pi_0 E\{Y(0)\mid U=0\}
++\pi_{0.5}E\{Y(0)\mid U=0.5\}
++\pi_1E\{Y(0)\mid U=1\}.
+\]
+其中第一项的 stratum-specific untreated mean 可由 exclusion restriction 识别为 $7/35$，但剩下两个 untreated means 只有一个 mixture equation。因此 $\tau_{0.5}$ 和 $\tau_1$ 不能分别识别。
+
+可以识别的是它们的 weighted average：
+\[
+\pi_{0.5}\tau_{0.5}+\pi_1\tau_1
+=
+E(Y\mid Z=1)-E(Y\mid Z=0),
+\]
+因为 $U=0$ 的 effect 为零。数据中
+\[
+\hat E(Y\mid Z=1)=\frac{7+17+40}{147}=0.4354,
+\]
+所以
+\[
+\widehat{\mathrm{ITT}}_Y
+=0.4354-0.1656
+=0.2698.
+\]
+若把 $D$ 当作剂量并报告 Wald-type per-unit-dose estimand，则
+\[
+\hat E(D\mid Z=1)
+=\frac{0.5\times 42+1\times 70}{147}
+=0.6190,
+\]
+从而
+\[
+\frac{\widehat{\mathrm{ITT}}_Y}{\widehat{\mathrm{ITT}}_D}
+=
+\frac{0.2698}{0.6190}
+=0.4359.
+\]
+这个 ratio 可解释为以 first-stage dose uptake 加权的平均改善；若要把它解释为 linear dose-response effect，还需要额外的 dose-response homogeneity 或 linearity assumption。
+
+\paragraph{Remark.}
+Partial adherence 的复杂性不在于 latent strata 的比例，而在于 control arm 把多个潜在 adherence strata 的 untreated outcomes 混在一起。没有额外假设时，数据只能识别若干 weighted averages，而不能同时拆开 partial-adherers 和 full-adherers 的 causal effects。
+\end{exercisesolution}

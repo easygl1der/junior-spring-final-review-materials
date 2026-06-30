@@ -1,0 +1,458 @@
+
+\chapter{Difficulties of Unconfoundedness in Observational Studies for Causal Effects}
+ \label{chapter::difficulties-observational-studies}
+ 
+ 
+本书 \cref{part::observational-studies} 在两个假设下讨论 observational studies 中的 causal inference：unconfoundedness 与 overlap。这两个假设都很强，在实践中也很可能被违反。本章讨论 unconfoundedness assumption 的困难。\cref{chapter::evalue,sec::rosenbaum-sensitivity-analysis} 将讨论 observational studies 在存在 unmeasured confounding 时进行 sensitivity analysis 的各种策略。\cref{chapter::overlap} 将讨论 overlap assumption 的困难。
+ 
+ 
+ 
+
+\section{Some basics of the causal diagram}
+
+
+\citet{pearl1995causal} 将 causal diagram 引入为 empirical research 中 causal inference 的有力工具。
+\citet{pearl2000causality} 是一本关于 causal diagram 的教材。这里我把 causal diagram 作为一种直观工具，用来说明变量之间的 causal relationships。
+
+例如，如果我们有如下 causal diagram
+$$
+\xymatrix{
+ & X \ar[ld]\ar[rd] \\
+Z\ar[rr] &&Y 
+}
+$$
+并关注 $Z$ 对 $Y$ 的 causal effect，
+那么可以把它读成下面的 data-generating process：
+$$
+\left\{ 
+\begin{aligned}
+      X & \sim F_X(x), \\
+      Z  &=   f_Z(X, \varepsilon_Z) , \\
+      Y(z) &=  f_Y(X, z, \varepsilon_Y(z)) ,
+\end{aligned}
+\right. 
+$$
+其中对 $z=0,1$ 都有 $\varepsilon_Z \ind \varepsilon_Y(z)$。
+在上面的过程里，covariates $X$ 由分布 $F_X(x)$ 生成；treatment assignment 是 $X$ 与随机误差项 $\varepsilon_Z$ 的函数；potential outcome $ Y(z) $ 是 $X$、$z$ 与随机误差项 $\varepsilon_Y(z)$ 的函数。从这些方程可以直接看出 $Z\ind Y(z) \mid X$，也就是说，unconfoundedness assumption 成立。
+
+
+如果我们有如下 causal diagram
+$$
+\xymatrix{
+ X \ar[d]\ar[rrd] & & U\ar[d]\ar[lld] \\
+Z\ar[rr] &&Y 
+}
+$$
+那么可以把它读成下面的 data-generating process：
+$$
+\left\{ 
+\begin{aligned}
+       X & \sim F_X(x), \\
+       U& \sim F_U(u), \\ 
+      Z  &=   f_Z(X, U,  \varepsilon_Z) , \\
+      Y(z) &=  f_Y(X, U, z, \varepsilon_Y(z)) ,
+\end{aligned}
+\right. 
+$$
+其中对 $z=0,1$ 都有 $\varepsilon_Z \ind \varepsilon_Y(z)$。从这些方程可以直接看出 $Z\ind Y(z) \mid (X,U)$，但是 $Z\nind Y(z) \mid X$；也就是说，unconfoundedness assumption 在给定 $(X,U)$ 时成立，但仅给定 $X$ 时不成立。在这种情形下，$U$ 是一个 unmeasured confounder。在这个图中，$U$ 被称为 unmeasured confounder。
+
+
+
+
+
+
+\section{Assessing the unconfoundedness assumption}
+
+
+Unconfoundedness assumption（无混杂性假设）
+$$
+Z\ind Y(1) \mid X, \quad 
+Z\ind Y(0) \mid X
+$$
+蕴含
+\begin{eqnarray*}
+\pr\{ Y(1)\mid  Z=1, X \}  &=& \pr\{ Y(1)\mid  Z=0, X \} , \\
+\pr\{ Y(0)\mid  Z=1, X \} &=& \pr\{ Y(0)\mid  Z=0, X \} . 
+\end{eqnarray*}
+因此，unconfoundedness assumption 本质上要求 counterfactual distribution $\pr\{ Y(1)\mid  Z=0, X \}$ 等于 observed distribution
+$\pr\{ Y(1)\mid  Z=1, X \}$，并且 counterfactual distribution $\pr\{ Y(0)\mid  Z=1, X \} $ 等于 observed distribution $\pr\{ Y(0)\mid  Z=0, X \}$。由于 counterfactual distributions 不能直接从数据中识别出来，在没有额外假设时，unconfoundedness assumption 从根本上说是不可检验的。下面我将讨论两种评估 unconfoundedness assumption 的策略。这里，``assess'' 是比 ``test'' 更弱的概念：前者指支持或削弱初始分析的 supplementary analysis，后者则指形式化的 statistical testing。
+
+
+
+\subsection{Using negative outcomes}
+
+
+ 
+
+假设 $Y^\textup{n}$ 是一个与 $Y$ 相似的 outcome；理想情况下，它与 $Y$ 共享相同的 confounding structure。如果我们相信 $Z\ind Y(z)\mid X$，那么通常也会倾向于相信 $Z\ind Y^\textup{n} (z)\mid X$。
+此外，我们事先知道 $Z$ 对 $Y^\textup{n}$ 的 effect：
+$$
+\tau(Z\rightarrow Y^\textup{n} )
+= 
+E\{  Y^\textup{n}(1) - Y^\textup{n}(0) \} .
+$$
+一个重要例子是 $\tau(Z\rightarrow Y^\textup{n} ) = 0$。满足这些要求的 causal diagram 如下：
+
+$$
+\xymatrix{
+ & X \ar[ld]\ar[rd] \ar[rr] & & Y^\textup{n}  \\
+Z\ar[rr] &&Y 
+}
+$$
+
+
+
+\begin{example}
+\citet{Cornfield::1959} 基于 observational studies 研究 cigarette smoking 对 lung cancer 的 causal role。他们控制了许多重要的 background variables，但仍然可能存在一些 unmeasured confounders，使 observed effects 产生 bias。为了加强 causation 的证据，他们还报告了 cigarette smoking 对 car accidents 的 effect；这个 effect 接近于零，符合 biology 上的预期。因此，即使他们在分析中不能排除 unmeasured confounding，基于 negative outcome 的这项 supplementary analysis 仍然增强了 cigarette smoking 对 lung cancer 有 causal effect 的证据。
+\end{example}
+
+\begin{example}
+\citet{imbens2015causal} 建议把 lagged outcome 用作 negative outcome。在多数情形下，认为 lagged outcome 与 outcome 具有相似的 confounding structure 是合理的。由于 lagged outcome 发生在 treatment 之前，treatment 对它的 average causal effect 必须为 $0$。不过，这一建议应当谨慎使用，因为在多数研究中，我们通常只是把 lagged outcomes 当作 observed confounder。
+
+从某种意义上说，\cref{chapter::pscore-key} 中的 covariate balance check 是使用 negative controls 的一个特殊情形。与把 lagged outcomes 用作 negative controls 的问题类似，这些 covariates 通常本身就是 unconfoundedness assumption 的一部分。因此，covariate balance check 失败并不真正 falsify unconfoundedness assumption，而是 falsify propensity score 的 model specification。
+\end{example}
+
+\begin{example}
+关于老年人的 observational studies 显示，在调整 measured covariates 后，influenza vaccination 会显著降低随后一个季节中 pneumonia/influenza hospitalization 与 all-cause mortality 的风险。\citet{jackson2006evidence} 对如此大的效应幅度持怀疑态度，因此对 negative outcomes 进行了 supplementary analysis。Vaccination 通常从秋季开始，但 influenza transmission 往往要到冬季才明显出现。根据 biology，vaccination 的 effect 应当在 influenza season 中最为明显。但是 \citet{jackson2006evidence} 发现，在 influenza season 之前的 effect 反而更大，这提示 observed effect 可能来自 unmeasured confounding。
+\end{example}
+
+\citet{jackson2006evidence} 的例子似乎最有说服力，因为 influenza season 之前与期间的 influenza-related outcomes 应当具有相似的 confounding patterns。\citet{Cornfield::1959} 的额外证据则显得较弱，因为就 cigarette smoking 而言，car accidents 与 lung cancer 的 causal mechanisms 很不相同。事实上，\citet{Fisher::1957} 的批评正是：cigarette smoking 与 lung cancer 之间的关系可能是由某个 unobserved genetic factor 导致的（见 \cref{chapter::evalue}）。这样的 genetic factor 也许会同时影响 cigarette smoking 和 lung cancer，但它似乎不太可能也影响 car accidents。
+
+
+\citet{lipsitch2010negative} 是一篇关于 negative outcomes 的较新文章。
+\citet{rosenbaum1989role} 讨论了 known effects 在 causal inference 中的作用。
+
+ 
+
+\subsection{Using negative exposures}
+
+ 
+
+
+Negative exposures 是 negative outcomes 的对偶。
+假设 $Z^\textup{n}$ 是一个与 $Z$ 相似的 treatment variable，并且与 $Z$ 共享相同的 confounding structure。如果我们相信 $Z \ind Y  (z) \mid X$，那么也会倾向于相信
+$
+Z^\textup{n}\ind Y  (z) \mid X.
+$
+此外，我们事先知道 $Z^\textup{n}$ 对 $Y $ 的 effect
+$$
+\tau(Z^\textup{n}\rightarrow Y  )
+= 
+E\{  Y(1^\textup{n}) - Y (0^\textup{n}) \}.
+$$
+一个重要例子是 $\tau(Z^\textup{n}\rightarrow Y  ) = 0.$ 满足这些要求的 causal diagram 如下：
+
+
+$$
+\xymatrix{
+Z^\textup{n} & & X \ar[ll] \ar[ld]\ar[rd] \\
+&Z  \ar[rr] && Y 
+}
+$$
+
+
+
+
+\begin{example}
+\citet{sanderson2017negative} 给出了许多 negative exposures 的例子：为了确定 intrauterine exposure 对后续 outcomes 的 effect，可以比较 maternal exposure during pregnancy 与目标 outcome 的 association，以及 paternal exposure 与同一 outcome 的 association。他们回顾了 maternal and paternal smoking 对 offspring outcomes 的 effect 的研究，也回顾了 maternal and paternal BMI 对后代后续 BMI 与 autism spectrum disorder 的 effect 的研究。在这些例子中，我们预期 maternal exposure 与 outcome 的 association 会大于 paternal exposure 与 outcome 的 association。
+\end{example}
+
+
+
+\subsection{Summary}
+
+
+在没有额外假设时，unconfoundedness assumption 从根本上说是不可检验的。虽然 observational studies 中的 negative outcomes 与 negative controls 不能证明或否定 unconfoundedness，但把它们用于 supplementary analyses 可以加强 causation 的证据。不过，开展这类 supplementary analysis 往往并不容易，因为它需要更多数据；更重要的是，它还需要对 causal problems 有更深的理解，才能找到有说服力的 negative outcomes 与 negative controls。
+
+ 
+ 
+
+
+\section{Problems of over-adjustment}
+\label{sec::pearl-bias}
+
+我们已经讨论了许多在 unconfoundedness assumption 下估计 causal effects 的方法：
+$$
+Z\ind \{ Y(1), Y(0) \} \mid X .
+$$
+这是一个在 $X$ 上 conditioning 的假设。选择正确的 $X$ 的集合，以保证 conditional independence，是至关重要的。
+\citet{rosenbaum2002design} 写道：``there is no reason to avoid adjustment for a variable describing subjects before treatment.'' 类似地，\citet{rubin2007design} 写道：``typically, the more conditional an assumption, the more acceptable it is.'' 二者都主张我们应当控制所有 observed pretreatment covariates。\citet{vanderweele2011new} 称之为 {\it pretreatment criterion}。
+Pearl 不同意这一建议，并给出了下面两个反例。
+
+
+\subsection{M-bias}
+\label{section::m-bias}
+
+M-bias 出现在下面这个具有 M-structure 的 causal diagram 中：
+$$
+\xymatrix{
+U_1 \ar[dd]\ar[dr] &&U_2 \ar[dd]\ar[dl] \\
+&X& \\
+Z   && Y 
+}
+$$
+
+从图中可以读出下面的 data-generating process：
+$$
+\left\{ 
+\begin{aligned}
+&U_1 \ind U_2 ,\\
+&X = f_X(U_1, U_2, \varepsilon_X),\\
+&Z=   f_Z(U_1,  \varepsilon_Z) , \\
+&Y=      Y(z) =  f_Y(U_2, \varepsilon_Y) ,
+\end{aligned}
+\right. 
+$$
+其中 $(\varepsilon_X, \varepsilon_Z, \varepsilon_Y) $ 是相互独立的 random error terms。在上面的 causal diagram 中，$X$ 是 observed 的，但 $U_1$ 与 $U_2$ 是 unobserved 的。
+如果我们改变 $Z$ 的取值，$Y$ 的取值完全不会改变。因此，$Z$ 对 $Y$ 的 true causal effect 必须为 $0$。从 data-generating equations 可以看出 $Z\ind Y$，所以 $Z$ 与 $Y$ 之间的 association 为 $0$；特别地，
+$$
+\tau_\textsc{PF} = E(Y\mid Z=1) - E(Y\mid Z=0) = 0.
+$$
+这意味着，如果不调整 covariate $X$，simple estimator 对 true parameter 是 unbiased 的。
+
+然而，如果我们 condition on $X$，那么 $U_1\nind  U_2 \mid X$；因此，$Z\nind Y\mid X$，并且一般来说
+$$
+\int \{  E(Y\mid Z=1, X=x) - E(Y\mid Z=0, X=x) \} f(x) \diff x \neq 0
+$$
+成立。
+为了获得直觉，我们考虑 Normal linear models 的情形\footnote{对于我们关于 binary $Z$ 的讨论，这并不理想，但它简化了推导。\citet{ding2015adjust} 对 binary $Z$ 的更自然模型给出了详细讨论。}：
+$$
+\left\{ 
+\begin{aligned}
+&X = a U_1 + b U_2 +  \varepsilon_X,\\
+&Z=   cU_1 +  \varepsilon_Z , \\
+&Y=      Y(z) =  dU_2 +  \varepsilon_Y ,
+\end{aligned}
+\right. 
+$$
+其中 $(U_1, U_2, \varepsilon_X, \varepsilon_Z, \varepsilon_Y)  \iidsim \N01$。
+我们有
+$$
+\cov(Z,Y) = \cov(  cU_1 +  \varepsilon_Z,  dU_2 +  \varepsilon_Y) = 0,
+$$
+但由 Problem \cref{hw::partial-correlation} 的结果，给定 $X$ 时 $Z$ 与 $Y$ 的 partial correlation coefficient 为\footnote{记号 $\propto$ 读作 ``proportional to''，它允许我们省略一些不重要的常数。}
+\begin{eqnarray*}
+\rho_{ZY\mid X} &=& \frac{   \rho_{ZY} - \rho_{ZX} \rho_{YX}  }{  \sqrt{  1-\rho_{ZX}^2 }  \sqrt{1- \rho_{YX}^2  }  }   
+\\
+&\propto &  - \rho_{ZX} \rho_{YX}  \\
+&\propto &  - \cov(Z, X) \cov(Y, X)  \\
+&=&  - abcd,
+\end{eqnarray*}
+这正是从 $Z$ 到 $Y$ 的路径上各系数的乘积。
+因此，unadjusted estimator 是 unbiased 的，但 adjusted estimator 具有与 $abcd$ 成比例的 bias。
+
+
+ 
+ 
+下面这个简单例子说明 M-bias。
+
+\begin{lstlisting}
+> ## M bias with large sample size
+> n  = 10^6
+> U1 = rnorm(n)
+> U2 = rnorm(n)
+> X  = U1 + U2 + rnorm(n)
+> Y  = U2 + rnorm(n)
+> ## with a continuous treatment Z
+> Z  = U1 + rnorm(n)
+> round(summary(lm(Y ~ Z))$coef[2, 1], 3)
+[1] 0
+> round(summary(lm(Y ~ Z + X))$coef[2, 1], 3)
+[1] -0.2
+> 
+> ## with a binary treatment Z
+> Z  = (Z >= 0)
+> round(summary(lm(Y ~ Z))$coef[2, 1], 3)
+[1] 0.002
+> round(summary(lm(Y ~ Z + X))$coef[2, 1], 3)
+[1] -0.42
+\end{lstlisting}
+
+
+
+\subsection{Z-bias}
+\label{sec::z-bias}
+
+ 
+
+考虑如下 causal diagram：
+$$
+\xymatrix{
+&&&U \ar[dl]_b \ar[dr]^c \\
+X \ar[rr]^a &&Z\ar[rr]^\tau   && Y 
+}
+$$
+其 data-generating process 为\footnote{同样地，为了简化推导，我们从 linear model 生成 continuous $Z$。\citet{ding2017instrumental} 将该理论推广到更一般的 causal models，特别是 binary $Z$ 的情形。
+}
+$$
+\left\{ 
+\begin{aligned}
+&Z=   aX + bU +   \varepsilon_Z , \\
+&Y(z)=   \tau z + cU +  \varepsilon_Y ,
+\end{aligned}
+\right. 
+$$
+其中 $(U, X, \varepsilon_Z, \varepsilon_Y) $ 是 IID  $ \N01$。在这个 data-generating process 中，我们有
+$X\ind U,$ $X\nind Z$，并且 $X$ 只通过 $Z$ 影响 $Y$。
+
+ 
+Unadjusted estimator 为
+\begin{eqnarray*}
+\tau_\textup{unadj} &=& \frac{ \cov(Z, Y)  }{  \var(Z) }  \\
+&=& \frac{ \cov(Z, \tau Z + cU)  }{ \var(Z) }  \\
+&=& \tau + \frac{c \cov(aX + bU, U)  }{  \var(Z) }  \\
+&=& \tau + \frac{c b }{  a^2 + b^2 + 1} ,
+\end{eqnarray*}
+其 bias 为 $bc/(a^2 + b^2 + 1)$。把 $Y$ 对 $(Z,X)$ 做 OLS 得到的 adjusted estimator 满足
+$$
+\left\{ 
+\begin{aligned}
+E\{  Z(Y- \tau_\textup{adj} Z  - \alpha X  )  \} &= 0,\\
+E\{  X(Y - \tau_\textup{adj} Z - \alpha X)  \} &= 0.
+\end{aligned}
+\right. 
+$$
+求解上面关于 $(\tau_\textup{adj}, \alpha)$ 的 linear system，可得到 $  \tau_\textup{adj}$ 的公式：
+\begin{equation}
+\label{eq::zbias-result}
+  \tau_\textup{adj}  = \tau +  \frac{    bc }{   b^2+1 },
+\end{equation}
+其 bias 为 $bc/(b^2+1)$。关于求解 $(\tau_\textup{adj}, \alpha)$ 这个 linear system 的细节，我将其留作 Problem \cref{hw::z-bias-formula}。
+
+因此，unadjusted estimator 的 bias 小于 adjusted estimator。更有意思的是，$X$ 与 $Z$ 之间的 association 越强（由 $a$ 衡量），adjusted estimator 的 bias 就越大。
+
+
+数学推导并不特别困难。但这类 bias 看起来相当神秘。直觉如下。Treatment 是 $X$、$U$ 与其他 random errors 的函数。如果我们 condition on $X$，它就只剩下 $U$ 与其他 random errors 的函数。因此，conditioning on $X$ 会使 $Z$ 的随机性降低；更关键的是，它会让 unmeasured confounder $U$ 在 $Z$ 中发挥更重要的作用。结果，由 $U$ 导致的 confounding bias 被 conditioning on $X$ 放大了。这个理想化的例子说明了对某些 covariates 进行 over-adjustment 的危险。
+
+
+
+ \citet{heckman2004using} 在 simulation studies 中观察到了这一现象。
+ \citet[][technical report in 2006]{wooldridge2009should} 在 linear models 中验证了它。
+ \citet{pearl2010class, pearl2011invited} 用 causal diagrams 解释了它。
+ \citet{ding2017instrumental} 为这一现象提供了更一般的理论以及一些直觉。
+ 这类 bias 被称为 Z-bias，是因为在 Pearl 的原始论文中，他用符号 $Z$ 表示这里的变量 $X$。不过，在本书中，$Z$ 始终表示 treatment variable。在本书 \cref{part::instrumentalvariables} 中，如果 $Z$ 满足本小节给出的 causal diagram，我们会称它为 instrumental variable。因此，{\it instrumental variable bias} 也是这类 bias 的另一个合理名称。
+
+
+
+下面这个简单例子说明 Z-bias。
+\begin{lstlisting}
+> ## Z bias with large sample size
+> n  = 10^6
+> X = rnorm(n)
+> U = rnorm(n)
+> Z = X + U + rnorm(n)
+> Y = U + rnorm(n)
+> 
+> round(summary(lm(Y ~ Z))$coef[2, 1], 3)
+[1] 0.333
+> round(summary(lm(Y ~ Z + X))$coef[2, 1], 3)
+[1] 0.501
+> 
+> ## stronger association between X and Z
+> Z = 2*X + U + rnorm(n)
+> round(summary(lm(Y ~ Z))$coef[2, 1], 3)
+[1] 0.167
+> round(summary(lm(Y ~ Z + X))$coef[2, 1], 3)
+[1] 0.501
+> 
+> ## even stronger association between X and Z
+> Z = 10*X + U + rnorm(n)
+> round(summary(lm(Y ~ Z))$coef[2, 1], 3)
+[1] 0.01
+> round(summary(lm(Y ~ Z + X))$coef[2, 1], 3)
+[1] 0.5
+\end{lstlisting} 
+
+
+\subsection{What covariates should we adjust for in observational studies?}
+
+
+我们永远不知道真实的 underlying data-generating process，而它可能相当复杂。不过，下面的 causal diagram 有助于澄清许多想法。它已经排除了 \cref{section::m-bias} 讨论的 $M$-bias 的可能性。
+$$
+\xymatrix{
+ &&X_R&& \\
+X_Z \ar[ddr] && X \ar[ddl] \ar[ddr]&& X_Y \ar[ddl] \\
+ &\\
+ &Z \ar[rr] \ar[ddr] &&Y \ar[ddl]& \\
+ & \\
+ &&X_I&&
+}
+$$
+上面的 covariates 具有不同特征：
+\begin{enumerate}
+\item
+$X$ 同时影响 treatment 与 outcome。Conditioning on $X$ 可以保证 unconfoundedness assumption，因此我们应当控制 $X$。
+\item
+$X_R$ 是纯粹的 random noise，既不影响 treatment，也不影响 outcome。把它纳入分析不会使 estimate 产生 bias，但会在有限样本中引入不必要的 variability。
+\item
+$X_Z$ 是一个 instrumental variable，它只通过 treatment 影响 outcome。在上图中，把它纳入分析不会使 estimate 产生 bias，但会增加 estimate 的 variability。然而，在存在 unmeasured confounding 时，把它纳入分析会放大 bias，如 \cref{section::m-bias} 所示。
+\item
+$X_Y$ 只影响 outcome，而不影响 treatment。即使不 condition on 它，unconfoundedness assumption 仍然成立。由于它们可以预测 outcome，把它们纳入分析通常会提高 precision。
+\item
+$X_I$ 受到 treatment 与 outcome 的影响。它是 post-treatment variable，而不是 pretreatment covariate。如果目标是推断 treatment 对 outcome 的 effect，我们就不应当纳入它。本书 \cref{part::post-treatmentvariable} 将讨论 causal inference 中与 post-treatment variables 有关的问题。
+\end{enumerate}
+
+
+
+如果我们相信上面的 causal diagram，那么至少应当 adjust for $X$ 以消除 bias；更理想地，还应进一步 adjust for $X_Y$ 以降低 variance。
+
+
+ 
+ 
+ 
+\section{Homework Problems}
+
+
+\homeworksolutionref{16}
+\paragraph{More details for the formula of Z-bias}\label{hw::z-bias-formula}
+验证 \eqref{eq::zbias-result}。
+ 
+
+\paragraph{Cochran's formula or the omitted variable bias formula}
+\label{hw::cochran+ovb}
+
+
+
+Sir David Cox 将下面的结果称为 {\it Cochran's formula} \citep{cochran1938omission, cox2007generalization}，而 econometricians 称之为 {\it omitted variable bias formula} \citep{angrist2008mostly}。
+一个特殊情形已经出现在 \citet{fisher1925statistical} 中。
+它也是 \cref{appendix::fwl-theorem} 中 Frisch--Waugh--Lovell theorem 的对应版本。
+
+这个公式有两个版本。下面所有 vectors 都是 column vectors。
+
+\begin{enumerate}
+[(1)]
+\item
+(Population version) 假设 $(y_i, x_{1i}, x_{2i})_{i=1}^n$ 是 IID，其中 $y_i$ 是 scalar，$x_{i1}$ 的 dimension 为 $K$，$x_{i2}$ 的 dimension 为 $L$。
+
+我们有下面的 random variables 的 OLS decompositions：
+\begin{eqnarray}
+y_i &=& \beta_1 \tran x_{i1} + \beta_2  \tran x_{2i} + \varepsilon_i , \label{eq::long}\\
+y_i&=&\gamma  \tran x_{i1} + e_i, \label{eq::short}\\
+x_{i2} &=& \delta  \tran x_{i1} + v_i . \label{eq::inter}
+\end{eqnarray}
+Equation \eqref{eq::long} 称为 long regression，Equation \eqref{eq::short} 称为 short regression。在 Equation \eqref{eq::inter} 中，$\delta$ 是一个 matrix，因为这是把一个 vector 对另一个 vector 做 regression。可以把 \eqref{eq::inter} 理解为将 $x_{i2}$ 的每个 component 对 $x_{i1}$ 做 regression。
+
+证明 $\gamma = \beta_1 + \delta \beta_2.$
+
+
+\item
+(Sample version) 我们有一个 $n\times 1$ vector $Y$，一个 $n\times K$ matrix $X_1$，以及一个 $n\times L$ matrix $X_2$。这里不假设任何 randomness。下面所有结果都是纯粹的 linear algebra。
+
+可以得到下面的 OLS fits：
+\begin{eqnarray*}
+Y &=& X_1 \hat{\beta}_1 + X_2 \hat{\beta}_2+ \hat{\varepsilon},\\
+Y &=& X_1 \hat{\gamma} + \hat{e} ,\\
+X_2 &=& X_1 \hat{\delta} + \hat{v},
+\end{eqnarray*}
+其中 $\hat{\varepsilon},  \hat{e}, \hat{v}$ 是 residuals。
+同样，最后一个 OLS fit 表示把 $X_2$ 的每一列对 $X_1$ 做 OLS fit，因此 residual $\hat{v}$ 是一个 $n\times L$ matrix。
+
+证明 $\hat{\gamma} = \hat{\beta}_1 +  \hat{\delta} \hat{\beta}_2$。
+
+\end{enumerate}
+
+ 
+Remark: 乘积项 $\delta \beta_2$ 与 $\hat{\delta} \hat{\beta}_2$ 通常分别称为 population level 与 sample level 的 omitted-variable bias。
+ 
+ 
+ 

@@ -1,0 +1,443 @@
+\chapter{Neymanian Repeated Sampling Inference in Completely Randomized Experiments}\label{chapter::neyman-cr}
+ \chaptermark{Completely Randomized Experiment and Neymanian Inference}
+
+
+在奠基性的论文中，\citet{Neyman:1923} 不仅提出了 potential outcomes 的记号，还为 CRE 下 average causal effect 的推断给出了严格的数学结果。不同于 Fisher 在 sharp null hypothesis 下计算 $p$-value 的思路，\citet{Neyman:1923} 基于 point estimator 的 sampling distribution，提出了一个 unbiased point estimator 和一个 conservative confidence interval。本章介绍 \citet{Neyman:1923} 的基本结果；这些结果对于理解本书 \cref{part::rcts} 后续章节非常重要。
+
+
+
+\section{Finite population quantities}
+
+考虑一个含有 $n$ 个 units 的 CRE，其中 $n_1$ 个 units 接受 treatment，$n_0$ 个 units 接受 control。对 unit $i = 1, \ldots, n$，有 potential outcomes $Y_i(1)$ 和 $Y_i(0)$，以及 individual effect $\tau_i = Y_i(1) - Y_i(0).$ 这些 potential outcomes 有 finite population means
+$$
+\bar{Y}(1) = n^{-1} \sumn Y_i(1),\quad
+\bar{Y}(0) = n^{-1} \sumn Y_i(0),
+$$
+variances\footnote{这里分母取 $n-1$，可以让本章的主要定理形式更简洁。把分母改为 $n$ 会让公式更复杂，但不会从根本上改变结果。当 $n$ 很大时，两者差别很小。}
+$$
+S^2(1) = (n-1)^{-1} \sumn \{ Y_i(1) -\bar{Y}(1)  \}^2,\quad
+S^2(0) = (n-1)^{-1} \sumn \{ Y_i(0) -\bar{Y}(0)  \}^2 ,
+$$
+以及 covariance
+$$
+S(1,0) = (n-1)^{-1} \sumn \{ Y_i(1) -\bar{Y}(1)  \}\{ Y_i(0) -\bar{Y}(0)  \} .
+$$
+individual effects 的 mean 为
+$$
+\tau = n^{-1} \sumn \tau_i = \bar{Y}(1) - \bar{Y}(0) .
+$$
+variance 为
+$$
+S^2(\tau) = (n-1)^{-1} \sumn (\tau_i - \tau)^2.
+$$
+这些 variances 和 covariance 之间有如下关系。
+\begin{lemma}\label{lemma::variancecovariancetau}
+$2S(1,0) = S^2(1)+S^2(0) - S^2(\tau).$
+\end{lemma}
+
+\cref{lemma::variancecovariancetau} 是一个基本结果，后面的讨论会反复用到它。\cref{lemma::variancecovariancetau} 的证明只需要初等代数，留作 Problem \ref{hw::proof-covariance-basic}。
+
+这些固定量都是 Science Table $\{ Y_i(1), Y_i(0)  \}_{i=1}^n$ 的函数。我们的目标是基于 CRE 产生的数据 $ (Z_i, Y_i)_{i=1}^n$ 来估计 average causal effect $\tau$。
+
+
+\section{\citet{Neyman:1923}'s theorem}
+
+
+基于 observed outcomes，可以计算 sample means
+$$
+\hat{\bar{Y}}(1) = n_1^{-1} \sumn Z_i Y_i,\quad
+\hat{\bar{Y}}(0) = n_0^{-1} \sumn (1-Z_i) Y_i,
+$$
+以及 sample variances
+$$
+\hat{S}^2(1) = (n_1 - 1)^{-1} \sumn Z_i  \{  Y_i - \hat{\bar{Y}}(1) \}^2,\quad
+\hat{S}^2(0) = (n_0 - 1)^{-1} \sumn (1-Z_i)  \{  Y_i - \hat{\bar{Y}}(0) \}^2 .
+$$
+但是 $S(1,0)$ 和 $S^2(\tau)$ 没有 sample versions，因为对每个 unit $i$，potential outcomes $Y_i(1)$ 与 $Y_i(0)$ 永远不会被同时观测到。\citet{Neyman:1923} 证明了下面的 theorem。
+
+
+
+
+\begin{theorem}
+\label{thm::neyman1923}
+Under a CRE,
+\begin{enumerate}
+\item
+the difference-in-means estimator $\hat{\tau} =\hat{\bar{Y}}(1) -  \hat{\bar{Y}}(0)$ is unbiased for $\tau$:
+$$
+E(\hat{\tau}) =\tau ;
+$$
+\item
+$\hat{\tau} $ has variance
+\begin{eqnarray}
+\var(\hat{\tau})  &=&  \frac{S^2(1)}{n_1} + \frac{S^2(0)}{n_0} - \frac{S^2(\tau)}{n} \label{eq::neyman23var} \\
+&=& \frac{n_0}{n_1 n} S^2(1) + \frac{n_1}{n_0 n} S^2(0) + \frac{2}{n} S(1,0) ;  \label{eq::neyman23var-equivalent}
+\end{eqnarray}
+\item\label{neyman-3}
+the variance estimator
+$$
+\hat{V} = \frac{\hat{S}^2(1)}{n_1} + \frac{\hat{S}^2(0)}{n_0}
+$$
+is conservative for estimating $\var(\hat{\tau})$ in the sense that
+$$
+E(\hat{V} ) - \var(\hat{\tau})  = \frac{S^2(\tau)}{n}  \geq 0
+$$
+with equality holding if and only if $\tau_i = \tau$ for all units.
+\end{enumerate}
+\end{theorem}
+
+我会在 \cref{sec::prove-neyman-1923} 给出 \cref{thm::neyman1923} 的证明。在证明 \cref{thm::neyman1923} 之前，先要澄清其中 $E(\cdot)$ 和 $\var(\cdot)$ 的含义。potential outcomes 全部都是固定数，只有 treatment indicators $Z_i$ 是随机的。因此，expectations 和 variances 都是相对于 $Z_i$ 的随机性而言的；这些 $Z_i$ 是 $n_1$ 个 1 与 $n_0$ 个 0 的 random permutations。\cref{fig::neyman1923} 展示了 $\hat\tau$ 的随机性：它是由 $M=\binom{n}{n_1}$ 种可能 treatment allocations 诱导出的、定义在 $\{ \hat\tau^1 , \ldots, \hat\tau^M\}$ 上的 discrete uniform distribution。
+比较 \cref{fig::neyman1923} 与 \cref{fig::frt}，可以看到 FRT 与 \citet{Neyman:1923}'s theorem 的几个关键差别：
+\begin{enumerate}
+\item
+FRT 可用于任意 test statistic，而 \citet{Neyman:1923}'s theorem 只讨论 difference in means。虽然我们也可以推导其他 estimators 的类似性质，但对一般 estimators 来说，这种数学推导往往相当困难。
+
+\item
+在 \cref{fig::frt} 中，observed outcome vector $\boldsymbol{Y}$ 是固定的；但在 \cref{fig::neyman1923} 中，observed outcome vector $\boldsymbol{Y}(\boldsymbol{z}^m)$ 会随着 $\boldsymbol{z}^m$ 改变而改变。
+
+\item
+\cref{fig::frt} 中的 $T(\boldsymbol{z}^m,\boldsymbol{Y}) $ 都可以基于 observed data 计算；但 \cref{fig::neyman1923} 中的 $\hat\tau^m$ 是 hypothetical values，因为并非所有 potential outcomes 都已知。
+\end{enumerate}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width =  \textwidth]{figures/neyman1923_fig.pdf}
+\caption{Illustration of \citet{Neyman:1923}'s theorem, where $\boldsymbol{Y}(\boldsymbol{z}^m)$ is the observed outcome vector under the treatment vector $\boldsymbol{z}^m$.}\label{fig::neyman1923}
+\end{figure}
+
+
+
+
+point estimator $\hat\tau$ 本身很标准，但在 CRE 的 potential outcomes framework 下，它的 variance 并不平凡。variance formula \eqref{eq::neyman23var} 不同于经典 difference in means 的 variance formula\footnote{在经典 two-sample problem 中，treatment 下的 outcomes 是从均值为 $\mu_1$、方差为 $\sigma_1^2$ 的分布中 IID 抽取的，control 下的 outcomes 是从均值为 $\mu_0$、方差为 $\sigma_0^2$ 的分布中 IID 抽取的。在这个假设下，
+$$
+\var(\hat{\tau} ) = \frac{\sigma_1^2}{n_1} +  \frac{\sigma_0^2}{n_0}.
+$$
+这里 $\var(\cdot)$ 是相对于 outcomes 的随机性而言的。这个 variance formula 不包含依赖 individual causal effects 的 variance 的第三项。
+}，因为它不仅依赖 potential outcomes 的 finite population variances，还依赖 individual effects 的 finite population variance，或者等价地，依赖 potential outcomes 的 finite population covariance。遗憾的是，由于 $Y_i(1)$ 与 $Y_i(0)$ 永远不会被同时观测到，$S^2(\tau)$ 和 $S(1,0)$ 无法从数据中识别。
+
+
+
+
+\eqref{eq::neyman23var} 有一点令人困惑：individual effects 越 heterogeneous，$\hat{\tau}$ 的 variability 反而越小。这里的直觉是什么？我基于等价形式 \eqref{eq::neyman23var-equivalent} 给出解释。比较 potential outcomes 正相关和负相关两种情况。
+尽管 treatment group 是从 $n$ 个 units 的 finite population 中抽出的 simple random sample，但一次 realized experiment 中有可能观测到相对较大的 treatment potential outcomes。假设这种情况发生。
+\begin{enumerate}
+\item
+如果 $S(1,0) > 0$，那么这些 treated units 也有相对较大的 control potential outcomes。因此，control 下被观测到的 outcomes 会相对较小，从而导致较大的 $\hat\tau$。
+\item
+如果 $S(1,0) < 0$，那么这些 treated units 有相对较小的 control potential outcomes。因此，control 下被观测到的 outcomes 会相对较大，从而导致较小的 $\hat\tau$。
+\end{enumerate}
+如果一次 realized experiment 中观测到的是相对较小的 treatment potential outcomes，则也会发生相反的情况。总体而言，虽然 $\hat\tau$ 的 unbiasedness 不依赖 potential outcomes 之间的 correlation，但在 $S(1,0) > 0$ 时，比在 $S(1,0) < 0$ 时更容易观测到极端的 $\hat\tau$。所以当 potential outcomes 正相关时，$\hat{\tau}$ 的 variance 更大。
+
+
+
+
+
+
+\citet[][Theorem 5 and Proposition 3]{li2017general} 进一步基于 finite population CLT 证明了 $\hat{\tau}$ 的如下 asymptotic Normality。
+\begin{theorem}
+\label{thm::clt-difference-in-means}
+Let $n\rightarrow \infty$ and $n_1 \rightarrow \infty$.
+If $n_1/n$ has a limiting value in $(0,1)$,  $\{S^2(1), S^2(0), S(1,0)\}$ have limiting values, and
+$$
+\max_{1\leq i \leq n}\{ Y_i(1) - \bar{Y}(1) \}^2/n \rightarrow 0, \quad
+\max_{1\leq i \leq n}\{ Y_i(0) - \bar{Y}(0) \}^2/n \rightarrow 0,
+$$
+then
+$$
+\frac{   \hat{\tau} - \tau }{  \sqrt{ \var(\hat{\tau}) } } \rightarrow \N01
+$$
+in distribution, and
+$$
+\hat{S}^2(1) \rightarrow S^2(1),\quad
+\hat{S}^2(0) \rightarrow S^2(0)
+$$
+in probability.
+\end{theorem}
+
+
+\cref{thm::clt-difference-in-means} 的证明技术性较强，超出本书范围。它保证了：在 sample size 较大且满足一些 regularity conditions 时，$\hat{\tau} $ 的 sampling distribution 可以用 Normal distribution 近似。此外，它还保证 outcomes 的 sample variances 对 population variances 是 consistent 的，从而进一步保证 \cite{Neyman:1923}'s variance estimator 的 probability limit 大于 $\hat{\tau} $ 的真实 variance。这就给出了 $\tau$ 的 conservative large-sample confidence interval：
+$$
+\hat{\tau} \pm z_{1-\alpha/2} \sqrt{  \hat{V}  },
+$$
+其中 $z_{1-\alpha/2}$ 是 standard Normal random variable 的 $1-\alpha/2$ upper quantile。渐近地看，它与 standard two-sample problem 的 confidence interval 相同（见 Chapter \ref{sec::bf-problem}）。当 sample size 足够大时，这个 confidence interval 覆盖 $\tau$ 的概率至少为 $1-\alpha$。由 duality，这个 confidence interval 也蕴含了对
+$$
+\HN: \tau = 0,
+$$
+的 test；这个假设称为 weak null hypothesis。
+
+
+
+由于 missing one potential outcome 这个 fundamental problem，我们最多只能得到 conservative variance estimator。在 statistics 中，confidence interval 的定义允许 over coverage，因此也允许 variance estimation 的 conservativeness（见 Chapter \ref{sec::statistical-inference}）。如果低估 treatment effect 在实际中不是严重问题，那么 conservativeness 并不是大问题。但如果 outcomes 衡量的是 treatment 的副作用，它有时会变得很麻烦。在 medical experiments 中，低估新药副作用可能会对病人健康造成严重后果。
+
+
+
+\section{Proofs}\label{sec::prove-neyman-1923}
+
+本节证明 \cref{thm::neyman1923}。
+
+
+首先，$\hat{\tau}$ 的 unbiasedness 来自如下表示：
+\begin{eqnarray*}
+\hat{\tau} &=& n_1^{-1} \sumn Z_i Y_i - n_0^{-1} \sumn (1-Z_i) Y_i \\
+&=& n_1^{-1} \sumn Z_i Y_i(1) - n_0^{-1} \sumn (1-Z_i) Y_i(0)
+\end{eqnarray*}
+以及 expectation 的 linearity：
+\begin{eqnarray*}
+E( \hat{\tau}  ) &=& E\left\{    n_1^{-1} \sumn Z_i Y_i(1) - n_0^{-1} \sumn (1-Z_i) Y_i(0)   \right\} \\
+&=& n_1^{-1} \sumn E(Z_i) Y_i(1) - n_0^{-1} \sumn E(1-Z_i) Y_i(0) \\
+&=& n_1^{-1} \sumn \frac{n_1}{n} Y_i(1) - n_0^{-1} \sumn \frac{n_0}{n} Y_i(0) \\
+&=&  n^{-1} \sumn Y_i(1) - n^{-1} \sumn Y_i(0) \\
+&=& \tau .
+\end{eqnarray*}
+
+
+其次，可以把 $\hat{\tau}$ 进一步写为
+\begin{eqnarray*}
+\hat{\tau} &=&  \sumn Z_i  \left\{    \frac{  Y_i(1) }{ n_1 } + \frac{  Y_i(0) }{ n_0 }   \right\}
+- n_0^{-1} \sumn Y_i(0).
+\end{eqnarray*}
+由 simple random sampling 的 \cref{lemma::samplemean} 可得 $\hat{\tau}$ 的 variance：
+\begin{eqnarray*}
+\var(\hat{\tau}) &=&  \frac{  n_1 n_0  }{  n(n-1)  }  \sumn
+\left\{    \frac{  Y_i(1) }{ n_1 } + \frac{  Y_i(0) }{ n_0 }  -  \frac{  \bar{Y}(1) }{ n_1 } - \frac{  \bar{Y}(0) }{ n_0 }    \right\}^2 \\
+&=&  \frac{  n_1 n_0  }{  n(n-1)  }  \left[
+\frac{1}{n_1^{2}}   \sumn  \{  Y_i(1) -  \bar{Y}(1)\}^2 + \frac{1}{n_0^{2}}  \sumn  \{  Y_i(0) -  \bar{Y}(0)\}^2 \right. \\
+&& \left. \qquad \qquad
++ \frac{2}{n_1 n_0}  \sumn  \{  Y_i(1) -  \bar{Y}(1)\}  \{  Y_i(0) -  \bar{Y}(0)\}
+\right]\\
+&=& \frac{n_0}{n_1n} S^2(1) + \frac{n_1}{n_0n}S^2(0) + \frac{2}{n} S(1,0).
+\end{eqnarray*}
+由 \cref{lemma::variancecovariancetau}，也可以把 variance 写成
+\begin{eqnarray*}
+\var(\hat{\tau})
+&=& \frac{n_0}{n_1n} S^2(1) + \frac{n_1}{n_0n}S^2(0) + \frac{1}{n} \{ S^2(1)+S^2(0) - S^2(\tau) \}\\
+&=&  \frac{S^2(1)}{n_1} + \frac{S^2(0)}{n_0} - \frac{S^2(\tau)}{n}.
+\end{eqnarray*}
+
+第三，因为 treatment group 是从 $n$ 个 units 中抽出的、大小为 $n_1$ 的 simple random sample，\cref{lemma::variance-unbiased} 保证 $Y_i(1)$ 的 sample variance 对其 population variance 是 unbiased 的：
+$$
+E\{  \hat{S}^2(1) \} = S^2(1).
+$$
+类似地，$E\{  \hat{S}^2(0) \} = S^2(0).$ 因此，$\hat{V} $ 对 \eqref{eq::neyman23var} 的前两项是 unbiased 的。
+
+
+
+
+ \section{Regression analysis of the CRE}
+
+
+
+实践中，人们经常用 regression-based inference 来分析 average causal effect $\tau$。一种标准做法是对 outcomes 关于 treatment indicators 和 intercept 做 ordinary least squares (OLS)：
+$$
+(\hat\alpha, \hat\beta) = \arg\min_{(a,b)} \sum_{i=1}^n (Y_i - a - bZ_i)^2,
+$$
+并把 treatment 的 coefficient $ \hat\beta$ 作为 average causal effect 的 estimator。可以证明 coefficient $ \hat\beta$ 等于 difference in means：
+\begin{equation}
+\label{eq::ols-difference-in-means}
+\hat\beta = \hat\tau .
+\end{equation}
+
+不过，OLS 通常给出的 variance estimator（见 Chapter \ref{appendix::basic-linear-regression} 中的 \eqref{eq::v-hat-ols}），例如 \ri{R} 的 \ri{lm} 函数输出，等于
+\begin{eqnarray}
+\label{eq::ols-se}
+\hat V_\textsc{ols} &=& \frac{n\left(n_1 -1\right)}{( n-2 ) n_1  n_0 } \hat S^2(1) +\frac{n\left(n_0 -1\right)}{( n-2 ) n_1  n_0 } \hat S^2(0)\\
+\nonumber &\approx& \frac{\hat S^2(1)}{n_0 }+\frac{ \hat S^2(0) }{n_1 },
+\end{eqnarray}
+其中 approximation 在 $ n_1 $ 和 $ n_0 $ 较大时成立。即使 $ n_1 $ 和 $ n_0 $ 较大，它也不同于 $\hat{V}$。
+
+
+幸运的是，Eicker--Huber--White (EHW) robust variance estimator（见 Chapter \ref{appendix::basic-linear-regression} 中的 \eqref{eq::v-hat-ehw}）接近 $\hat{V}$：
+ \begin{eqnarray}
+\label{eq::ols-ehw}
+\hat V_\textsc{ehw} &=& \frac{\hat S^2(1)}{n_1 } \frac{n_1 -1}{n_1 }+\frac{\hat S^2(0)}{n_0 } \frac{n_0 -1}{n_0 } \\
+\nonumber &\approx& \frac{ \hat S^2(1)  }{n_1 }+\frac{ \hat S^2(0) }{n_0 }
+\end{eqnarray}
+其中 approximation 在 $ n_1 $ 和 $ n_0 $ 较大时成立。它几乎与 $\hat{V}$ 相同。进一步说，EHW robust variance estimator 的所谓 HC2 variant 与 $\hat{V}$ 完全相同。\ri{car} package 中的 \ri{hccm} 函数会返回 EHW robust variance estimator 及其 HC2 variant。
+
+Problem \ref{hw::neyman-ols-nox} 给出了 \eqref{eq::ols-difference-in-means}--\eqref{eq::ols-ehw} 的更多技术细节。
+
+
+
+
+
+
+
+
+
+\subsection{Application}
+\label{sec::example-neyman-formula}
+
+
+我在 Chapter \ref{sec::frt-lalonde-experiment} 中分析过 \ri{lalonde} 数据，用它说明 FRT 的思想。现在我用同一组数据来说明本章理论。
+\begin{lstlisting}
+> library(Matching)
+> data(lalonde)
+> z = lalonde$treat
+> y = lalonde$re78
+\end{lstlisting}
+
+根据 \cref{thm::neyman1923} 中的公式，可以很容易计算 point estimator 和 standard error：
+\begin{lstlisting}
+> n1= sum(z)
+> n0= length(z) - n1
+> tauhat = mean(y[z==1]) - mean(y[z==0])
+> vhat   = var(y[z==1])/n1 + var(y[z==0])/n0
+> sehat  = sqrt(vhat)
+> tauhat
+[1] 1794.343
+> sehat
+[1] 670.9967
+\end{lstlisting}
+
+实践中，人们常用 OLS 来估计 average causal effect；OLS 也会给出 standard error。
+\begin{lstlisting}
+> olsfit = lm(y ~ z)
+> summary(olsfit)$coef[2, 1: 2]
+  Estimate Std. Error
+ 1794.3431   632.8536
+ \end{lstlisting}
+不过，上面的 standard error 相比基于 \cref{thm::neyman1923} 的 standard error 似乎太小。使用 EHW robust standard error 可以解决这个问题。
+\begin{lstlisting}
+> library(car)
+> sqrt(hccm(olsfit)[2, 2])
+[1] 672.6823
+> sqrt(hccm(olsfit, type = "hc0")[2, 2])
+[1] 669.3155
+> sqrt(hccm(olsfit, type = "hc2")[2, 2])
+[1] 670.9967
+ \end{lstlisting}
+
+
+
+
+
+\section{Homework Problems}
+
+\homeworksolutionref{04}
+\paragraph{Proof of Lemma \ref{lemma::variancecovariancetau}}\label{hw::proof-covariance-basic}
+
+
+Prove Lemma \ref{lemma::variancecovariancetau}.
+
+
+\paragraph{Alternative proof of Theorem \ref{thm::neyman1923}}\label{hw::neyman-alternative-proof}
+
+Under a CRE, calculate
+$$
+\var\{  \hat{\bar{Y}}(1)  \} ,\quad
+\var\{  \hat{\bar{Y}}(0)  \} ,\quad
+\cov\{  \hat{\bar{Y}}(1) ,  \hat{\bar{Y}}(0)  \}
+$$
+and use these formulas to calculate $\var(\hat{\tau} )$.
+
+Remark: Use the results in Chapter \ref{chapter::SRS-appendix}.
+
+
+
+
+
+\paragraph{Neymanian inference and OLS}
+\label{hw::neyman-ols-nox}
+
+
+Prove \eqref{eq::ols-difference-in-means}--\eqref{eq::ols-ehw}. Moreover, prove that the HC2 variant of the EHW robust variance estimator recovers $\hat{V}$ exactly.
+
+Remark: Chapter \ref{appendix::basic-linear-regression} reviews some important technical results about OLS.
+
+
+
+
+
+\paragraph{Treatment effect heterogeneity}\label{hw::treatment-effect-heterogeneity-neyman}
+
+
+Show that $S^2(\tau) = 0$ implies that $S^2(1) = S^2(0)$. Given a counterexample with $S^2(1) = S^2(0)$ but $S^2(\tau) \neq  0$.
+
+
+Show that $S^2(1) < S^2(0)$ implies that
+$$
+S(Y(0),\tau)  = (n-1)^{-1} \sumn \{ Y_i(0)  - \bar{Y}(0) \} (\tau_i - \tau) <0.
+$$
+Give a counterexample with $S^2(1) > S^2(0)$ but $S(Y(0),\tau)  < 0 .$
+
+
+
+Remark: The first result states that no treatment effect heterogeneity implies equal variances in the treated and control potential outcomes. But the converse is not true. The second result states that if the treated potential outcome has a smaller variance than the control potential outcome, then the individual treatment effect is negatively correlated with the control potential outcome. But the converse is not true. \citet[][page 293]{gerber2012field} and \citet[][Appendix B.3]{ding2019decomposing} gave related discussions.
+
+
+
+\paragraph{A better bound of the variance formula}
+\label{hw::better-bound-neyman}
+
+
+\cite{Neyman:1923}'s conservative variance estimator essentially uses the following upper bound on the true variance:
+$$
+\var(\widehat{\tau}) = \frac{S^2(1)}{n_1} + \frac{S^2(0)}{n_0} - \frac{S^2(\tau)}{n} \leq \frac{S^2(1)}{n_1} + \frac{S^2(0)}{n_0},
+$$
+which uses the trivial fact that $S^2(\tau) \geq 0$.
+Show the following upper bound
+\begin{eqnarray}\label{hw::cs-bound-neyman}
+\var(\widehat{\tau})  \leq   \frac{1}{n} \left\{   \sqrt{  \frac{n_0}{n_1}  } S(1) +  \sqrt{  \frac{n_1}{n_0}  } S(0)   \right\}^2.
+\end{eqnarray}
+When does the equality in \eqref{hw::cs-bound-neyman} hold?
+
+The upper bound \eqref{hw::cs-bound-neyman} motivates another conservative variance estimator
+$$
+\hat{V}' =  \frac{1}{n} \left\{   \sqrt{  \frac{n_0}{n_1}  } \hat S(1) +  \sqrt{  \frac{n_1}{n_0}  } \hat S(0)   \right\}^2.
+$$
+Repeat the simulation above with an additional comparison with the variance estimator $\hat{V}' $ and the associated confidence interval.
+
+
+
+Remark:
+You may find Section \ref{sec::cauchy-schwarz-inequality} useful for the proof.
+The upper bound \eqref{hw::cs-bound-neyman} can be further improved.
+\citet{aronow2014sharp} derived the sharp upper bound for $\var(\widehat{\tau}) $ using the Frechet--Hoeffding inequality. Those improvements are rarely used in practice mainly for two reasons. First, they are more complicated than $\hat{V}$ which can be conveniently implemented by OLS. Second, the confidence interval based on  $\hat{V}$ also works under other formulations, for example, under a true linear model of the outcome on the treatment, but those improvements do not. Although they are theoretically interesting, those improvements have little practical impact.
+
+
+
+\paragraph{Vector version of \citet{Neyman:1923}} \label{hw::vector-neyman1923}
+
+The classic result of \citet{Neyman:1923} is about a scalar outcome. It is common to have multiple outcomes in practice. Therefore, we now extend the potential outcomes to vectors. We consider the average causal effect on a vector outcome $\boldsymbol{V}  \in \mathbb{R}^K$:
+$$
+\tau_{\boldsymbol{V}} = \frac{1}{n}  \sumn \left\{  \boldsymbol{V}_i(1) - \boldsymbol{V}_i(0) \right\},
+$$
+where $\boldsymbol{V}_i(1)$ and $\boldsymbol{V}_i(0)$ are the potential outcomes of $\boldsymbol{V}$ for unit $i$.
+The Neyman-type estimator for $\tau_{\boldsymbol{V}}$ is the difference between the sample mean vectors of the observed outcomes under treatment and control:
+$$
+\widehat{ \tau}_{\boldsymbol{V}} = \bar{\boldsymbol{V}}_1  - \bar{\boldsymbol{V}}_0
+= \frac{1}{n_1}   \sumn Z_i  \boldsymbol{V}_i   - \frac{1}{n_0}  \sumn (1-Z_i) \boldsymbol{V}_i .
+$$
+
+
+Consider a CRE. Show that $\widehat{ \tau}_{\boldsymbol{V}} $ is unbiased for $\tau_{\boldsymbol{V}} $. Find the covariance matrix of $\widehat{ \tau}_{\boldsymbol{V}} $. Find a (possibly conservative) estimator for the variance.
+
+
+\paragraph{Inference in the BRE}\label{hw::bre-inference}
+
+
+In this book, I use the following definition for the BRE.
+
+\begin{definition}
+[BRE]\label{def::BRE}
+The treatment indicators $Z_i$'s are IID Bernoulli$(\pi)$ with $n_1 = \sumn Z_i$ receiving the treatment and $n_0 = \sumn (1-Z_i)$ receiving the control, respectively.
+\end{definition}
+
+
+
+First, we can use the FRT to analyze the BRE. How do we test $\HF$ in the BRE? Can we use the same FRT procedure as in the CRE if the actual experiment is the BRE? If yes, give a justification; if no, explain why.
+
+Second, we can obtain point estimators for $\tau$ and find the associated variance estimators, as \citet{Neyman:1923} did for the CRE.
+\begin{enumerate}
+\item
+Is $\hat{\tau}$ unbiased for $\tau$? Is it consistent?
+\item
+Find an unbiased estimator for $\tau$.
+\item
+Compare the variance of the above unbiased estimator and the asymptotic variance of $\hat{\tau}$.
+\end{enumerate}
+
+Remark:
+Under the BRE, the estimator $\hat{\tau}$ does not have finite variance but the variance of its asymptotic distribution is finite.
+
+

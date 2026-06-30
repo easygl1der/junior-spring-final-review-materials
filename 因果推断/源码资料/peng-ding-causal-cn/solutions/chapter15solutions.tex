@@ -1,0 +1,450 @@
+\chapter{Solutions to Chapter 15: Matching in Observational Studies}
+\label{sol:chapter15}
+
+\begin{exercisesolution}{Linear expansions of the bias-corrected estimators}{matching residual 的计数恒等式}
+本题证明 \cref{prop::matching-expansion-ate} 和 \cref{prop::linear-expansion-att}。核心不是概率论，而是一个简单的 bookkeeping：一个 unit 不仅贡献自己的 observed residual；如果它被其他 units 用作 matched unit，还会额外贡献 $K_i/M$ 份 residual。
+
+先证明 ATE 的 expansion。令
+\[
+\hat R_i=Y_i-\hat\mu_{Z_i}(X_i).
+\]
+对 treated unit $i$，有
+\begin{align*}
+Y_i-M^{-1}\sum_{k\in J_i}Y_k
+&=\hat\mu_1(X_i)-\hat\mu_0(X_i)
+  +\{Y_i-\hat\mu_1(X_i)\}  \\
+&\quad
+  -M^{-1}\sum_{k\in J_i}\{Y_k-\hat\mu_0(X_k)\}
+  +M^{-1}\sum_{k\in J_i}\{\hat\mu_0(X_i)-\hat\mu_0(X_k)\}.
+\end{align*}
+最后一项正是 treated unit 的 bias term $\hat B_i$。对 control unit $i$，同理
+\begin{align*}
+M^{-1}\sum_{k\in J_i}Y_k-Y_i
+&=\hat\mu_1(X_i)-\hat\mu_0(X_i)
+  -\{Y_i-\hat\mu_0(X_i)\}  \\
+&\quad
+  +M^{-1}\sum_{k\in J_i}\{Y_k-\hat\mu_1(X_k)\}
+  -M^{-1}\sum_{k\in J_i}\{\hat\mu_1(X_i)-\hat\mu_1(X_k)\},
+\end{align*}
+最后一项也正是 control unit 的 bias term $\hat B_i$。把两种情形合并并对 $i$ 求和，得到
+\begin{align*}
+\hat\tau^{\textup{m}}
+&=n^{-1}\sumn\{\hat\mu_1(X_i)-\hat\mu_0(X_i)\}
+  +\hat B  \\
+&\quad
+  +n^{-1}\sumn (2Z_i-1)\hat R_i
+  +n^{-1}\sumn (2Z_i-1){K_i\over M}\hat R_i.
+\end{align*}
+这里最后一行的第二项来自 re-indexing：若 unit $i$ 被别人匹配了 $K_i$ 次，则它的 residual 在 matched counterfactual averages 中出现 $K_i/M$ 次；treated residual 带正号，control residual 带负号。因此
+\[
+\hat\tau^{\textup{m}}-\hat B
+=n^{-1}\sumn\left[
+\hat\mu_1(X_i)-\hat\mu_0(X_i)
+ +(2Z_i-1)\left(1+{K_i\over M}\right)
+ \{Y_i-\hat\mu_{Z_i}(X_i)\}
+\right].
+\]
+这就是 \cref{eq::linearATE} 中的
+\[
+\hat\tau^{\textup{mbc}}=n^{-1}\sumn\hat\psi_i.
+\]
+
+再证明 ATT 的 expansion。ATT 只为 treated units 填补 control potential outcome，所以
+\begin{align*}
+\hat\tau_\textsc{T}^{\textup{m}}
+&=n_1^{-1}\sumn Z_i
+\left\{
+Y_i-M^{-1}\sum_{k\in J_i}Y_k
+\right\}  \\
+&=n_1^{-1}\sumn Z_i
+\left[
+Y_i-\hat\mu_0(X_i)
+-M^{-1}\sum_{k\in J_i}\{Y_k-\hat\mu_0(X_k)\}
+\right]
+\hat B_\textsc{T}.
+\end{align*}
+减去 $\hat B_\textsc{T}$ 后，再把 matched control residuals 按被匹配次数重排，得到
+\[
+\hat\tau_\textsc{T}^{\textup{mbc}}
+=n_1^{-1}\sumn
+\left[
+Z_i\{Y_i-\hat\mu_0(X_i)\}
+-(1-Z_i){K_i\over M}\{Y_i-\hat\mu_0(X_i)\}
+\right],
+\]
+这正是 \cref{eq::linearATT} 中的
+\[
+\hat\tau_\textsc{T}^{\textup{mbc}}
+=n_1^{-1}\sumn \hat\psi_{\textsc{T},i}.
+\]
+
+\paragraph{Remark.}
+这两个 expansions 解释了 matching variance estimator 的形式。matching with replacement 使同一个 unit 可能反复充当别人的 counterfactual；$K_i$ 正是把这种重复使用转化为 residual 权重的量。因此 matching 的不确定性不能只看原始 treated-control 差值，还必须看哪些 units 在匹配图中被重复使用。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Doubly robust form of the bias-corrected matching estimator for $\tau$}{matching weights 作为非参数 propensity-score weights}
+本题证明 \cref{prop::mbc-dr}。由上一题已经得到
+\[
+\hat\tau^{\textup{mbc}}
+=n^{-1}\sumn\left[
+\hat\mu_1(X_i)-\hat\mu_0(X_i)
+ +(2Z_i-1)\left(1+{K_i\over M}\right)
+ \{Y_i-\hat\mu_{Z_i}(X_i)\}
+\right].
+\]
+另一方面，正文定义的 residual 为
+\[
+\hat R_i=
+\begin{cases}
+Y_i-\hat\mu_1(X_i), & Z_i=1,\\
+Y_i-\hat\mu_0(X_i), & Z_i=0.
+\end{cases}
+\]
+因此
+\[
+(2Z_i-1)\{Y_i-\hat\mu_{Z_i}(X_i)\}
+=Z_i\hat R_i-(1-Z_i)\hat R_i.
+\]
+把这个恒等式代回 expansion，得到
+\begin{align*}
+\hat\tau^{\textup{mbc}}
+&=n^{-1}\sumn\{\hat\mu_1(X_i)-\hat\mu_0(X_i)\} \\
+&\quad
+ +n^{-1}\sumn
+\left[
+\left(1+{K_i\over M}\right)Z_i\hat R_i
+-\left(1+{K_i\over M}\right)(1-Z_i)\hat R_i
+\right].
+\end{align*}
+第一行就是 outcome regression estimator
+\[
+\hat\tau^{\textup{reg}}
+=n^{-1}\sumn\{\hat\mu_1(X_i)-\hat\mu_0(X_i)\}.
+\]
+于是
+\[
+\hat{\tau}^{\textup{mbc}}
+=\hat{\tau}^{\textup{reg}}
++n^{-1}\sumn
+\left\{
+\left(1+{K_i\over M}\right)Z_i\hat R_i
+-\left(1+{K_i\over M}\right)(1-Z_i)\hat R_i
+\right\},
+\]
+即 \cref{prop::mbc-dr}。
+
+\paragraph{Remark.}
+这个公式把 matching 和 doubly robust estimator 放在同一张图里。DR estimator 用 $1/\hat e(X_i)$ 和 $1/\{1-\hat e(X_i)\}$ 加权 residual；bias-corrected matching estimator 用 $1+K_i/M$ 加权 residual。直觉上，一个 treated unit 若处在 propensity score 很小的区域，就会被许多 control units 选为近邻，从而 $K_i$ 大；matching 通过这种局部近邻计数来近似 inverse propensity weighting。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Doubly robust form of the bias-corrected matching estimator for $\tau_\textsc{T}$}{ATT 中 $K_i/M$ 作为 odds weight}
+本题证明 \cref{prop::mbc-dr-att}。由 \cref{prop::linear-expansion-att}，
+\[
+\hat\tau_\textsc{T}^{\textup{mbc}}
+=n_1^{-1}\sumn
+\left[
+Z_i\{Y_i-\hat\mu_0(X_i)\}
+-(1-Z_i){K_i\over M}\{Y_i-\hat\mu_0(X_i)\}
+\right].
+\]
+正文中 ATT 的 outcome regression estimator 为
+\[
+\hat\tau_{\textsc{T}}^{\textup{reg}}
+=n_1^{-1}\sumn Z_i\{Y_i-\hat\mu_0(X_i)\}.
+\]
+同时，对 control units 有
+\[
+\hat R_i=Y_i-\hat\mu_0(X_i),\qquad Z_i=0.
+\]
+因此上一式可直接写为
+\[
+\hat\tau_\textsc{T}^{\textup{mbc}}
+=\hat\tau_{\textsc{T}}^{\textup{reg}}
+-n_1^{-1}\sumn {K_i\over M}(1-Z_i)\hat R_i,
+\]
+这就是 \cref{prop::mbc-dr-att}。
+
+\paragraph{Remark.}
+ATT 的 DR form 只需要修正 control residual，因为 treated units 的 $Y_i$ 已经直接来自目标人群。对应地，matching 只需要用 $K_i/M$ 衡量一个 control unit 对 treated population 的代表性。这个量对应于 ATT weighting 中的 odds $e(X_i)/\{1-e(X_i)\}$，而不是 ATE weighting 中的 inverse propensity weights。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Revisit Example \cref{eg::chan-bmi-ATE}}{\ri{nhanes_bmi.csv} 的 matching 分析框架}
+本题要求用 matching estimator 重新分析 \cref{eg::chan-bmi-ATE} 中的 NHANES BMI 数据，并与先前章节的结果比较。目标 estimand 与 \cref{sec::ATE-application} 相同，都是参加 school meal program 对 BMI 的 average causal effect。项目 worktree 中没有找到 \ri{nhanes_bmi.csv}，因此这里不编造 matching 数值；下面给出可复现代码和应报告的比较结构。
+
+先回顾已有结果。基于 propensity score stratification，\cref{sec::application-pscore-stratification} 给出的 point estimates 大致在
+\[
+-0.12 \text{ 到 } -0.27
+\]
+之间，standard errors 约为 $0.27$ 到 $0.28$。基于 IPW，\cref{sec::ATE-application} 报告未截断时 HT estimator 为 $-1.516$，Hajek estimator 为 $-0.156$；outcome regression 和 doubly robust estimators 分别约为 $-0.017$ 和 $-0.019$。这说明该数据中 HT 对极端 propensity-score weights 很敏感，而 regression、Hajek 和 DR routes 更接近零。
+
+下面的代码用 \ri{Matching} package 做 $1$-$M$ matching，并检查匹配前后的 covariate balance。若把 \ri{nhanes_bmi.csv} 放在运行目录，它会输出不同 $M$ 和是否 bias adjustment 下的 matching estimates、Abadie--Imbens standard errors，以及每个 covariate 的匹配前后 standardized mean differences。
+
+\begin{lstlisting}
+library(Matching)
+library(sandwich)
+
+smd_one <- function(x, z) {
+  x <- as.matrix(x)
+  out <- apply(x, 2, function(v) {
+    m1 <- mean(v[z == 1])
+    m0 <- mean(v[z == 0])
+    s1 <- var(v[z == 1])
+    s0 <- var(v[z == 0])
+    (m1 - m0) / sqrt((s1 + s0) / 2)
+  })
+  out
+}
+
+matched_smd <- function(match.obj, x) {
+  xt <- x[match.obj$index.treated, , drop = FALSE]
+  xc <- x[match.obj$index.control, , drop = FALSE]
+  apply(xt - xc, 2, function(v) mean(v) / sd(v))
+}
+
+one_match <- function(y, z, x, M = 1, bias.adjust = TRUE) {
+  fit <- Match(Y = y, Tr = z, X = x, M = M,
+               BiasAdjust = bias.adjust, ties = TRUE)
+  summ <- summary(fit)
+  c(est = fit$est,
+    se = fit$se.standard,
+    ai.se = fit$se,
+    n.matched = length(fit$index.treated))
+}
+
+dat <- read.csv("nhanes_bmi.csv")[, -1]
+z <- dat$School_meal
+y <- dat$BMI
+x <- as.matrix(dat[, setdiff(names(dat), c("School_meal", "BMI"))])
+x <- scale(x)
+
+before <- smd_one(x, z)
+
+Ms <- c(1, 2, 3, 5, 10)
+tab.noadj <- t(sapply(Ms, function(m) one_match(y, z, x, M = m,
+                                                 bias.adjust = FALSE)))
+tab.adj <- t(sapply(Ms, function(m) one_match(y, z, x, M = m,
+                                               bias.adjust = TRUE)))
+rownames(tab.noadj) <- paste0("M", Ms)
+rownames(tab.adj) <- paste0("M", Ms)
+round(tab.noadj, 3)
+round(tab.adj, 3)
+
+fit1 <- Match(Y = y, Tr = z, X = x, M = 1,
+              BiasAdjust = TRUE, ties = TRUE)
+after <- matched_smd(fit1, x)
+balance <- cbind(before = before, after = after)
+round(balance, 3)
+\end{lstlisting}
+
+结果报告应回答三个问题。第一，bias adjustment 是否改变 point estimate；若改变明显，说明 raw matching pairs 中仍有 residual covariate imbalance。第二，$M$ 从 $1$ 增加到 $10$ 时 estimate 和 standard error 是否稳定；若 $M$ 过大导致 estimate 接近 regression route，则说明 matching 正在引入较远的 controls。第三，匹配后 standardized mean differences 是否整体缩小，特别是 \cref{fig::balance-check} 中曾经较突出的 \ri{Food_Stamp}。
+
+\paragraph{Remark.}
+这个例子的教学价值在于比较三条路线：regression route 接近零，Hajek 和 DR routes 也接近零，而 unnormalized HT 是明显 outlier。matching analysis 若设计良好，通常应更接近 Hajek/DR 而不是未截断 HT；如果 matching estimate 反而接近 HT，就要检查是否有 poor overlap、少数高杠杆 units 或匹配距离过大。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Revisit Chapter \cref{sec::matching-application}}{LaLonde observational study 的多方法再分析}
+本题要求重新分析 \cref{sec::matching-application} 的 LaLonde observational study，并把 outcome regression、propensity score stratification、HT、Hajek、DR 与 matching estimator 以及 experimental gold standard 比较。
+
+正文已经给出几个锚点。实验数据中，未调整、Fisher regression adjustment 和 Lin regression adjustment 的 estimates 分别约为
+\[
+1794,\qquad 1676,\qquad 1622.
+\]
+把实验数据当作 matching study，bias-adjusted matching estimate 约为 $2119.7$，AI standard error 约为 $876.4$。在 observational counterpart \ri{cps1re74.csv} 中，简单 OLS 给出 $-8506.5$，additive OLS 给出 $1067.5$，Lin estimator 给出 $-4265.8$，说明 regression specification 非常敏感。相反，bias-adjusted $1$-$1$ matching estimate 约为 $1747.8$，AI standard error 约为 $916.6$，接近 experimental benchmark。
+
+项目 worktree 中没有找到 \ri{cps1re74.csv}，所以下面的代码给出完整复现流程。它同时报告 regression、stratification、HT、Hajek、DR、matching，以及把同一批 estimators 应用于 matched data 后的结果。
+
+\begin{lstlisting}
+library(Matching)
+library(sandwich)
+
+hc2_se <- function(fit, name = "z") {
+  sqrt(vcovHC(fit, type = "HC2")[name, name])
+}
+
+ps_fit <- function(z, x, quad = FALSE) {
+  x <- as.data.frame(x)
+  names(x) <- paste0("x", seq_len(ncol(x)))
+  dat <- data.frame(z = z, x)
+  if (!quad) {
+    glm(z ~ ., data = dat, family = binomial())$fitted.values
+  } else {
+    glm(z ~ . + I(x1^2) + I(x2^2) + I(x7^2) + I(x8^2),
+        data = dat, family = binomial())$fitted.values
+  }
+}
+
+strat_est <- function(z, y, ps, K = 5) {
+  qs <- quantile(ps, probs = (1:(K - 1)) / K)
+  g <- cut(ps, breaks = c(-Inf, qs, Inf), labels = FALSE)
+  lev <- sort(unique(g))
+  est <- se2 <- numeric(length(lev))
+  w <- numeric(length(lev))
+  for (j in seq_along(lev)) {
+    id <- g == lev[j]
+    w[j] <- mean(id)
+    y1 <- y[id & z == 1]
+    y0 <- y[id & z == 0]
+    est[j] <- mean(y1) - mean(y0)
+    se2[j] <- var(y1) / length(y1) + var(y0) / length(y0)
+  }
+  c(est = sum(w * est), se = sqrt(sum(w^2 * se2)))
+}
+
+dr_est <- function(z, y, x, truncps = c(0, 1), quad = FALSE) {
+  x <- as.data.frame(x)
+  names(x) <- paste0("x", seq_len(ncol(x)))
+  ps <- ps_fit(z, x, quad = quad)
+  ps <- pmax(truncps[1], pmin(truncps[2], ps))
+
+  d <- data.frame(y = y, z = z, x)
+  m1 <- lm(y ~ ., data = d[d$z == 1, setdiff(names(d), "z")])
+  m0 <- lm(y ~ ., data = d[d$z == 0, setdiff(names(d), "z")])
+  mu1 <- predict(m1, newdata = d)
+  mu0 <- predict(m0, newdata = d)
+
+  reg <- mean(mu1 - mu0)
+  ht <- mean(z * y / ps) - mean((1 - z) * y / (1 - ps))
+  hajek <- sum(z * y / ps) / sum(z / ps) -
+    sum((1 - z) * y / (1 - ps)) / sum((1 - z) / (1 - ps))
+  dr <- reg + mean(z * (y - mu1) / ps) -
+    mean((1 - z) * (y - mu0) / (1 - ps))
+  c(reg = reg, HT = ht, Hajek = hajek, DR = dr)
+}
+
+dat <- read.table("cps1re74.csv", header = TRUE)
+dat$u74 <- as.numeric(dat$re74 == 0)
+dat$u75 <- as.numeric(dat$re75 == 0)
+
+y <- dat$re78
+z <- dat$treat
+x <- as.matrix(dat[, c("age", "educ", "black",
+                       "hispan", "married", "nodegree",
+                       "re74", "re75", "u74", "u75")])
+xs <- scale(x)
+
+fit.unadj <- lm(y ~ z)
+fit.add <- lm(y ~ z + xs)
+fit.lin <- lm(y ~ z * xs)
+regtab <- rbind(
+  unadjusted = c(est = coef(fit.unadj)["z"],
+                 se = hc2_se(fit.unadj, "z")),
+  additive = c(est = coef(fit.add)["z"],
+               se = hc2_se(fit.add, "z")),
+  Lin = c(est = coef(fit.lin)["z"],
+          se = hc2_se(fit.lin, "z"))
+)
+round(regtab, 2)
+
+ps <- ps_fit(z, xs)
+sapply(c(5, 10, 20), function(K) strat_est(z, y, ps, K = K))
+
+rbind(
+  notrunc = dr_est(z, y, xs, truncps = c(0, 1)),
+  trunc01 = dr_est(z, y, xs, truncps = c(0.01, 0.99)),
+  trunc05 = dr_est(z, y, xs, truncps = c(0.05, 0.95)),
+  trunc10 = dr_est(z, y, xs, truncps = c(0.10, 0.90)),
+  quad = dr_est(z, y, xs, truncps = c(0.01, 0.99), quad = TRUE)
+)
+
+matchest <- Match(Y = y, Tr = z, X = xs, BiasAdjust = TRUE)
+summary(matchest)
+
+id.m <- c(matchest$index.treated, matchest$index.control)
+dr_est(z[id.m], y[id.m], xs[id.m, , drop = FALSE],
+       truncps = c(0.01, 0.99))
+\end{lstlisting}
+
+报告时应以 experimental estimates $1600$--$1800$ 作为 benchmark。若 stratification、Hajek 或 DR 在合理 truncation 和 model specification 下也靠近这个区间，就说明它们与 matching 给出一致证据。若某些方法远离 benchmark，尤其是 HT 或高阶 regression specification，应进一步检查 propensity-score tail、covariate balance 和 model dependence。
+
+\paragraph{Remark.}
+LaLonde example 的要点不是证明 matching 永远优于 regression，而是展示 design stage 的重要性。matching 先把 treated 和 control units 拉到可比区域，再做 outcome analysis；这常常比在原始高度不平衡样本上直接写一个长 regression 更稳健。题目中建议把 estimators 应用于 matched data，正是为了分离 ``设计造成的改变'' 和 ``分析公式造成的改变''。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Data re-analyses}{Ho, Imai, King, and Stuart 的两个 datasets}
+本题要求重新分析 \citet{ho2007matching} 使用的两个 political science datasets。该论文的核心观点不是把 matching 当作最终 estimator，而是把 matching 当作 nonparametric preprocessing：先改善 covariate balance、减少 model dependence，再使用原本准备使用的 parametric outcome model。论文和 replication data 的公开页面说明，相关数据可从 Harvard Dataverse 获取；\citet{ho2011matchit} 则给出了 \ri{MatchIt} package 的软件实现。项目 worktree 中没有这些 Dataverse 数据文件，因此这里给出可复现分析模板。
+
+对每个 dataset，建议按同一套报告结构完成：
+\begin{enumerate}
+\item 明确 treatment、outcome、pre-treatment covariates 和目标 estimand；
+\item 在原始数据上拟合主 outcome model，记录 treatment coefficient 和 robust standard error；
+\item 使用 \ri{MatchIt} 做 nearest-neighbor、optimal、full matching 或 propensity-score subclassification；
+\item 用 standardized mean differences、variance ratios 和 empirical CDF differences 检查匹配前后 balance；
+\item 在 matched data 上重新拟合同一个 outcome model，使用 matching weights；
+\item 对不同 matching methods、calipers、ratio 和 model specifications 做敏感性比较。
+\end{enumerate}
+
+下面的 R 代码把这套流程封装成一个函数。只要把 Dataverse 下载的数据整理成包含 treatment、outcome 和 covariates 的 data frame，就可以直接复用。
+
+\begin{lstlisting}
+library(MatchIt)
+library(cobalt)
+library(sandwich)
+library(lmtest)
+
+analyze_ho_dataset <- function(dat, treat, outcome, covars,
+                               estimand = "ATT",
+                               methods = c("nearest", "optimal",
+                                           "full", "subclass")) {
+  f.ps <- as.formula(
+    paste(treat, "~", paste(covars, collapse = " + "))
+  )
+  f.out <- as.formula(
+    paste(outcome, "~", treat, "+", paste(covars, collapse = " + "))
+  )
+
+  fit.raw <- lm(f.out, data = dat)
+  raw <- coeftest(fit.raw, vcov = vcovHC(fit.raw, type = "HC2"))[treat, ]
+
+  out <- vector("list", length(methods))
+  names(out) <- methods
+
+  for (m in methods) {
+    if (m == "nearest") {
+      mat <- matchit(f.ps, data = dat, method = "nearest",
+                     distance = "glm", estimand = estimand,
+                     ratio = 1, caliper = 0.2)
+    } else if (m == "optimal") {
+      mat <- matchit(f.ps, data = dat, method = "optimal",
+                     distance = "glm", estimand = estimand,
+                     ratio = 1)
+    } else if (m == "full") {
+      mat <- matchit(f.ps, data = dat, method = "full",
+                     distance = "glm", estimand = estimand)
+    } else {
+      mat <- matchit(f.ps, data = dat, method = "subclass",
+                     distance = "glm", estimand = estimand,
+                     subclass = 5)
+    }
+
+    md <- match.data(mat)
+    fit <- lm(f.out, data = md, weights = weights)
+    est <- coeftest(fit, vcov = vcovHC(fit, type = "HC2"))[treat, ]
+    bal <- bal.tab(mat, un = TRUE, disp.v.ratio = TRUE)
+
+    out[[m]] <- list(matchit = mat,
+                     coef = est,
+                     balance = bal,
+                     n = nrow(md))
+  }
+
+  list(raw = raw, matched = out)
+}
+
+## Example usage after downloading and cleaning a Dataverse file:
+## dat1 <- read.csv("dataset1.csv")
+## res1 <- analyze_ho_dataset(
+##   dat = dat1,
+##   treat = "treat",
+##   outcome = "y",
+##   covars = c("x1", "x2", "x3", "x4")
+## )
+## res1$raw
+## lapply(res1$matched, function(x) x$coef)
+## lapply(res1$matched, function(x) x$balance)
+\end{lstlisting}
+
+最终文字报告不应只列 treatment coefficients。更重要的是展示 matching 是否减少了 model dependence：如果原始数据中不同 outcome models 给出差异很大的 treatment estimates，而 matched data 中这些 estimates 收敛到同一区间，那么这正支持 \citet{ho2007matching} 的主张。相反，如果匹配后 balance 仍差，或结论强烈依赖 caliper、ratio、subclassification 数量，就应把这种敏感性作为主要结论，而不是只报告一个最顺眼的 estimate。
+
+\paragraph{Remark.}
+这道题的重点是 design before analysis。Matching 的作用类似把 observational study 改造成一个更接近 randomized experiment 的比较；它不能替代 ignorability assumption，也不能自动解决 unobserved confounding。因此，高质量再分析必须同时报告 balance、discarded units、target population 的变化和 outcome-model sensitivity。
+\end{exercisesolution}

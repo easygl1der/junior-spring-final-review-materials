@@ -1,0 +1,352 @@
+\chapter{Solutions to Chapter 14: Using the Propensity Score in Regressions for Causal Effects}
+\label{sol:chapter14}
+
+\begin{exercisesolution}{Hajek estimators as WLS estimators}{二元处理下 WLS 系数的 weighted mean 表示}
+本题证明 \cref{prop::hajek-wls} 和 \cref{prop::hajek-att}。核心代数事实已经在 \cref{hw::wls-uni-binary} 中出现：若在 univariate WLS
+\[
+(\hat \alpha_w,\hat\beta_w)
+=\arg\min_{a,b}\sumn w_i(Y_i-a-bZ_i)^2
+\]
+中 regressor $Z_i$ 是 binary，则由 \cref{eq::wls-10}
+\[
+\hat\beta_w
+=\frac{\sumn w_iZ_iY_i}{\sumn w_iZ_i}
+ -\frac{\sumn w_i(1-Z_i)Y_i}{\sumn w_i(1-Z_i)}.
+\]
+这就是说，$Z_i$ 的 WLS 系数只是 treated weighted mean 与 control weighted mean 的差。
+
+先证明 \cref{prop::hajek-wls}。由 \cref{eq::weight-hajek}，
+\[
+w_iZ_i=\frac{Z_i}{\hat e(X_i)},\qquad
+w_i(1-Z_i)=\frac{1-Z_i}{1-\hat e(X_i)}.
+\]
+代入上面的二元 WLS 公式，得到
+\[
+\hat\beta_w
+=
+\frac{\sumn Z_iY_i/\hat e(X_i)}{\sumn Z_i/\hat e(X_i)}
+-
+\frac{\sumn (1-Z_i)Y_i/\{1-\hat e(X_i)\}}
+     {\sumn (1-Z_i)/\{1-\hat e(X_i)\}},
+\]
+这正是 $\hat\tau^{\textup{hajek}}$。因此 \cref{prop::hajek-wls} 成立。
+
+再证明 \cref{prop::hajek-att}。由 \cref{eq::weight-hajek-att}，
+\[
+w_{\textsc{T}i}Z_i=Z_i,\qquad
+w_{\textsc{T}i}(1-Z_i)=\hat o(X_i)(1-Z_i),
+\]
+其中 $\hat o(X_i)=\hat e(X_i)/\{1-\hat e(X_i)\}$。仍然代入二元 WLS 公式，得到
+\[
+\hat\beta_w
+=
+\frac{\sumn Z_iY_i}{\sumn Z_i}
+-
+\frac{\sumn \hat o(X_i)(1-Z_i)Y_i}
+     {\sumn \hat o(X_i)(1-Z_i)}
+=\hat{\bar Y}(1)
+-
+\frac{\sumn \hat o(X_i)(1-Z_i)Y_i}
+     {\sumn \hat o(X_i)(1-Z_i)}.
+\]
+这正是 $\hat\tau_\textsc{T}^{\textup{hajek}}$。因此 \cref{prop::hajek-att} 成立。
+
+\paragraph{Remark.}
+这两个命题没有使用任何 causal assumption；它们只是 WLS 的代数恒等式。causal interpretation 来自权重本身：\cref{eq::weight-hajek} 让 treated 和 control 都代表 whole population，而 \cref{eq::weight-hajek-att} 让 weighted controls 代表 treated population。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Predictive estimator and doubly robust estimator}{odds 加权 WLS 下 predictive form 与 DR form 的等价}
+记
+\[
+\hat m_{1i}=\mu_1(X_i,\hat\beta_1),\qquad
+\hat m_{0i}=\mu_0(X_i,\hat\beta_0),\qquad
+\hat o_i=\frac{\hat e(X_i)}{1-\hat e(X_i)}.
+\]
+题目中的 predictive estimator 可以写成
+\begin{align*}
+\hat\tau^{\textup{pred}}
+&=\frac{1}{n}\sumn
+\{Z_iY_i+(1-Z_i)\hat m_{1i}
+-Z_i\hat m_{0i}-(1-Z_i)Y_i\}\\
+&=\frac{1}{n}\sumn(\hat m_{1i}-\hat m_{0i})
+  +\frac{1}{n}\sumn Z_i(Y_i-\hat m_{1i})
+  -\frac{1}{n}\sumn (1-Z_i)(Y_i-\hat m_{0i}).
+\end{align*}
+另一方面，由 \cref{def::dr:ace} 的 sample analog，使用同一组 nuisance fits 时
+\[
+\hat\tau_{\textup{wls}}^{\textup{dr}}
+=\frac{1}{n}\sumn(\hat m_{1i}-\hat m_{0i})
+  +\frac{1}{n}\sumn \frac{Z_i(Y_i-\hat m_{1i})}{\hat e(X_i)}
+  -\frac{1}{n}\sumn
+       \frac{(1-Z_i)(Y_i-\hat m_{0i})}{1-\hat e(X_i)}.
+\]
+因此二者之差为
+\begin{align*}
+\hat\tau_{\textup{wls}}^{\textup{dr}}-\hat\tau^{\textup{pred}}
+&=\frac{1}{n}\sumn
+Z_i(Y_i-\hat m_{1i})
+\left\{\frac{1}{\hat e(X_i)}-1\right\}\\
+&\quad
+-\frac{1}{n}\sumn
+(1-Z_i)(Y_i-\hat m_{0i})
+\left\{\frac{1}{1-\hat e(X_i)}-1\right\}\\
+&=\frac{1}{n}\sumn
+\frac{Z_i(Y_i-\hat m_{1i})}{\hat o_i}
+-\frac{1}{n}\sumn
+\hat o_i(1-Z_i)(Y_i-\hat m_{0i}).
+\end{align*}
+现在使用题目指定的 WLS weights \cref{eq::odds-weight-predictive}。treated outcome model 是在 treated data 上、以 $1/\hat o_i$ 为 weights 的 WLS；因为模型包含 intercept，WLS score equation 给出
+\[
+\sumn \frac{Z_i(Y_i-\hat m_{1i})}{\hat o_i}=0.
+\]
+control outcome model 是在 control data 上、以 $\hat o_i$ 为 weights 的 WLS；同理
+\[
+\sumn \hat o_i(1-Z_i)(Y_i-\hat m_{0i})=0.
+\]
+代回前式，得到
+\[
+\hat\tau_{\textup{wls}}^{\textup{dr}}-\hat\tau^{\textup{pred}}=0.
+\]
+因此 doubly robust estimator 等于 predictive estimator。
+
+\paragraph{Remark.}
+这个练习解释了 \cref{eq::odds-weight-predictive} 中看似奇怪的 odds weights：它们正好把 DR estimator 和只预测 counterfactual outcomes 的 predictive estimator 之间的差化成两个 weighted residual sums。只要 weighted regressions 含 intercept，这两个 residual sums 就自动为零。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Weighted logistic regression with a binary outcome}{加权 logistic score equation 消去 DR residual 项}
+本题的关键是：上一题和 \cref{thm::numerical-equivalence-wls-dr} 用到的并不是 linear least squares 的特殊闭式解，而是含 intercept 的 weighted score equation。对 binary outcome，令 logistic outcome model 为
+\[
+m_z(X,\beta_z)=\frac{\exp\{\beta_{z0}+\beta_{zx}\tran X\}}
+{1+\exp\{\beta_{z0}+\beta_{zx}\tran X\}},
+\qquad z=0,1.
+\]
+在加权 logistic regression 中，intercept 的 score equation 是
+\[
+\sumn a_i\{Y_i-m_z(X_i,\hat\beta_z)\}=0,
+\]
+其中 $a_i$ 是该组 regression 的 weight。
+
+先看 $\tau$。若分别在 treated 和 control data 上拟合 weighted logistic regressions，并使用 \cref{eq::weight-hajek} 中的 inverse propensity score weights，则 intercept score equations 给出
+\[
+\sumn \frac{Z_i\{Y_i-\hat m_{1i}\}}{\hat e(X_i)}=0,\qquad
+\sumn \frac{(1-Z_i)\{Y_i-\hat m_{0i}\}}{1-\hat e(X_i)}=0.
+\]
+因此 \cref{def::dr:ace} 中 $\tau$ 的 doubly robust estimator
+\[
+\hat\tau^{\textup{dr}}
+=\frac{1}{n}\sumn(\hat m_{1i}-\hat m_{0i})
+ +\frac{1}{n}\sumn \frac{Z_i(Y_i-\hat m_{1i})}{\hat e(X_i)}
+ -\frac{1}{n}\sumn
+   \frac{(1-Z_i)(Y_i-\hat m_{0i})}{1-\hat e(X_i)}
+\]
+中的两个 residual augmentation terms 都为零。于是
+\[
+\hat\tau^{\textup{dr}}
+=\frac{1}{n}\sumn(\hat m_{1i}-\hat m_{0i})
+=\hat\tau^{\textup{reg}}.
+\]
+
+再看 $\tau_\textsc{T}$。由 \cref{def::dr-att}，ATT 的 DR estimator 可写成
+\[
+\hat\tau_\textsc{T}^{\textup{dr}}
+=\hat{\bar Y}(1)
+-\frac{1}{n_1}\sumn Z_i\hat m_{0i}
+-\frac{1}{n_1}\sumn \hat o_i(1-Z_i)(Y_i-\hat m_{0i}).
+\]
+如果 control outcome model 用 weights $\hat o_i$ 在 control data 上做 weighted logistic regression，则 intercept score equation 给出
+\[
+\sumn \hat o_i(1-Z_i)(Y_i-\hat m_{0i})=0.
+\]
+所以
+\[
+\hat\tau_\textsc{T}^{\textup{dr}}
+=\hat{\bar Y}(1)-\frac{1}{n_1}\sumn Z_i\hat m_{0i}
+=\hat\tau_\textsc{T}^{\textup{reg}}.
+\]
+
+\paragraph{Remark.}
+这个结果说明，``DR 等于 regression'' 并不是 logistic model 也线性化了；真正起作用的是 weighted likelihood 的 intercept score。只要 residual augmentation term 选择的权重与 outcome model 拟合时的权重一致，score equation 就会把 residual correction 精确消掉。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Causal inference with a misspecified linear regression}{FWL 分解下 treatment 系数的 estimand}
+令 $L=(1,X\tran)\tran$。由 FWL theorem，$Y$ 对 $(1,Z,X)$ 的 population OLS 中 $Z$ 的系数可以写成
+\[
+\beta_1=\frac{\mathbb{E}\{RY\}}{\mathbb{E}\{RZ\}},
+\qquad
+R=Z-\tilde e(X),
+\]
+其中 $\tilde e(X)=\gamma_0+\gamma_1\tran X$ 是 $Z$ 在 $L$ 上的 population linear projection。因为 $R$ 与 $L$ 中的每个 regressor 都正交，$R$ 就是 residualized treatment。
+
+先化简分母。条件于 $X$，
+\[
+\mathbb{E}(RZ\mid X)=\mathbb{E}[\{Z-\tilde e(X)\}Z\mid X]
+=e(X)\{1-\tilde e(X)\}.
+\]
+因此
+\[
+\mathbb{E}(RZ)=\mathbb{E}\{e(X)[1-\tilde e(X)]\}=\mathbb{E}\{\tilde w(X)\},
+\]
+其中 $\tilde w(X)=e(X)\{1-\tilde e(X)\}$。
+
+再化简分子。由 consistency，
+\[
+Y=ZY(1)+(1-Z)Y(0).
+\]
+在 ignorability 下，记
+\[
+\mu_1(X)=\mathbb{E}\{Y(1)\mid X\},\qquad
+\mu_0(X)=\mathbb{E}\{Y(0)\mid X\}.
+\]
+条件于 $X$，
+\begin{align*}
+\mathbb{E}(RY\mid X)
+&=\mathbb{E}[\{Z-\tilde e(X)\}ZY(1)\mid X]
+  +\mathbb{E}[\{Z-\tilde e(X)\}(1-Z)Y(0)\mid X]\\
+&=e(X)\{1-\tilde e(X)\}\mu_1(X)
+  -\tilde e(X)\{1-e(X)\}\mu_0(X).
+\end{align*}
+把第二项改写为题目中的形式：
+\begin{align*}
+&e(X)\{1-\tilde e(X)\}\mu_1(X)
+  -\tilde e(X)\{1-e(X)\}\mu_0(X)\\
+&\quad
+=\tilde w(X)\{\mu_1(X)-\mu_0(X)\}
+  +\{e(X)-\tilde e(X)\}\mu_0(X).
+\end{align*}
+取 expectation 后代入 $\beta_1=\mathbb{E}(RY)/\mathbb{E}(RZ)$，得到
+\[
+\beta_1 =
+\frac{\mathbb{E} [\tilde{w}(X) \{ \mu_1(X) - \mu_0(X) \} ]}{\mathbb{E} \{ \tilde{w}(X) \}}
++ \frac{\mathbb{E} [\{e(X)-\tilde{e}(X)\} \mu_0(X)]}{\mathbb{E} \{ \tilde{w}(X) \}}.
+\]
+这证明了 part 1。
+
+现在假设 $X$ 包含一个 discrete covariate 的 dummy variables。更准确地说，若 $X$ 给出了该离散协变量各 cell 的 saturated representation，则 $Z$ 在 $(1,X)$ 上的 population linear projection 等于 cell mean：
+\[
+\tilde e(X)=\mathbb{E}(Z\mid X)=e(X).
+\]
+于是第二项
+\[
+\mathbb{E}[\{e(X)-\tilde e(X)\}\mu_0(X)]
+\]
+为零，并且
+\[
+\tilde w(X)=e(X)\{1-\tilde e(X)\}=e(X)\{1-e(X)\}=w(X).
+\]
+因此
+\[
+\beta_1 =
+\frac{\mathbb{E} [w(X) \{ \mu_1(X) - \mu_0(X) \} ]}{\mathbb{E} \{ w(X) \}},
+\]
+这正是 overlap-weighted estimand。
+
+\paragraph{Remark.}
+part 1 展示了 misspecified linear regression 的两个来源：第一项是一个由 linear projection 诱导的 weighted average treatment effect；第二项是 projection error $e(X)-\tilde e(X)$ 与 baseline outcome mean $\mu_0(X)$ 的耦合。part 2 说明 saturated discrete adjustment 会消掉第二个来源，把 regression coefficient 拉回到 \cref{thm::ols-pscore-tau-o} 中相同的 overlap estimand。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Analyzing a dataset from the Karolinska Institute}{用 propensity score regression 与 WLS 估计 $\tau_\textsc{O}$ 和 $\tau$}
+本题要求重新考察 \cref{hw::Karolinska-dr}，并基于本章方法估计 $\tau_\textsc{O}$ 和 $\tau$。我在当前本地工程中没有找到 \ri{karolinska.txt}，因此这里不编造 point estimates。下面给出完整可复现代码；把数据文件放在运行目录后，它会输出 $\tau_\textsc{O}$ 的三种 propensity-score regression estimators，以及 $\tau$ 的 Hajek/WLS 和 covariate-adjusted WLS estimators，并用 bootstrap 给出 standard errors。
+
+\begin{lstlisting}
+PS_ch14_est <- function(z, y, x, trim = 1e-6) {
+  x <- as.data.frame(x)
+  dat <- data.frame(y = y, z = z, x)
+  n <- length(z)
+
+  psfit <- glm(z ~ ., data = dat[, -1], family = binomial())
+  ps <- psfit$fitted.values
+  ps <- pmin(1 - trim, pmax(trim, ps))
+  odds <- ps / (1 - ps)
+
+  ## estimators for tau_O from Section 14.1
+  tauO_ps <- coef(lm(y ~ z + ps))["z"]
+  tauO_centered <- coef(lm(y ~ I(z - ps) + 0))["I(z - ps)"]
+  tauO_ps_x <- coef(lm(y ~ z + ps + ., data = dat))["z"]
+
+  ## Hajek estimator for tau as WLS in Proposition 14.1
+  w_ate <- z / ps + (1 - z) / (1 - ps)
+  tau_hajek <- coef(lm(y ~ z, weights = w_ate))["z"]
+
+  ## Covariate-adjusted WLS estimator for tau in Theorem 14.1
+  xc <- scale(as.matrix(x), center = TRUE, scale = FALSE)
+  datc <- data.frame(y = y, z = z, xc)
+  tau_wls_adj <- coef(lm(y ~ z * ., data = datc,
+                         weights = w_ate))["z"]
+
+  ## Binary outcome version: weighted logistic outcome regressions.
+  ## The reported effect is on the risk-difference scale through
+  ## standardization of fitted probabilities.
+  fit1 <- glm(y ~ ., data = data.frame(y = y, x),
+              weights = z / ps, family = binomial())
+  fit0 <- glm(y ~ ., data = data.frame(y = y, x),
+              weights = (1 - z) / (1 - ps),
+              family = binomial())
+  m1 <- predict(fit1, newdata = x, type = "response")
+  m0 <- predict(fit0, newdata = x, type = "response")
+  tau_logit_reg <- mean(m1 - m0)
+
+  c(tauO_ps = tauO_ps,
+    tauO_centered = tauO_centered,
+    tauO_ps_x = tauO_ps_x,
+    tau_hajek = tau_hajek,
+    tau_wls_adj = tau_wls_adj,
+    tau_logit_reg = tau_logit_reg)
+}
+
+PS_ch14 <- function(z, y, x, n.boot = 2000) {
+  point.est <- PS_ch14_est(z, y, x)
+  n <- length(z)
+  x <- as.matrix(x)
+
+  boot.est <- replicate(n.boot, {
+    id <- sample.int(n, n, replace = TRUE)
+    PS_ch14_est(z[id], y[id], x[id, , drop = FALSE])
+  })
+
+  boot.se <- apply(boot.est, 1, sd)
+  out <- rbind(est = point.est, se = boot.se)
+  round(out, 3)
+}
+
+diagnose_ps <- function(z, x) {
+  ps <- glm(z ~ ., data = data.frame(z = z, x),
+            family = binomial())$fitted.values
+  odds <- ps / (1 - ps)
+  rbind(
+    pscore = round(c(min = min(ps),
+                     q05 = quantile(ps, 0.05),
+                     median = median(ps),
+                     q95 = quantile(ps, 0.95),
+                     max = max(ps)), 3),
+    odds = round(c(min = min(odds),
+                   q05 = quantile(odds, 0.05),
+                   median = median(odds),
+                   q95 = quantile(odds, 0.95),
+                   max = max(odds)), 3)
+  )
+}
+
+karolinska <- read.table("karolinska.txt", header = TRUE)
+z <- karolinska$hvdiag
+y <- 1 - (karolinska$year.survival == 1)
+x <- as.matrix(karolinska[, c(3, 4, 5)])
+
+table(z)
+table(y, z)
+diagnose_ps(z, x)
+PS_ch14(z, y, x, n.boot = 2000)
+\end{lstlisting}
+
+解释结果时要区分两个 estimands。由 \cref{thm::ols-pscore-tau-o}，把 propensity score 放进 OLS 后得到的 $Z$ 系数在 model misspecification 下自然指向
+\[
+\tau_\textsc{O}
+=\frac{\mathbb{E}[e(X)\{1-e(X)\}\tau(X)]}
+       {\mathbb{E}[e(X)\{1-e(X)\}]},
+\]
+也就是 overlap population 上的平均效应。它降低了 propensity score 接近 $0$ 或 $1$ 的 units 的影响。相反，\cref{prop::hajek-wls} 中的 WLS/Hajek estimator 目标是 original population 上的 $\tau$，它用 inverse propensity score weights 让 treated 和 control 两组都代表 whole population。
+
+报告时至少应包含三类诊断。第一，报告 propensity scores 和 odds 的分布；若 $e(X)$ 接近 $0$ 或 $1$，$\tau$ 的 IPW/WLS estimator 会不稳定，而 $\tau_\textsc{O}$ 会自动弱化这些区域。第二，比较 \ri{tauO_ps}, \ri{tauO_centered} 和 \ri{tauO_ps_x}；三者都受 \cref{thm::ols-pscore-tau-o} 和 \cref{coro::regress-on-pscore} 启发，但 finite sample 中会因 propensity score estimation 和 covariate adjustment 有差异。第三，比较 \ri{tau_hajek}, \ri{tau_wls_adj} 和 \ri{tau_logit_reg}；若它们差别很大，说明 outcome model、weight variability 或 binary outcome 的 link function choice 对结论有实质影响。
+
+\paragraph{Remark.}
+Karolinska 数据的样本量只有 $158$，所以本题不应只报告一个 point estimate。对本章方法而言，bootstrap standard errors、propensity score overlap diagnostics，以及 $\tau_\textsc{O}$ 与 $\tau$ 的 estimand 区分，同样是实证结论的一部分。
+\end{exercisesolution}

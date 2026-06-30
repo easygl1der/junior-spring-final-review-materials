@@ -1,0 +1,451 @@
+\chapter{Solutions to Chapter 18: Sensitivity Analysis for the Average Causal Effect with Unmeasured Confounding}
+\label{sol:chapter18}
+
+\begin{exercisesolution}{Proof of \cref{thm::outcome-reg-sensitivity}}{outcome regression sensitivity formulas}
+本题证明 \cref{thm::outcome-reg-sensitivity}。这一定理的核心思想很简单：unmeasured confounding 不再被假设为零，而是被两个可解释的 sensitivity parameters 吸收进 counterfactual conditional means。
+
+由 consistency，
+\[
+\mu_1(X)=\mathbb{E}(Y\mid Z=1,X)=\mathbb{E}\{Y(1)\mid Z=1,X\},
+\]
+以及
+\[
+\mu_0(X)=\mathbb{E}(Y\mid Z=0,X)=\mathbb{E}\{Y(0)\mid Z=0,X\}.
+\]
+根据本章对 sensitivity parameters 的定义，
+\[
+\varepsilon_1(X)
+=
+\frac{\mathbb{E}\{Y(1)\mid Z=1,X\}}
+     {\mathbb{E}\{Y(1)\mid Z=0,X\}},
+\qquad
+\varepsilon_0(X)
+=
+\frac{\mathbb{E}\{Y(0)\mid Z=1,X\}}
+     {\mathbb{E}\{Y(0)\mid Z=0,X\}}.
+\]
+因此只要 $\varepsilon_1(X)$ 和 $\varepsilon_0(X)$ 已知，就有
+\[
+\mathbb{E}\{Y(1)\mid Z=0,X\}
+=\frac{\mu_1(X)}{\varepsilon_1(X)},
+\qquad
+\mathbb{E}\{Y(0)\mid Z=1,X\}
+=\mu_0(X)\varepsilon_0(X).
+\]
+再对 $X\mid Z=0$ 和 $X\mid Z=1$ 分别取条件期望，得到
+\[
+\mathbb{E}\{Y(1)\mid Z=0\}
+=
+\mathbb{E}\left\{\frac{\mu_1(X)}{\varepsilon_1(X)}\mid Z=0\right\},
+\]
+以及
+\[
+\mathbb{E}\{Y(0)\mid Z=1\}
+=
+\mathbb{E}\{\mu_0(X)\varepsilon_0(X)\mid Z=1\}.
+\]
+这就是定理中的两个 counterfactual mean identification formulas。
+
+下面把它们代入 average causal effect。由全期望公式，
+\begin{align*}
+\mathbb{E}\{Y(1)\}
+&=
+\mathbb{E}\{ZY(1)+(1-Z)Y(1)\}\\
+&=
+\mathbb{E}\left\{ZY+(1-Z)\frac{\mu_1(X)}{\varepsilon_1(X)}\right\},
+\end{align*}
+其中第一项使用 consistency，第二项使用刚得到的 counterfactual conditional mean。类似地，
+\[
+\mathbb{E}\{Y(0)\}
+=
+\mathbb{E}\{Z\mu_0(X)\varepsilon_0(X)+(1-Z)Y\}.
+\]
+两式相减，得到 \cref{eq::predictive}。
+
+最后证明 \cref{eq::projective}。注意
+\[
+\mathbb{E}(ZY)
+=
+\mathbb{E}\{Z\mathbb{E}(Y\mid Z,X)\}
+=
+\mathbb{E}\{Z\mu_1(X)\},
+\]
+且
+\[
+\mathbb{E}\{(1-Z)Y\}
+=
+\mathbb{E}\{(1-Z)\mu_0(X)\}.
+\]
+把 \cref{eq::predictive} 中两个 observed outcome terms 替换为对应的 conditional mean representation，即得到 \cref{eq::projective}。
+
+\paragraph{Remark.}
+\cref{eq::predictive} 和 \cref{eq::projective} 的差别只在于是否在 observed part 使用实际观测到的 $Y$。前者更像 survey sampling 中的 predictive form；后者完全投影到 outcome regressions 上，因此被称为 projective form。当 $\varepsilon_1(X)=\varepsilon_0(X)=1$ 时，这两个公式退化回 ignorability 下的标准 outcome-regression identification。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Proof of \cref{thm::ipw-sensitivity}}{带 sensitivity weights 的 IPW identification}
+本题证明 \cref{thm::ipw-sensitivity}。这里的关键不是重新发明 IPW，而是看清楚在 unmeasured confounding 下，经典 IPW 公式需要额外乘上一个 correction factor。
+
+记
+\[
+e(X)=\mathbb{P}(Z=1\mid X).
+\]
+假设 positivity 成立，即 $0<e(X)<1$，并且相关期望有限。对任意给定的 $X$，由 consistency 得
+\begin{align*}
+\mathbb{E}\left\{\frac{Z}{e(X)}Y\mid X\right\}
+&=
+\frac{1}{e(X)}\mathbb{E}\{ZY(1)\mid X\}\\
+&=
+\mathbb{E}\{Y(1)\mid Z=1,X\}\\
+&=
+\mu_1(X).
+\end{align*}
+因此
+\[
+\mathbb{E}\left\{w_1(X)\frac{Z}{e(X)}Y\mid X\right\}
+=w_1(X)\mu_1(X).
+\]
+另一方面，
+\begin{align*}
+\mathbb{E}\{Y(1)\mid X\}
+&=
+e(X)\mathbb{E}\{Y(1)\mid Z=1,X\}
+\{1-e(X)\}\mathbb{E}\{Y(1)\mid Z=0,X\}\\
+&=
+e(X)\mu_1(X)
+\{1-e(X)\}\frac{\mu_1(X)}{\varepsilon_1(X)}\\
+&=
+\left[e(X)+\frac{1-e(X)}{\varepsilon_1(X)}\right]\mu_1(X)\\
+&=
+w_1(X)\mu_1(X).
+\end{align*}
+于是
+\[
+\mathbb{E}\left\{w_1(X)\frac{Z}{e(X)}Y\mid X\right\}
+=
+\mathbb{E}\{Y(1)\mid X\}.
+\]
+再对 $X$ 取期望，得到
+\[
+\mathbb{E}\{Y(1)\}
+=
+\mathbb{E}\left\{w_1(X)\frac{Z}{e(X)}Y\right\}.
+\]
+
+对 $Y(0)$ 的证明完全平行。由 consistency，
+\[
+\mathbb{E}\left\{\frac{1-Z}{1-e(X)}Y\mid X\right\}
+=
+\mathbb{E}\{Y(0)\mid Z=0,X\}
+=
+\mu_0(X).
+\]
+于是
+\[
+\mathbb{E}\left\{w_0(X)\frac{1-Z}{1-e(X)}Y\mid X\right\}
+=w_0(X)\mu_0(X).
+\]
+又因为
+\begin{align*}
+\mathbb{E}\{Y(0)\mid X\}
+&=
+e(X)\mathbb{E}\{Y(0)\mid Z=1,X\}
+\{1-e(X)\}\mathbb{E}\{Y(0)\mid Z=0,X\}\\
+&=
+e(X)\varepsilon_0(X)\mu_0(X)+\{1-e(X)\}\mu_0(X)\\
+&=
+\{e(X)\varepsilon_0(X)+1-e(X)\}\mu_0(X)\\
+&=
+w_0(X)\mu_0(X),
+\end{align*}
+所以
+\[
+\mathbb{E}\{Y(0)\}
+=
+\mathbb{E}\left\{w_0(X)\frac{1-Z}{1-e(X)}Y\right\}.
+\]
+这就证明了 \cref{thm::ipw-sensitivity}。
+
+\paragraph{Remark.}
+当 $\varepsilon_1(X)=\varepsilon_0(X)=1$ 时，$w_1(X)=w_0(X)=1$，\cref{thm::ipw-sensitivity} 立刻退化为标准 IPW 公式。换句话说，$w_1(X)$ 和 $w_0(X)$ 精确刻画了 deviation from ignorability 对 IPW 的影响；它们不是任意的稳定化权重，而是由 potential outcome means 的 tilt 直接推出的 correction factors。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Standard errors in sensitivity analysis}{bootstrap standard errors 的可复现计算}
+\cref{sec::eg-sensitivity-tau} 只报告了 \cref{table::sensitivity-ACE} 中 doubly robust estimator 的点估计。本题要求报告对应的 bootstrap standard errors。项目目录中没有找到原例使用的 \ri{nhanes_bmi.csv}，因此这里不编造数值；下面给出完整的可复现代码。把 \ri{nhanes_bmi.csv} 放在运行目录后，代码会生成与 \cref{table::sensitivity-ACE} 同维度的 point-estimate table 和 bootstrap-standard-error table。
+
+\begin{lstlisting}
+OS_est_sa <- function(z, y, x, out.family = gaussian,
+                      truncps = c(0, 1), e1 = 1, e0 = 1)
+{
+  pscore <- glm(z ~ x, family = binomial)$fitted.values
+  pscore <- pmax(truncps[1], pmin(truncps[2], pscore))
+
+  outcome1 <- glm(y ~ x, weights = z,
+                  family = out.family)$fitted.values
+  outcome0 <- glm(y ~ x, weights = 1 - z,
+                  family = out.family)$fitted.values
+
+  ace.reg <- mean(z * y) + mean((1 - z) * outcome1 / e1) -
+    mean(z * outcome0 * e0) - mean((1 - z) * y)
+
+  w1 <- pscore + (1 - pscore) / e1
+  w0 <- pscore * e0 + (1 - pscore)
+
+  ace.ipw0 <- mean(z * y * w1 / pscore) -
+    mean((1 - z) * y * w0 / (1 - pscore))
+
+  ace.ipw <- mean(z * y * w1 / pscore) / mean(z / pscore) -
+    mean((1 - z) * y * w0 / (1 - pscore)) /
+      mean((1 - z) / (1 - pscore))
+
+  aug <- outcome1 / pscore / e1 + outcome0 * e0 / (1 - pscore)
+  ace.dr <- ace.ipw0 + mean((z - pscore) * aug)
+
+  c(reg = ace.reg, ht = ace.ipw0, haj = ace.ipw, dr = ace.dr)
+}
+
+dr_grid <- function(dat, E1, E0, out.family = gaussian,
+                    truncps = c(0.01, 0.99))
+{
+  z <- dat$School_meal
+  y <- dat$BMI
+  x <- as.matrix(dat[, setdiff(names(dat), c("School_meal", "BMI"))])
+  x <- scale(x)
+
+  ans <- matrix(NA_real_, length(E1), length(E0),
+                dimnames = list(E1, E0))
+  for (i in seq_along(E1)) {
+    for (j in seq_along(E0)) {
+      ans[i, j] <- OS_est_sa(z, y, x, out.family = out.family,
+                             truncps = truncps,
+                             e1 = E1[i], e0 = E0[j])["dr"]
+    }
+  }
+  ans
+}
+
+boot_dr_grid <- function(dat, E1, E0, B = 1000,
+                         out.family = gaussian,
+                         truncps = c(0.01, 0.99),
+                         seed = 2026)
+{
+  set.seed(seed)
+  n <- nrow(dat)
+  boot <- array(NA_real_, dim = c(B, length(E1), length(E0)))
+
+  for (b in seq_len(B)) {
+    id <- sample.int(n, size = n, replace = TRUE)
+    boot[b, , ] <- tryCatch(
+      dr_grid(dat[id, , drop = FALSE], E1, E0,
+              out.family = out.family, truncps = truncps),
+      error = function(e) matrix(NA_real_, length(E1), length(E0))
+    )
+  }
+
+  apply(boot, c(2, 3), sd, na.rm = TRUE)
+}
+
+nhanes_bmi <- read.csv("nhanes_bmi.csv")[, -1]
+E1 <- c(1/2, 1/1.7, 1/1.5, 1/1.3, 1, 1.3, 1.5, 1.7, 2)
+E0 <- c(1/2, 1/1.7, 1/1.5, 1/1.3, 1, 1.3, 1.5, 1.7, 2)
+
+point.est <- dr_grid(nhanes_bmi, E1, E0)
+boot.se <- boot_dr_grid(nhanes_bmi, E1, E0, B = 1000)
+
+round(point.est, 2)
+round(boot.se, 2)
+\end{lstlisting}
+
+这个 bootstrap 是 ordinary nonparametric bootstrap：每次从原始数据行中有放回抽样，重新拟合 propensity score model 和 outcome models，再重新计算整个 sensitivity grid。这样得到的 standard error 同时反映了 nuisance models 的拟合不确定性和 final estimator 的抽样不确定性。
+
+\paragraph{Remark.}
+这里不要只在固定的 fitted values 上重抽 residuals，也不要在固定 propensity scores 上重算最后一步。sensitivity analysis 的目标是报告完整估计程序的 uncertainty；因此 bootstrap replicate 必须包含重新拟合 $\hat e(X)$、$\hat\mu_1(X)$ 和 $\hat\mu_0(X)$ 这一步。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Sensitivity analysis for the average causal effect on the treated units $\tau_\textsc{T}$}{ATT counterfactual mean 的两个 identification formulas}
+本题证明 \cref{thm::att-reg-ipw}。ATT 与 ATE 的差别在于目标人群已经固定为 treated units，所以唯一需要补上的 counterfactual term 是
+\[
+\mathbb{E}\{Y(0)\mid Z=1\}.
+\]
+因此，只需要一个 sensitivity parameter $\varepsilon_0(X)$。
+
+令
+\[
+e=\mathbb{P}(Z=1),
+\qquad
+e(X)=\mathbb{P}(Z=1\mid X),
+\qquad
+\mu_0(X)=\mathbb{E}(Y\mid Z=0,X).
+\]
+由 consistency，
+\[
+\mu_0(X)=\mathbb{E}\{Y(0)\mid Z=0,X\}.
+\]
+根据 $\varepsilon_0(X)$ 的定义，
+\[
+\mathbb{E}\{Y(0)\mid Z=1,X\}
+=
+\varepsilon_0(X)\mathbb{E}\{Y(0)\mid Z=0,X\}
+=
+\varepsilon_0(X)\mu_0(X).
+\]
+于是
+\begin{align*}
+\mathbb{E}\{Y(0)\mid Z=1\}
+&=
+\frac{\mathbb{E}\{ZY(0)\}}{\mathbb{P}(Z=1)}\\
+&=
+\frac{\mathbb{E}\left[Z\mathbb{E}\{Y(0)\mid Z=1,X\}\right]}{e}\\
+&=
+\frac{\mathbb{E}\{Z\mu_0(X)\varepsilon_0(X)\}}{e}.
+\end{align*}
+这证明了 \cref{thm::att-reg-ipw} 的 outcome-regression formula。
+
+下面证明 IPW formula。条件化在 $X$ 上，
+\begin{align*}
+\mathbb{E}\left\{
+e(X)\varepsilon_0(X)\frac{1-Z}{1-e(X)}Y
+\mid X
+\right\}
+&=
+e(X)\varepsilon_0(X)
+\mathbb{E}\left\{\frac{1-Z}{1-e(X)}Y(0)\mid X\right\}\\
+&=
+e(X)\varepsilon_0(X)
+\mathbb{E}\{Y(0)\mid Z=0,X\}\\
+&=
+e(X)\varepsilon_0(X)\mu_0(X).
+\end{align*}
+另一方面，
+\[
+\mathbb{E}\{Z\mu_0(X)\varepsilon_0(X)\mid X\}
+=
+e(X)\varepsilon_0(X)\mu_0(X).
+\]
+所以
+\[
+\mathbb{E}\left\{
+e(X)\varepsilon_0(X)\frac{1-Z}{1-e(X)}Y
+\right\}
+=
+\mathbb{E}\{Z\mu_0(X)\varepsilon_0(X)\}.
+\]
+代入上一段的 outcome-regression formula，即得
+\[
+\mathbb{E}\{Y(0)\mid Z=1\}
+=
+\frac{
+\mathbb{E}\left\{
+e(X)\varepsilon_0(X)(1-Z)Y/\{1-e(X)\}
+\right\}
+}{e}.
+\]
+这就是 \cref{thm::att-reg-ipw} 的第二个 identification formula。
+
+\paragraph{Remark.}
+ATT sensitivity analysis 比 ATE 情形少一个 sensitivity parameter，因为 $\mathbb{E}(Y\mid Z=1)$ 已经是 treated population 的 observed mean。所有建模与加权工作都只服务于一个问题：treated units 若没有接受 treatment，它们的平均结局会是多少？
+\end{exercisesolution}
+
+\begin{exercisesolution}{R code}{\cref{hw::att-sentivity-analysis} 中 ATT sensitivity estimators 的实现}
+本题要求实现 \cref{hw::att-sentivity-analysis} 中的估计量，并分析 \cref{sec::eg-sensitivity-tau} 使用的数据。项目目录中没有找到该例的 \ri{nhanes_bmi.csv}，因此这里不报告虚构数值；下面给出完整可复现代码。数据可用时，它会输出 $\hat\mu_{\textsc{t}1}$、四个 $\hat\mu_{\textsc{t}0}$ 估计量，以及相应的 $\hat\tau_{\textsc{t}}$ sensitivity grid。
+
+\begin{lstlisting}
+ATT_est_sa <- function(z, y, x, out.family = gaussian,
+                       truncps = c(0.01, 0.99), e0 = 1)
+{
+  pscore <- glm(z ~ x, family = binomial)$fitted.values
+  pscore <- pmax(truncps[1], pmin(truncps[2], pscore))
+
+  outcome0 <- glm(y ~ x, weights = 1 - z,
+                  family = out.family)$fitted.values
+
+  n1 <- sum(z)
+  odds <- pscore / (1 - pscore)
+
+  mu.t1 <- sum(z * y) / n1
+
+  mu.t0.reg <- sum(z * e0 * outcome0) / n1
+  mu.t0.ht <- sum(e0 * odds * (1 - z) * y) / n1
+  mu.t0.haj <- sum(e0 * odds * (1 - z) * y) /
+    sum(odds * (1 - z))
+  mu.t0.dr <- mu.t0.ht -
+    sum(e0 * (pscore - z) * outcome0 / (1 - pscore)) / n1
+
+  c(mu.t1 = mu.t1,
+    mu.t0.reg = mu.t0.reg,
+    mu.t0.ht = mu.t0.ht,
+    mu.t0.haj = mu.t0.haj,
+    mu.t0.dr = mu.t0.dr,
+    tau.reg = mu.t1 - mu.t0.reg,
+    tau.ht = mu.t1 - mu.t0.ht,
+    tau.haj = mu.t1 - mu.t0.haj,
+    tau.dr = mu.t1 - mu.t0.dr)
+}
+
+ATT_grid <- function(dat, E0, out.family = gaussian,
+                     truncps = c(0.01, 0.99))
+{
+  z <- dat$School_meal
+  y <- dat$BMI
+  x <- as.matrix(dat[, setdiff(names(dat), c("School_meal", "BMI"))])
+  x <- scale(x)
+
+  ans <- matrix(NA_real_, length(E0), 4,
+                dimnames = list(E0, c("reg", "ht", "haj", "dr")))
+  mu0 <- matrix(NA_real_, length(E0), 4,
+                dimnames = list(E0, c("reg", "ht", "haj", "dr")))
+
+  for (j in seq_along(E0)) {
+    fit <- ATT_est_sa(z, y, x, out.family = out.family,
+                      truncps = truncps, e0 = E0[j])
+    ans[j, ] <- fit[c("tau.reg", "tau.ht", "tau.haj", "tau.dr")]
+    mu0[j, ] <- fit[c("mu.t0.reg", "mu.t0.ht",
+                      "mu.t0.haj", "mu.t0.dr")]
+  }
+
+  list(tau = ans, mu.t0 = mu0)
+}
+
+boot_ATT_grid <- function(dat, E0, B = 1000,
+                          out.family = gaussian,
+                          truncps = c(0.01, 0.99),
+                          seed = 2026)
+{
+  set.seed(seed)
+  n <- nrow(dat)
+  boot <- array(NA_real_, dim = c(B, length(E0), 4))
+
+  for (b in seq_len(B)) {
+    id <- sample.int(n, n, replace = TRUE)
+    boot[b, , ] <- tryCatch(
+      ATT_grid(dat[id, , drop = FALSE], E0,
+               out.family = out.family,
+               truncps = truncps)$tau,
+      error = function(e) matrix(NA_real_, length(E0), 4)
+    )
+  }
+
+  se <- apply(boot, c(2, 3), sd, na.rm = TRUE)
+  dimnames(se) <- list(E0, c("reg", "ht", "haj", "dr"))
+  se
+}
+
+nhanes_bmi <- read.csv("nhanes_bmi.csv")[, -1]
+E0 <- c(1/2, 1/1.7, 1/1.5, 1/1.3, 1, 1.3, 1.5, 1.7, 2)
+
+att.point <- ATT_grid(nhanes_bmi, E0)
+att.se <- boot_ATT_grid(nhanes_bmi, E0, B = 1000)
+
+round(att.point$tau, 2)
+round(att.point$mu.t0, 2)
+round(att.se, 2)
+\end{lstlisting}
+
+代码中的四个 $\hat\mu_{\textsc{t}0}$ 分别对应 \cref{hw::att-sentivity-analysis} 的 regression、Horvitz--Thompson、Hajek 和 doubly robust forms。最终 ATT estimate 都通过
+\[
+\hat\tau_{\textsc{t}}=\hat\mu_{\textsc{t}1}-\hat\mu_{\textsc{t}0}
+\]
+得到。若要复现 \cref{sec::eg-sensitivity-tau} 的分析方式，可以重点报告 doubly robust 列；若要检查稳定性，则应同时比较 \ri{reg}、\ri{ht}、\ri{haj} 和 \ri{dr} 四列。
+
+\paragraph{Remark.}
+Hajek 版本通常比 Horvitz--Thompson 版本更稳定，因为它把 control units 的 odds weights 做了 self-normalization。doubly robust 版本的用途则不同：当 propensity score model 或 control outcome model 至少一个设定正确时，它仍有一致性的保护。因此在实际 sensitivity analysis 中，报告多个版本有助于区分 ``sensitivity parameter 改变导致的变化'' 和 ``估计方法本身不稳定导致的变化''。
+\end{exercisesolution}

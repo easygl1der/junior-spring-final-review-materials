@@ -1,0 +1,25 @@
+\chapter{问答与注解}
+
+\section{阅读过程中的问题与解答}
+
+\subsection{为什么译本保留英文术语括注？}\label{sec:qa-english-term-parentheses}
+
+\textbf{问}：因果推断教材翻译时，专有名词应该保持英文，还是在中文旁边标注英文？
+
+\textbf{答}：本译本采用“中文术语（English term）”的方式。第一次出现时给出中文译名和英文原词，例如“潜在结果（potential outcomes）”；后文以中文为主。对 FRT、SUTVA、RCT 这类领域常用缩写，则保留英文缩写，方便和英文文献、软件输出、原书章节互相对照。
+
+\textbf{关联章节}：全书术语规范。
+
+\textbf{是否影响正文}：影响。正文首次出现的核心术语应带英文括注，后文保持译名一致。
+
+\subsection{Part II 的 motivation 是什么？}\label{sec:qa-part-ii-motivation}
+
+\textbf{问}：Part II 的 motivation 是什么？
+
+\textbf{答}：Part II 研究 randomized experiments，其 motivation 是把 causal inference 中最干净的一种情形作为基准。在 randomized experiments 中，treatment assignment mechanism 由研究者设计并且已知，因此可以清楚地区分两件事：一是 causal estimand 由 potential outcomes 定义；二是 statistical uncertainty 来自 randomization。这使 Fisher randomization test、Neyman repeated-sampling inference、stratification、rerandomization、matched experiments 以及 Fisher--Neyman 统一框架都能在最少建模假设下讲清楚。
+
+更重要的是，Part II 为后面的 observational studies 提供参照系。后文的 propensity score、doubly robust estimator、matching、sensitivity analysis 和 instrumental variables，本质上都在问：当 assignment 不再由研究者控制时，我们需要加入哪些假设，才能恢复 randomized experiments 中那种可解释、可检验、可估计的结构？
+
+\textbf{关联章节}：Part II；\cref{ch::frt-cre,chapter::neyman-cr,chapter::stratification-poststratification,chapter:rerandomization-regression,chapter::mpe,chapter::unification-fisher-neyman}。
+
+\textbf{是否影响正文}：影响。已在 Part II 第一章开头加入脚注，提示这部分在全书结构中的基准作用。

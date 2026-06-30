@@ -1,0 +1,641 @@
+ 
+\chapter{An Econometric Perspective of the Instrumental Variable}
+ \label{chapter::iv-econometric}
+ 
+ 
+\cref{chapter::iv-experiment} 和 \cref{chapter::iv-inequalities} 从实验视角讨论 IV 方法。\cref{fig::causal-diagram-IV} 展示了这一讨论背后的直观图像。 
+ 
+ 
+\begin{figure}[h]
+\centering 
+$
+\xymatrix{
+ && & U  \ar[dl] \ar[dr] &\\
+Z \ar[rr] &&D \ar[rr]&&Y
+}
+$
+\caption{IV 的因果图}\label{fig::causal-diagram-IV}
+\end{figure} 
+ 
+ 
+ 
+在存在 noncompliance 的 encouragement design 中，$Z$ 是 randomized 的，因此它独立于实际接受的 treatment $D$ 与 outcome $Y$ 之间的 confounder $U$。更重要的是，treatment assignment $Z$ 对 outcome $Y$ 没有任何直接作用。它之所以是实际接受 treatment $D$ 的 IV，是因为它只通过实际接受的 treatment $D$ 影响 outcome $Y$。这种 IV 由实验者产生。 
+
+
+在许多应用中，randomization 不可行。那么，当 treatment $D$ 与 outcome $Y$ 之间存在 unmeasured confounding 时，我们怎样做 causal inference？econometrics 中的一个巧妙想法，是寻找 {\it natural experiments} 来模拟 encouragement design 的设定。为了在 unmeasured confounding 下识别 $D$ 对 $Y$ 的 causal effect，我们可以寻找另一个变量 $Z$，使它满足 \cref{fig::causal-diagram-IV} 中图形所表达的假设。变量 $Z$ 必须满足以下条件：
+\begin{enumerate}
+\item
+它应当接近 randomized，从而独立于 unmeasured confounding $U$；
+\item
+它应当改变 $D$ 的分布；
+\item
+它应当只通过 $D$ 间接影响 outcome $Y$，而不能直接影响 $Y$。
+\end{enumerate}
+如果这些条件都成立，那么 $Z$ 就是估计 $D$ 对 $Y$ 之 effect 的 valid IV。 
+
+
+
+本章给出 IV 的传统 econometrics 视角。这个视角建立在线性回归之上。\citet{imbens1994identification} 和 \citet{angrist1996identification} 的基础性贡献，是澄清了这一视角与 \cref{chapter::iv-experiment} 和 \cref{chapter::iv-inequalities} 中实验视角之间的联系。我们先从例子开始，再给出更多代数细节。 
+
+
+
+\section{Examples of studies with IVs}
+ 
+ 
+ 
+为 causal inference 寻找 IV 更像一门技艺，而不只是机械的科学程序。后面几节中的代数细节并不是统计学里最复杂的部分；真正困难的是在实证研究中找到合适的 IV。下面是一些著名例子。  
+
+
+\begin{example} 
+在 encouragement design 中，$Z$ 是随机分配的 treatment，$D$ 是最终实际接受的 treatment，$Y$ 是 outcome。如 \cref{chapter::iv-experiment} 所讨论，在 double-blind RCT 中，\cref{fig::causal-diagram-IV} 所编码的 IV 假设是可信的。这是 IV 的理想情形。 
+\end{example}
+
+
+ 
+ 
+ \begin{example}
+ \citet{hearst1986delayed} 报告说，在 Vietnam Era draft lottery 中抽到低 lottery number 的男性，之后有更高的死亡率。他们把这一现象归因于 military service 的负面影响。
+ \citet{angrist1990lifetime} 进一步报告说，在 Vietnam Era draft lottery 中抽到低 lottery number 的男性，之后收入更低。他把这一现象归因于 military service 的负面影响。 
+ 这些解释是可信的，因为 lottery number 是随机生成的，低 lottery number 的男性更可能服 military service，而 lottery number 不太可能直接影响后续死亡率或收入。也就是说，\cref{fig::causal-diagram-IV} 是可信的。 
+\citet{angrist1996identification} 用 IV 框架重新分析了这些数据。这里，lottery number 是 IV，military service 是 treatment，死亡率或收入是 outcome。 
+\end{example}
+
+
+
+
+\begin{example}
+\citet{angrist1991does} 研究了 schooling years 对 earnings 的 return，并使用 quarter of birth 作为 IV。这个 IV 是可信的，因为 quarter of birth 近似 pseudo-randomized。它会影响 schooling years，原因有二：(1) 美国多数州要求学生在满六岁的那个日历年入学；(2) compulsory schooling laws 通常要求学生在十六岁生日之前留在学校。更重要的是，quarter of birth 不直接影响 earnings 也是可信的。 
+\end{example}
+
+
+\begin{example}
+\citet{angrist1998children} 研究了 family size 对母亲 employment 与 work 的影响，并使用 sibling sex composition 作为 IV。这个 IV 是可信的，因为 sibling sex composition 近似 pseudo-randomized。此外，在美国，已有两个同性别孩子的父母比已有两个不同性别孩子的父母更可能生第三个孩子。sibling sex composition 不直接影响母亲的 employment 与 work 也同样可信。 
+\end{example}
+
+
+\begin{example}\label{example::Card1993}
+\citet{card1993using} 研究了 schooling 对 wages 的影响，并使用 college proximity 的地理差异作为 IV。具体地，$Z$ 包含若干 dummy variables，表示研究对象成长地附近是否有 two-year college 或 four-year college。虽然这项研究很经典，但它也可能不是 IV 的好例子，因为父母选择住在哪里未必是随机的，而且一个人在哪里长大本身也可能影响之后的 wage。 
+\end{example}
+
+
+
+\begin{example}
+\citet{voight2012plasma} 基于 {\it Mendelian randomization} 研究了 plasma high-density lipoprotein (HDL) cholesterol 对 heart attack 风险的 causal effect。他们使用一些 single-nucleotide polymorphisms (SNPs) 作为 HDL 的 genetic IV。根据 Mendel's second law，这些 SNPs 相对于 HDL 与 heart attack 之间的 unmeasured confounders 是随机的，并且只通过 HDL 影响 heart attack。 
+\cref{chapter::iv-mr} 会给出 Mendelian randomization 的更多细节。 
+\end{example}
+
+
+
+\section{Brief Review of the Ordinary Least Squares}
+
+
+
+在讨论 IV 的 econometric view 之前，我们先简要回顾 OLS（见 \cref{appendix::basic-linear-regression}）。这是统计学中的标准主题。不过，它有不同的数学表述，而采用哪一种表述会影响解释。 
+
+第一种视角基于 projection。给定具有有限二阶矩的 random variable $Y$ 和 random variable 或 vector $D$，定义 population OLS coefficient 为
+\begin{eqnarray*}
+\beta  &=& \arg\min_b E(Y - D  \tran b  )^2 \\
+&=& E(DD\tran)^{-1} E(DY),
+\end{eqnarray*}
+然后定义 population residual 为 $\varepsilon = Y -  D  \tran \beta $。根据定义，$Y$ 分解为
+\begin{eqnarray}\label{eq::olsdecomposition}
+Y = D  \tran \beta  + \varepsilon,
+\end{eqnarray}
+并且必然满足
+$$
+E(  D \varepsilon) = 0.
+$$ 
+基于 $(D_i,Y_i)_{i=1}^n \iidsim (D, Y)$，$\beta$ 的 OLS estimator 是如下 moment estimator：
+$$
+\hat{\beta} = \left(  \sumn D_i D_i\tran \right)^{-1}   \sumn D_i Y_i  . 
+$$
+因为
+\begin{eqnarray*}
+\hat{\beta}  &=& \left(  \sumn D_i D_i\tran \right)^{-1}  \sumn D_i ( D_i\tran \beta + \varepsilon_i   )  \\
+&=& \beta + \left(  \sumn D_i D_i\tran \right)^{-1} \sumn D_i  \varepsilon_i   ,
+\end{eqnarray*}
+由大数定律以及 $E(\varepsilon D) = 0$，可知 $\hat{\beta}$ 是 $\beta$ 的 consistent estimator。
+$\cov(\hat\beta)$ 的经典 EHW robust variance estimator 为
+$$
+\hat{V}_\textsc{ehw} = \left(  \sumn D_i D_i\tran \right)^{-1}
+\left(  \sumn \hat{\varepsilon}_i^2 D_i D_i\tran \right)
+\left(  \sumn D_i D_i\tran \right)^{-1}
+$$
+其中 $\hat{\varepsilon}_i  = Y_i - D_i\tran \hat{\beta}$ 是 residual。 
+
+
+
+
+第二种视角是把
+\begin{eqnarray}\label{eq::ols-true-model}
+Y = D  \tran \beta  + \varepsilon,
+\end{eqnarray}
+看成 data-generating process 的真实模型。
+也就是说，给定 random variables $(D, \varepsilon)$ 后，我们根据线性方程 \cref{eq::ols-true-model} 生成 $Y$。
+重要的是，在 data-generating process 中，$\varepsilon$ 和 $D$ 可能相关，并且 $E( D \varepsilon) \neq  0$。\cref{fig::endogenous-regressor} 给出了这样的例子。这与第一种视角有根本区别；在第一种视角中，$E(\varepsilon D) = 0$ 是由 population OLS 的定义保证的。
+因此，OLS estimator 可能不一致：
+$$
+\hat{\beta} \rightarrow \beta + E(DD\tran)^{-1} E(D\varepsilon) \neq \beta 
+$$
+当 sample size $n$ 趋于无穷时，上式是依概率收敛。 
+
+
+本节最后基于 \cref{eq::ols-true-model} 定义 {\it endogenous} 与 {\it exogenous} regressors，尽管它们在 econometrics 中并没有唯一的定义。 
+
+
+
+\begin{definition}
+\label{def::endogenous-exogenous}
+当 $E(\varepsilon D) \neq  0$ 时，regressor $D$ 称为 {\it endogenous}；当 $E(\varepsilon D) =  0$ 时，regressor $D$ 称为 {\it exogenous}。 
+\end{definition}
+
+\cref{def::endogenous-exogenous} 中的术语是 econometrics 的标准术语。
+当 $E(\varepsilon D) \neq  0$ 时，我们也说存在 {\it endogeneity}；当 $E(\varepsilon D) =  0$ 时，我们也说存在 {\it exogeneity}。
+
+在 OLS 的第一种视角中，endogeneity 与 exogeneity 这两个概念不起作用，因为 $E(\varepsilon D) =  0$ 由定义成立。持第一种视角的统计学家通常会觉得 endogeneity 和 exogeneity 的概念有些奇怪，也因此会觉得 IV 的想法不够自然。要理解 IV 的 econometric view，我们必须切换到 OLS 的第二种视角。 
+
+
+
+
+ 
+
+\begin{figure}[h]
+\centering
+\begin{subfigure}[]{0.4\textwidth}
+                \centering
+$
+\xymatrix{
+& U \ar[dl] \ar[dr]& \\
+D \ar[dr] & & \varepsilon \ar[dl] \\
+&Y&
+}
+$                \caption{$E(D\varepsilon) \neq 0$}
+        \end{subfigure}%
+        
+        \begin{subfigure}[]{0.4\textwidth}
+                \centering
+$
+\xymatrix{
+&\varepsilon  \ar[dl] \ar[dr] &\\
+D \ar[rr]&&Y
+}
+$
+                \caption{对 $\varepsilon$ 边际化}
+        \end{subfigure}%
+        
+\caption{Endogenous regressor $D$ 的不同表示。上图中，$U$ 表示 $D$ 与 $\varepsilon$ 的 unmeasured common causes。}\label{fig::endogenous-regressor}
+\end{figure}
+
+
+
+\section{Linear Instrumental Variable Model}
+\label{sec::linear-iv-model}
+
+
+
+当 $D$ 是 endogenous 时，OLS estimator 不一致。我们必须利用额外信息来构造 $\beta$ 的 consistent estimator。
+这里重点讨论如下 linear IV model：
+
+
+\begin{definition}
+[linear IV model]\label{def::linear-iv-model}
+我们有
+$$
+Y = D  \tran \beta  + \varepsilon ,
+$$
+并且
+\begin{eqnarray}\label{eq::iv-moment-condition}
+E(\varepsilon Z) = 0 . 
+\end{eqnarray}
+\end{definition}
+
+
+\cref{def::linear-iv-model} 中的 linear IV model 可以由下面的因果图表示：
+%\begin{figure}[h]
+%\centering 
+$$
+\xymatrix{
+&&&\varepsilon  \ar[dl] \ar[dr] &\\
+Z\ar[rr]&&D \ar[rr]&&Y
+}
+$$
+%\caption{Instrumental variable}
+%\end{figure}
+
+上面的 linear IV model 允许 $E(\varepsilon D) \neq 0$，但要求另一个 moment condition \cref{eq::iv-moment-condition}。把 intercept 纳入模型后有 $E(\varepsilon) = 0$，新条件说的是 $Z$ 与 error term $\varepsilon$ 不相关。不过，任何随机生成的 noise 都会与 $\varepsilon$ 不相关；因此，还需要额外条件来保证 $Z$ 对估计 $\beta$ 有用。直观地说，这个额外条件要求 $Z$ 与 $D$ 相关；更技术性的细节如下。  
+ 
+
+\cref{eq::iv-moment-condition} 这个数学要求看起来很简单。然而，在实证研究中，找到一个满足 \cref{eq::iv-moment-condition} 的变量 $Z$ 是关键挑战。由于条件 \cref{eq::iv-moment-condition} 涉及不可观测的 $\varepsilon$，它通常无法检验。 
+ 
+
+
+\section{The Just-Identified Case}
+\label{sec::iv-just-identify}
+
+我们先考虑 $Z$ 和 $D$ 维度相同且 $E(ZD\tran)$ full rank 的情形。条件 $E(\varepsilon Z) = 0$ 蕴含
+$$
+E\{  Z (Y -  D \tran \beta) \} = 0 .
+$$
+解这个线性方程组得到
+$$
+E(  ZY)  = E(ZD\tran) \beta  \\
+ \Longrightarrow 
+\beta = E(ZD\tran) ^{-1} E(  ZY)  
+$$
+只要 $E(ZD\tran)$ 不退化。
+如果 $E(\varepsilon D) = 0$，则 OLS 是一个特殊情形；换言之，$D$ 自己充当自己的 IV。由此得到的 moment estimator 是
+\begin{eqnarray}\label{eq::iv-estimator}
+\hat{\beta}_\textsc{iv} = \left(  \sumn Z_i D_i\tran \right)^{-1}  \sumn Z_iY_i.
+\end{eqnarray}
+
+把 scalar $D$ 和 $Z$ 的情形展开来看会很有启发。见下面的 \cref{eg::scalar-iv}。
+
+\begin{example}\label{eg::scalar-iv}
+在带有 intercept 且 $D$、$Z$ 都是 scalar 的简单情形中，我们有模型
+$$
+\left\{ \begin{array}{l}
+Y = \alpha +  \beta  D + \varepsilon ,\\
+E(\varepsilon) = 0, \quad \cov(\varepsilon, Z) = 0,
+\end{array}
+\right.
+$$
+在这个模型下，我们有
+$$
+\cov( Z, Y ) = \beta \cov(Z, D) 
+$$
+从而推出
+$$
+ \beta = \frac{ \cov( Z, Y )   }{ \cov(Z, D) }.
+$$
+用 $\var(Z)$ 分别标准化分子和分母，可得
+$$
+\beta =  \frac{ \cov( Z, Y ) / \var(Z)  }{ \cov(Z, D) / \var(Z) },
+$$
+它等于两个 OLS fits 中 $Z$ 的系数之比：一个是把 $Y$ 对 $Z$ 回归，另一个是把 $D$ 对 $Z$ 回归。
+如果 $Z$ 是 binary 的，那么这些系数就是均值差（见 \cref{problem::pols-binary}），并且 $\beta$ 化为
+$$
+\beta = \frac{ E(Y\mid Z=1) - E(Y\mid Z=0)  }{ E(D\mid Z=1) - E(D\mid Z=0) } .
+$$
+这与 \cref{thm::CACE-identification} 中的 identification formula 完全相同。也就是说，当 IV $Z$ 和 treatment $D$ 都是 binary 时，IV estimator 在 potential outcomes framework 下恢复 CACE。这是 \citet{imbens1994identification} 和 \citet{angrist1996identification} 的关键结果。  
+\end{example}
+
+
+
+ 
+
+\section{The Over-Identified Case}
+\label{sec::sec::iv-over-identify}
+
+\cref{sec::iv-just-identify} 的讨论集中在 {\it just-identified} 情形。当 $Z$ 的维度低于 $D$，且 $E(ZD\tran)$ 没有 full column rank 时，方程 $E(  ZY)  = E(ZD\tran) \beta$ 有无穷多个解。这是 {\it under-identified} 情形：即便有 $Z$，coefficient $\beta$ 也不能被唯一确定。这是一个困难情形，超出本书范围。为了保证 identifiability，我们需要至少与 endogenous regressors 数量一样多的 IV。 
+
+当 $Z$ 的维度高于 $D$，且 $E(ZD\tran)$ 有 full column rank 时，我们有多种方法可以从 $E(  ZY)  = E(ZD\tran) \beta$ 中确定 $\beta$。更进一步，sample analog
+$$
+n^{-1} \sumn Z_iY_i = n^{-1} \sumn Z_i D_i\tran \beta
+$$
+可能没有任何解，因为方程个数多于未知参数个数。 
+
+
+over-identified case 的一个计算技巧是 {\it two-stage least squares} (TSLS) estimator \citep{theil1953estimation, basmann1957generalized}。这是一个巧妙的计算技巧，分为两步。
+
+\begin{definition}
+[Two-stage least squares]\label{def::2sls}
+当 $Z$ 是 IV 时，$D$ 的 coefficient 的 TSLS estimator 定义如下。
+\begin{enumerate}
+\item
+把 $D$ 对 $Z$ 做 OLS，得到 fitted value $\hat{D}_i\ (i=1,\ldots, n)$。如果 $D_i$ 是 vector，则需要逐分量做 OLS 来得到 $\hat{D}_i$。把这些 fitted vectors 放入矩阵 $\hat{D}$，其中各行为 $\hat{D}_i\tran $；
+\item
+把 $Y$ 对 $\hat{D}$ 做 OLS，得到 coefficient $\hat{\beta}_\textsc{tsls}$。  
+\end{enumerate}
+\end{definition}
+ 
+
+为了看清 TSLS 为什么有效，需要更多代数。更明确地写为
+\begin{eqnarray} 
+\hat{\beta}_\textsc{tsls} &=& \left(  \sumn \hat{D}_i\hat{D}_i\tran \right) ^{-1} 
+\sumn \hat{D}_i Y_i  \label{eq::2sls-definition} \\
+&=& \left(  \sumn \hat{D}_i\hat{D}_i\tran \right) ^{-1} 
+\sumn \hat{D}_i (D_i \tran \beta + \varepsilon_i)  \nonumber  \\
+&=& \left(  \sumn \hat{D}_i\hat{D}_i\tran \right) ^{-1} 
+\sumn \hat{D}_i D_i \tran \beta + \left(  \sumn \hat{D}_i\hat{D}_i\tran \right) ^{-1} \sumn \hat{D}_i  \varepsilon_i .   \nonumber 
+\end{eqnarray}  
+第一阶段 OLS fit 保证 $D_i  = \hat{D}_i + \check D_i$，并且 fitted values 与 residuals 正交，即
+\begin{equation} \label{eq::ols-orthogonal}
+\sumn \hat{D}_i  \check D_i\tran = 0
+\end{equation}
+是与 $D_i$ 维度相同的零方阵。正交性 \cref{eq::ols-orthogonal} 蕴含
+$$
+\sumn \hat{D}_i D_i \tran = \sumn \hat{D}_i\hat{D}_i\tran,
+$$ 
+进一步推出
+\begin{eqnarray}
+\label{eq::2sls-ols}
+\hat{\beta}_\textsc{tsls} = \beta + \left(  \sumn \hat{D}_i\hat{D}_i\tran \right) ^{-1} \sumn \hat{D}_i  \varepsilon_i.
+\end{eqnarray}
+第一阶段 OLS fit 还保证
+\begin{equation}
+\label{eq::ols-donz}
+\hat{D}_i = \hat{\Gamma}\tran  Z_i 
+\end{equation}
+由此推出
+\begin{eqnarray}
+\label{eq::2sls-consistency}
+\hat{\beta}_\textsc{tsls} = \beta + \left\{  \hat{\Gamma}\tran  \left(  n^{-1}  \sumn Z_i Z_i\tran  \right) \hat{\Gamma}  \right\}  ^{-1}  
+\hat{\Gamma}\tran  \left( n^{-1} \sumn Z_i  \varepsilon_i \right) . 
+\end{eqnarray}
+基于 \cref{eq::2sls-consistency}，由大数定律以及 $n^{-1} \sumn Z_i  \varepsilon_i $ 的 probability limit 为 $E(Z\varepsilon) = 0$，可以看出 TSLS estimator 的 consistency。我们也可以用 \cref{eq::2sls-consistency} 证明：当 $Z$ 和 $D$ 维度相同时，$\hat{\beta}_\textsc{tsls} $ 与 \cref{sec::iv-just-identify} 中定义的 $\hat{\beta}_\textsc{iv} $ 在数值上完全相同；这留作 \cref{prob::algebra-tsls}。 
+
+
+
+
+基于 \cref{eq::2sls-ols}，可以如下得到 standard error。我们先得到 residual $\hat{\varepsilon}_i = Y_i - \hat{\beta}_\textsc{tsls}\tran D_i$，然后得到 robust variance estimator：
+$$
+\hat{V}_\textsc{tsls} = \left( \sumn  \hat{D}_i \hat{D}_i\tran  \right)^{-1}
+ \left( \sumn \hat{\varepsilon}_i ^2  \hat{D}_i \hat{D}_i\tran  \right)
+\left( \sumn  \hat{D}_i \hat{D}_i\tran  \right)^{-1} . 
+$$
+重要的是，$\hat{\varepsilon}_i$ 并不是第二阶段 OLS 的 residual $  Y_i - \hat{\beta}_\textsc{tsls}\tran \hat{D}_i $，所以 $\hat{V}_\textsc{tsls} $ 不同于第二阶段 OLS 给出的 robust variance estimator。 
+
+
+
+
+\section{A Special Case: A Single IV for a Single Endogenous Treatment}
+
+
+本节聚焦一个简单情形：单个 IV 与单个 endogenous treatment。这个情形有广泛应用。
+考虑如下 {\it structural equations}：
+\begin{eqnarray}
+\label{eq::strucrual-iv}
+\left\{
+\begin{array}{l}
+Y_i = \beta_0 + \beta_1 D_i + \beta_2\tran X_i + \varepsilon_{i},\\
+D_i = \gamma_0 + \gamma_1 Z_i + \gamma_2 \tran X_i + \varepsilon_{2i},
+\end{array}
+\right.
+\end{eqnarray}
+其中 $D_i$ 是 scalar endogenous regressor，表示我们关心的 treatment variable（即 $E(\varepsilon_{i} D_i) \neq 0$）；$Z_i$ 是 $D_i$ 的 scalar IV（即 $E(\varepsilon_{i} Z_i) = 0$）；$X_i$ 包含其他 exogenous regressors（即 $E(\varepsilon_{i} X_i) = 0$）。这是把 $D$ 替换为 $(1, D, X)$、把 $Z$ 替换为 $(1, Z, X)$ 的特殊情形。 
+
+
+
+\subsection{Two-stage least squares}
+
+\cref{def::2sls} 中的 TSLS estimator 在这里简化为如下形式。 
+
+\begin{definition}
+[TSLS with a single endogenous regressor]\label{def::tsls-single}
+基于 \cref{eq::strucrual-iv}，TSLS estimator 有如下两步。
+\begin{enumerate}
+\item
+把 $D$ 对 $(1, Z,X)$ 做 OLS，得到 fitted values $\hat{D}_i\ (i=1,\ldots, n)$，并把它们向量化为 $\hat{D}$；
+
+\item 
+把 $Y$ 对 $(1, \hat{D}, X)$ 做 OLS，得到 coefficient $\hat{\beta}_\textsc{tsls}$；特别地，得到 $\hat{\beta}_{1,\textsc{tsls}}$，即 $\hat{D}$ 的 coefficient。 
+\end{enumerate}
+\end{definition}
+
+
+
+\subsection{Indirect least squares}
+
+
+结构方程（structural equation）\cref{eq::strucrual-iv} 蕴含
+\begin{eqnarray*}
+Y_i &=&\beta_0 + \beta_1 (\gamma_0 + \gamma_1 Z_i + \gamma_2 \tran X_i + \varepsilon_{2i}) + \beta_2\tran X_i + \varepsilon_{i} \\
+&=& (\beta_0 + \beta_1\gamma_0 ) + \beta_1  \gamma_1 Z_i  + ( \beta_2 + \beta_1 \gamma_2 )\tran X_i  + ( \varepsilon_{i} + \beta_1 \varepsilon_{2i} ).
+\end{eqnarray*}
+定义 $\Gamma_0 = \beta_0 + \beta_1\gamma_0, \Gamma_1  =  \beta_1  \gamma_1, \Gamma_2 = \beta_2 + \beta_1 \gamma_2$，以及 $\varepsilon_{1i} = \varepsilon_{i} + \beta_1 \varepsilon_{2i}$。我们得到如下方程：
+\begin{eqnarray}
+\label{eq::reduced-iv}
+\left\{
+\begin{array}{l}
+Y_i =\Gamma_0 + \Gamma_1 Z_i + \Gamma_2\tran X_i + \varepsilon_{1i},\\
+D_i = \gamma_0 + \gamma_1 Z_i + \gamma_2 \tran X_i + \varepsilon_{2i},
+\end{array}
+\right.
+\end{eqnarray}
+这称为 {\it reduced form}，与 \cref{eq::strucrual-iv} 中的 {\it structural form} 相对。我们关心的参数等于两个 coefficients 的比值：
+$$
+\beta_1 = \Gamma_1 / \gamma_1.
+$$ 
+在 reduced form 中，左边是 dependent variables $Y$ 和 $D$，右边是 exogenous variables $Z$ 和 $X$，并且满足
+$$
+E( Z \varepsilon_{1i} ) = E( Z \varepsilon_{2i} )  = 0, \quad 
+E( X \varepsilon_{1i} ) = E( X \varepsilon_{2i} )  = 0.
+$$ 
+更重要的是，OLS 为 reduced form \cref{eq::reduced-iv} 中的 coefficients 给出 consistent estimators。 
+
+
+约化形式（reduced form）\cref{eq::reduced-iv} 表明，两个 OLS coefficients $\hat{\Gamma}_1$ 与 $\hat{\gamma}_1$ 的比值是 $\beta_1$ 的合理 estimator。这称为 {\it indirect least squares} (ILS) estimator：
+$$
+\hat{\beta}_{1,\textsc{ils}} =  \hat{\Gamma}_1 / \hat{\gamma}_1 .
+$$
+有趣的是，在 \cref{eq::strucrual-iv} 下，它与 TSLS estimator 在数值上完全相同。
+
+\begin{theorem}
+\label{thm::ils=2sls}
+%Under \cref{eq::strucrual-iv}, we have  
+在 \cref{eq::strucrual-iv} 中有单个 endogenous treatment 和单个 IV 时，我们有
+$$
+\hat{\beta}_{1,\textsc{ils}}   = \hat{\beta}_{1,\textsc{tsls}} . 
+$$
+\end{theorem}
+
+\cref{thm::ils=2sls} 是一个代数事实。
+\citet[][Section A.3]{imbens2014instrumental} 指出了这一点，但没有给出证明。
+证明留给 \cref{para::tsls-ils}。这个 ratio formula 清楚表明：当 instrument variable 较弱，即 $\gamma_1 $ 接近零时，TSLS estimator 的有限样本性质会很差。 
+
+
+
+\subsection{Weak IV}
+
+下面的 inferential procedure 更简单、更透明，并且对 weak IV 更 robust。不过，它的计算量更大。
+约化形式（reduced form）\cref{eq::reduced-iv} 还蕴含
+\begin{eqnarray}
+\label{eq::anderson-rubin-reg}
+Y_i  - bD_i = (\Gamma_0 -b \gamma_0 ) +  (\Gamma_1  - b \gamma_1 ) Z_i
++ (\Gamma_2 - b \gamma_2  ) \tran X_i  + ( \varepsilon_{1i} -  b \varepsilon_{2i} )
+\end{eqnarray}
+对任意 $b$ 都成立。
+在真实值 $b = \beta_1$ 处，$Z_i$ 的 coefficient 必须为 $0$。这个简单事实提示我们，可以通过反演 $H_0(b): \beta_1 = b$ 的检验来构造 $\beta_1$ 的 confidence interval：
+$$
+\left\{ b:  | t_Z(b) | \leq z_{1-\alpha/2} \right\},
+$$
+其中 $t_Z(b) $ 是基于 \cref{eq::anderson-rubin-reg} 的 OLS fit 并使用 EHW standard error 得到的 $Z$ 的 coefficient 的 $t$-statistic，$z_{1-\alpha/2}$ 是标准正态随机变量的 $1-\alpha/2$ 上分位数。
+这个 confidence interval 比基于 TSLS estimator 的 Wald-type confidence interval 更 robust。它类似于 \cref{chapter::iv-experiment} 中讨论的 FAR confidence set。这个 procedure 使 TSLS estimator 变得不再必要。进一步说，如果目标是在 \cref{eq::strucrual-iv} 下检验 $\beta_1 = 0$，那么我们只需要基于 reduced form 对 $Y$ 做 OLS fit。 
+
+
+
+\section{Application}\label{sec::tsls-application}
+
+ 
+
+回到 \cref{example::Card1993}。
+\citet{card1993using} 使用 National Longitudinal Survey of Young Men 来估计 education 对 earnings 的 causal effect。该数据集包含 3010 名男性，他们在 1966 年年龄介于 14 到 24 岁之间；\citet{card1993using} 利用 college proximity 的地理差异作为 education 的 IV。这里，$Z$ 是是否在 four-year college 附近长大的 indicator，$D$ 衡量 education years，outcome $Y$ 是 1976 年的 log wage，范围从 4.6 到 7.8。额外 covariates 包括 race、age、squared age、一个表示与双亲同住、单亲母亲同住或双亲同住的 categorical variable，以及总结过去居住区域的变量。 
+
+
+
+\begin{lstlisting}
+> library("car")
+> ## Card Data
+> card.data = read.csv("card1995.csv")
+> Y = card.data[, "lwage"]
+> D = card.data[, "educ"]
+> Z = card.data[, "nearc4"]
+> X = card.data[, c("exper", "expersq", "black", "south", 
++                   "smsa", "reg661", "reg662", "reg663", 
++                   "reg664", "reg665", "reg666", 
++                   "reg667", "reg668", "smsa66")]
+> X = as.matrix(X)
+\end{lstlisting}
+
+
+基于 TSLS，可以得到如下 point estimator 和 $95\%$ confidence interval。 
+\begin{lstlisting}
+> Dhat    = lm(D ~ Z + X)$fitted.values
+> tslsreg = lm(Y ~ Dhat + X)
+> tslsest = coef(tslsreg)[2]
+> ## correct se by changing the residuals
+> res.correct       = Y - cbind(1, D, X)%*%coef(tslsreg)
+> tslsreg$residuals = as.vector(res.correct)
+> tslsse = sqrt(hccm(tslsreg, type = "hc0")[2, 2])
+> res = c(tslsest, tslsest - 1.96*tslsse, tslsest + 1.96*tslsse)
+> names(res) = c("TSLS", "lower CI", "upper CI")
+> round(res, 3)
+    TSLS lower CI upper CI 
+   0.132    0.026    0.237 
+\end{lstlisting}
+
+
+使用 FAR confidence set 的策略，可以把 $p$-value 计算为 $b$ 的函数。 
+\begin{lstlisting}
+> BetaAR   = seq(-0.1, 0.4, 0.001)
+> PvalueAR = sapply(BetaAR, function(b){
++   Y_b   = Y - b*D
++   ARreg = lm(Y_b ~ Z + X)
++   coefZ = coef(ARreg)[2]
++   seZ   = sqrt(hccm(ARreg)[2, 2])
++   Tstat = coefZ/seZ
++   (1 - pnorm(abs(Tstat)))*2
++ })
+\end{lstlisting}
+\cref{fig::card-far-ci} 展示了基于下面 \ri{R} 代码、针对 $D$ 的 coefficient 的一系列检验所得到的 $p$-values：
+\begin{lstlisting}
+> plot(PvalueAR ~ BetaAR, type = "l",
++      xlab = "coefficient of D",
++      ylab = "p-value",
++      main = "Fieller-Anderson-Rubin interval based on Card's data")
+> point.est = BetaAR[which.max(PvalueAR)]
+> abline(h = 0.05, lty = 2, col = "grey")
+> abline(v = point.est, lty = 2, col = "grey")
+> ARCI = range(BetaAR[PvalueAR >= 0.05])
+> abline(v = ARCI[1], lty = 2, col = "grey")
+> abline(v = ARCI[2], lty = 2, col = "grey")
+\end{lstlisting}
+我们把 point estimate 报告为使 $p$-value 最大的 $b$，并把 confidence interval 报告为所有 $p$-values 大于 0.05 的 $b$ 所构成的区域。 
+\begin{lstlisting}
+> FARres = c(point.est, ARCI)
+> names(FARres) = c("FAR est", "lower CI", "upper CI")
+> round(FARres, 3)
+ FAR est lower CI upper CI 
+   0.132    0.028    0.282
+\end{lstlisting}
+比较 TSLS 和 FAR 方法，二者的 confidence lower limits 非常接近，但 confidence upper limits 略有不同，这可能是因为 TSLS estimator 的分布右尾较重。总体而言，在这个例子中 TSLS 和 FAR 方法给出了相近结果，因为 IV 并不 weak。 
+ 
+
+
+\begin{figure}
+\centering 
+\includegraphics[width = \textwidth]{figures/FAR_Carddata.pdf}
+\caption{通过反演检验重新分析 \citet{card1993using} 的数据} \label{fig::card-far-ci} 
+\end{figure}
+
+ 
+ 
+ 
+\section{Homework}
+
+\homeworksolutionref{23}
+\paragraph{More algebra for TSLS in \cref{sec::sec::iv-over-identify}}\label{prob::algebra-tsls}
+
+\begin{enumerate}
+\item 
+证明 \cref{eq::ols-donz} 中的 $\hat \Gamma$ 等于
+$$
+\hat{\Gamma} = \left(  \sumn Z_i Z_i\tran  \right)^{-1} \sumn Z_i D_i\tran .
+$$
+
+\item
+证明：如果 $Z$ 和 $D$ 维度相同，并且
+$$
+n^{-1} \sumn Z_i Z_i\tran, \quad n^{-1} \sumn Z_i D_i\tran
+$$
+都可逆，那么 \cref{eq::2sls-definition} 中定义的 $\hat{\beta}_\textsc{tsls} $ 化为 \cref{eq::iv-estimator} 中定义的 $ \hat{\beta}_\textsc{iv}$。 
+\end{enumerate}
+
+\paragraph{Equivalence between TSLS and ILS}\label{para::tsls-ils}
+证明 \cref{thm::ils=2sls}。 
+
+
+Remark: 使用 \cref{appendix::basic-linear-regression} 中的 FWL theorem。 
+
+
+
+\paragraph{Control function in the linear instrumental variable model}\label{para::control-function-iv}
+
+下面的 \cref{def::cf} 与上面的 \cref{def::2sls} 平行。
+
+\begin{definition}
+[control function]\label{def::cf}
+定义 control function estimator $\hat{\beta}_\textsc{cf}$ 如下。
+\begin{enumerate}
+\item
+把 $D$ 对 $Z$ 做 OLS，得到 residuals $\check D_i\ (i=1,\ldots, n)$。如果 $D_i$ 是 vector，则需要逐分量做 OLS 来得到 $\check D_i$。把这些 residual vectors 放入矩阵 $\check{D}$，其中各行为 $\check{D}_i\tran $；
+\item
+把 $Y$ 对 $D$ 和 $\check{D}$ 做 OLS，得到 $D$ 的 coefficient，即 $\hat{\beta}_\textsc{cf}$。  
+\end{enumerate}
+\end{definition}
+ 
+ 证明 $\hat{\beta}_\textsc{cf} = \hat{\beta}_\textsc{tsls}$。
+ 
+ 
+ Remark:
+为了证明这个结果，可以使用 \cref{hw::ols-orthogonal} 和 \cref{hw::ols-transform-regressors} 中的结果。
+  在 \cref{def::cf} 中，Step 1 得到的 $\check{D}$ 称为 Step 2 的 control function。
+ \citet{hausman1978specification} 指出了这个结果。\citet{wooldridge2015control} 对更复杂模型中的 control function methods 给出了更一般的讨论。 
+ 
+  
+
+
+ 
+
+%\paragraph{Data analysis: \citet{card1993using}}
+%
+%\citet{card1993using} used the geographic variation in college proximity to estimate the return to schooling. The treatment is education and the outcome is log wage. The IV is the college proximity. 
+%\texttt{card.csv} is a slightly modified version of the data from Card's homepage with detailed explanations of the variable names in \texttt{code\_bk.txt}.
+%
+%You can dichotomize the education variable and infer the LATE. How do you choose the threshold for the dichotomization? Are the results sensitive to your choice? Conduct an analysis with covariates. 
+%
+%Without dichotomizing the education variable, you can use the standard two-stage least squares estimator. Compare the results to the above analysis.
+%
+%What if the return of education is nonlinear? Do the data provide information for us to test the nonlinearity?
+%
+
+
+\paragraph{Data analysis: \citet{efron1991compliance}}
+
+\citet{efron1991compliance} 是较早在 potential outcomes framework 下处理 noncompliance 的研究之一。原始 randomized experiment，即 Lipid Research Clinics Coronary Primary Prevention Trial (LRC-CPPT)，旨在评估 cholestyramine 这种药物对 cholesterol levels 的影响。
+在数据集 \texttt{EF.csv} 中，第一列包含 treatment 与 control 的 binary indicators，第二列包含实际服用的名义 cholestyramine dose 的比例，最后三列是 cholesterol levels。
+注意，个体并不知道自己被分配到 cholestyramine 还是 placebo，但是 adverse side effects 的差异可能会诱导不同 treatment status 下的 compliance behavior 出现差异。所有个体都在同一时间段内被分配相同名义 dose 的药物或 placebo。
+第 3 列 $C_3$ 是在告知低胆固醇饮食好处之前测得的；第 4 列 $C_4$ 是在给出这一建议之后、随机分配 cholestyramine 或 placebo 之前测得的；第 5 列 $C_5$ 是 post-randomization cholesterol readings 的平均值，对研究中所有个体而言，它是在平均 7.3 年的时间段内按两个月读数取平均得到的。\citet{efron1991compliance} 使用 cholesterol level 的变化作为最终感兴趣的 outcome，定义为 $C_5 - 0.25C_3 - 0.75C_4$。他们的原始论文包含更详细的描述。 
+ 
+
+这里的数据结构比 \cref{chapter::iv-experiment} 和 \cref{chapter::iv-inequalities} 中讨论的 noncompliance problem 更复杂。
+\citet{jin2008principal} 后来基于 \cref{chapter::principal-stratification} 中的思想重新分析了这些数据。
+你可以根据自己对问题的理解来分析这些数据，但需要说明选择该方法的理由。这个问题没有 gold-standard solution。 
+
+
+
+
+ \paragraph{Recommended reading}
+
+
+\citet{imbens2014instrumental} 给出了 IV 的 econometrician's perspective。 

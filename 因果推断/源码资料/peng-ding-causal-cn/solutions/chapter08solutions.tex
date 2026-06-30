@@ -1,0 +1,266 @@
+\chapter{Solutions to Chapter 8: Unification of the Fisherian and Neymanian Inferences in Randomized Experiments}
+\label{sol:chapter08}
+
+\begin{exercisesolution}{Re-analyzing \citet{angrist2009effects}'s data}{MPE 中 studentized FRT 的可复现框架}
+本题是 Problem \ref{para::AL-mpe-neyman} 的 Fisherian 对应版本。实验单位是 schools，设计是 matched-pairs experiment；删去 pair 6 以及 noncompliance pairs 后，分析对象是 Chapter \ref{chapter::mpe} 中给出的 $14$ 个 complete pairs。对每个 outcome year，例如 \ri{pr01} 或 \ri{pr02}，先构造 pair-level treated-control difference
+\[
+d^Y_i=Y_{i,T}^{\mathrm{obs}}-Y_{i,C}^{\mathrm{obs}},
+\]
+并对 pretreatment covariates 构造同方向的 differences
+\[
+d^{99}_i=X^{99}_{i,T}-X^{99}_{i,C},\qquad
+d^{00}_i=X^{00}_{i,T}-X^{00}_{i,C}.
+\]
+在 sharp null hypothesis $\HF$ 下，每个 pair 内两所学校的 observed outcomes 固定，randomization 只会独立翻转 pair-level difference 的符号。因此若 $s_i\in\{-1,1\}$ 表示相对于 observed assignment 是否翻转第 $i$ 个 pair，则 randomization distribution 由
+\[
+d^Y_i(s)=s_id^Y_i,\qquad
+d^{99}_i(s)=s_id^{99}_i,\qquad
+d^{00}_i(s)=s_id^{00}_i
+\]
+生成。这里 covariate differences 也随 sign 翻转，因为在每个 hypothetical assignment 下 treated-control 的方向随 assignment 改变。
+
+不调整 covariates 时，推荐的 studentized statistic 是 intercept-only pair-level OLS 的 $t$-statistic：
+\[
+d^Y_i(s)=\alpha+u_i,\qquad
+T_0(s)=\frac{\hat\alpha(s)}{\widehat{\se}\{\hat\alpha(s)\}}.
+\]
+由于 $\hat\alpha(s)=n^{-1}\sum_i d^Y_i(s)$ 且 usual OLS intercept standard error 等于
+\[
+\left\{\frac{1}{n(n-1)}\sum_{i=1}^n
+\{d^Y_i(s)-\bar d^Y(s)\}^2\right\}^{1/2},
+\]
+这正是 MPE 的 paired $t$ statistic。它和 \cref{prop::mpe-variance,thm::varianceest-mp} 中的 Neymanian variance estimator 使用同一份 pair-level variation。
+
+调整 covariates 时，按 \cref{prop::colin2018regression} 拟合
+\[
+d^Y_i(s)=\alpha+\gamma_1d^{99}_i(s)+\gamma_2d^{00}_i(s)+u_i,
+\]
+并使用 intercept 的 $t$-statistic
+\[
+T_{\mathrm{adj}}(s)=
+\frac{\hat\alpha(s)}{\widehat{\se}\{\hat\alpha(s)\}}.
+\]
+这对应 Chapter \ref{chapter::unification-fisher-neyman} 中对 MPE 的建议：没有 covariates 时使用 intercept-only regression 的 studentized statistic；有 covariates 时使用 pair-level covariate-adjusted regression 的 intercept $t$-statistic。其理由与 \cref{sec::strong-weak-cre-frt} 平行：studentization 让 FRT 在 $\HF$ 下保留 finite-sample exactness，并在 weak null $\HN$ 下具有更好的 large-sample 行为；covariate adjustment 的角色则是利用 pretreatment Bagrut passing rates 提高 power。
+
+因为本题要求报告 $p_\frt$，但这里不伪造没有实际运行数据得到的数值。可复现的 \ri{R} 框架如下；如果使用教材中的 \ri{AL2009.csv}，它会同时给出 \ri{pr01} 和 \ri{pr02}、未调整和调整后的 two-sided $p_\frt$。对于 \ri{pr02} 中 pair 13 的缺失值，主分析采用 complete-pair rule：删除整个 pair，而不是只删除一个 school。这样做尊重 MPE 的 randomization unit。
+\begin{lstlisting}
+make_pair_data <- function(dat, yname) {
+  pieces <- by(dat, dat$pair, function(dd) {
+    dd <- dd[order(dd$z), ]
+    y0 <- dd[dd$z == 0, yname]
+    y1 <- dd[dd$z == 1, yname]
+    x990 <- dd[dd$z == 0, "pr99"]
+    x991 <- dd[dd$z == 1, "pr99"]
+    x000 <- dd[dd$z == 0, "pr00"]
+    x001 <- dd[dd$z == 1, "pr00"]
+    c(dy = y1 - y0, dx99 = x991 - x990, dx00 = x001 - x000)
+  })
+  out <- as.data.frame(do.call(rbind, pieces))
+  na.omit(out)
+}
+
+t_unadj <- function(D) {
+  summary(lm(dy ~ 1, data = D))$coef[1, "t value"]
+}
+
+t_adj <- function(D) {
+  summary(lm(dy ~ dx99 + dx00, data = D))$coef[1, "t value"]
+}
+
+enumerate_signs <- function(n) {
+  as.matrix(expand.grid(rep(list(c(-1, 1)), n)))
+}
+
+frt_mpe <- function(D, stat) {
+  D <- na.omit(D)
+  obs <- stat(D)
+  signs <- enumerate_signs(nrow(D))
+  vals <- apply(signs, 1, function(s) {
+    Ds <- D
+    Ds$dy <- s * D$dy
+    Ds$dx99 <- s * D$dx99
+    Ds$dx00 <- s * D$dx00
+    stat(Ds)
+  })
+  c(t.obs = obs,
+    p.frt = mean(abs(vals) >= abs(obs)),
+    n.pairs = nrow(D))
+}
+
+dat <- read.csv("AL2009.csv")
+D01 <- make_pair_data(dat, "pr01")
+D02 <- make_pair_data(dat, "pr02")
+
+frt_mpe(D01, t_unadj)
+frt_mpe(D01, t_adj)
+frt_mpe(D02, t_unadj)
+frt_mpe(D02, t_adj)
+\end{lstlisting}
+
+如果 pairs 很少，可以像上面那样枚举所有 $2^n$ 个 assignments，得到 exact $p_\frt$。如果 pairs 更多，则把 \ri{enumerate\_signs} 换成 Monte Carlo signs，并使用
+\[
+\tilde p_\frt=
+\frac{1+\sum_{r=1}^R \mathbb{I}\{|T_r|\geq |T_{\mathrm{obs}}|\}}{1+R}
+\]
+作为 finite-sample valid 的 Monte Carlo approximation；其逻辑见 Chapter \ref{ch::frt-cre} 中 Monte Carlo FRT 的讨论。
+
+\emph{Reference / 用途：} 本题连接了 \cref{para::AL-mpe-neyman} 的 Neymanian analysis 与本章的 Fisherian recommendation。实践报告应同时列出 outcome year、是否调整 covariates、使用的 pair 数、observed studentized statistic 和 $p_\frt$。若 covariate adjustment 后 $p_\frt$ 明显变小，应解释为 pretreatment passing rates 对 outcome 有预测力，从而提高了 test statistic 的 sensitivity；不能解释为 regression model 自身保证了 validity。Validity 仍来自 MPE 的 randomization distribution。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Replication of \citet{zhao2020caFRT}'s Figure 1}{SRE 中不同 FRT statistics 的 size simulation}
+\citet{zhao2020caFRT} 的 Figure 1 比较了 SRE 下不同 FRT statistics 的有限样本表现。复现的核心不是某个单一数据集，而是一个 repeated-simulation workflow：先固定一个 SRE design 和一组 potential outcomes，再反复抽取 realized assignments；在每个 realized dataset 上计算若干 FRT $p$-values；最后在 weak null $\HN:\tau=0$ 下比较 empirical rejection rates。若某个 test 在 nominal level $\alpha$ 下的 rejection rate 大于 $\alpha$，它在该 data-generating process 下反保守；若不超过 $\alpha$，则 finite-sample 或 large-sample 上更稳妥。
+
+对第 $k$ 个 stratum，记其大小为 $n_{[k]}$，treatment 数为 $n_{[k]1}$，control 数为 $n_{[k]0}$，权重为 $\pi_{[k]}=n_{[k]}/n$。未调整的 SRE estimator 和 conservative variance estimator 为
+\[
+\hat\tau_\textsc{S}
+=\sum_{k=1}^K\pi_{[k]}\hat\tau_{[k]},
+\]
+\[
+\hat V_\textsc{S}
+=\sum_{k=1}^K\pi_{[k]}^2
+\left\{
+\frac{\hat S_{[k]}^2(1)}{n_{[k]1}}
++\frac{\hat S_{[k]}^2(0)}{n_{[k]0}}
+\right\},
+\]
+见 \cref{sec::sre-neyman}。相应 studentized statistic 是
+\[
+t_\textsc{S}=\frac{\hat\tau_\textsc{S}}{\sqrt{\hat V_\textsc{S}}}.
+\]
+有额外 covariates 时，在每个 stratum 内使用 \citet{lin2013} regression adjustment，再按权重汇总：
+\[
+\hat\tau_{\textsc{L},\textsc{S}}
+=\sum_{k=1}^K\pi_{[k]}\hat\tau_{\textsc{L},[k]},
+\qquad
+\hat V_{\textsc{L},\textsc{S}}
+=\sum_{k=1}^K\pi_{[k]}^2\hat V_{\textsc{ehw},[k]},
+\]
+其中 stratum 内 covariates 必须按该 stratum 自身均值中心化；见 \cref{sec::covariate-SRE}。推荐 statistic 为
+\[
+t_{\textsc{L},\textsc{S}}
+=\frac{\hat\tau_{\textsc{L},\textsc{S}}}
+{\sqrt{\hat V_{\textsc{L},\textsc{S}}}}.
+\]
+本章 \cref{sec::xfrt-cre} 和 General recommendations 的结论说明，studentized statistics 尤其是 $t_{\textsc{L},\textsc{S}}$ 的优势在于同时兼顾 strong null 下的 randomization validity、weak null 下的 asymptotic validity，以及 covariates 有预测力时的 power。
+
+下面给出复现 Figure 1 的完整代码骨架。它故意把 data-generating process 写成可替换的函数；实际复现时应把 \ri{make\_finite\_population} 中的参数改成 \citet{zhao2020caFRT} Figure 1 使用的设定，并设置相同的 \ri{B}、\ri{R}、nominal levels 和 random seed。
+\begin{lstlisting}
+library(sandwich)
+
+make_finite_population <- function(K = 5, m = 20) {
+  n <- K * m
+  strata <- rep(seq_len(K), each = m)
+  x <- rnorm(n) + rep(seq(-1, 1, length.out = K), each = m)
+  y0 <- 1 + strata / K + x + rnorm(n)
+  tau_i <- 0.5 * (x - mean(x))
+  y1 <- y0 + tau_i - mean(tau_i)
+  data.frame(strata = strata, x = x, y0 = y0, y1 = y1)
+}
+
+draw_sre <- function(dat, n1_each) {
+  z <- integer(nrow(dat))
+  for (k in sort(unique(dat$strata))) {
+    id <- which(dat$strata == k)
+    z[sample(id, n1_each[k])] <- 1
+  }
+  z
+}
+
+tau_s <- function(y, z, strata) {
+  n <- length(y)
+  out <- by(seq_along(y), strata, function(id) {
+    nk <- length(id)
+    pi_k <- nk / n
+    pi_k * (mean(y[id][z[id] == 1]) - mean(y[id][z[id] == 0]))
+  })
+  sum(unlist(out))
+}
+
+v_s <- function(y, z, strata) {
+  n <- length(y)
+  out <- by(seq_along(y), strata, function(id) {
+    nk <- length(id)
+    pi_k <- nk / n
+    yk <- y[id]
+    zk <- z[id]
+    pi_k^2 * (var(yk[zk == 1]) / sum(zk == 1) +
+              var(yk[zk == 0]) / sum(zk == 0))
+  })
+  sum(unlist(out))
+}
+
+t_s <- function(y, z, strata) {
+  tau_s(y, z, strata) / sqrt(v_s(y, z, strata))
+}
+
+lin_one_stratum <- function(y, z, x) {
+  xc <- x - mean(x)
+  fit <- lm(y ~ z * xc)
+  b <- coef(fit)["z"]
+  v <- vcovHC(fit, type = "HC2")["z", "z"]
+  c(est = b, var = v)
+}
+
+t_ls <- function(y, z, x, strata) {
+  n <- length(y)
+  ans <- by(seq_along(y), strata, function(id) {
+    nk <- length(id)
+    pi_k <- nk / n
+    tmp <- lin_one_stratum(y[id], z[id], x[id])
+    c(est = pi_k * tmp["est"], var = pi_k^2 * tmp["var"])
+  })
+  mat <- do.call(rbind, ans)
+  sum(mat[, "est"]) / sqrt(sum(mat[, "var"]))
+}
+
+permute_sre <- function(z, strata) {
+  zp <- z
+  for (k in sort(unique(strata))) {
+    id <- which(strata == k)
+    zp[id] <- sample(z[id])
+  }
+  zp
+}
+
+p_frt <- function(y, z, x, strata, stat, R = 2000) {
+  obs <- stat(y, z, x, strata)
+  vals <- replicate(R, {
+    zp <- permute_sre(z, strata)
+    stat(y, zp, x, strata)
+  })
+  (1 + sum(abs(vals) >= abs(obs))) / (R + 1)
+}
+
+stat_tau_s <- function(y, z, x, strata) tau_s(y, z, strata)
+stat_t_s <- function(y, z, x, strata) t_s(y, z, strata)
+stat_t_ls <- function(y, z, x, strata) t_ls(y, z, x, strata)
+
+one_run <- function(pop, n1_each, R = 2000) {
+  z <- draw_sre(pop, n1_each)
+  y <- ifelse(z == 1, pop$y1, pop$y0)
+  c(tauS = p_frt(y, z, pop$x, pop$strata, stat_tau_s, R),
+    tS = p_frt(y, z, pop$x, pop$strata, stat_t_s, R),
+    tLS = p_frt(y, z, pop$x, pop$strata, stat_t_ls, R))
+}
+
+set.seed(20260208)
+pop <- make_finite_population(K = 5, m = 20)
+n1_each <- tapply(pop$strata, pop$strata, length) / 2
+
+B <- 1000
+R <- 2000
+pvals <- replicate(B, one_run(pop, n1_each, R))
+levels <- c(0.01, 0.05, 0.10)
+size <- sapply(levels, function(a) rowMeans(pvals <= a))
+matplot(levels, t(size), type = "b", pch = 1:3, lty = 1,
+        xlab = "nominal level", ylab = "empirical rejection rate")
+abline(0, 1, lty = 2)
+legend("topleft", legend = rownames(size), pch = 1:3, lty = 1)
+\end{lstlisting}
+
+上面的代码包括三类 FRT：以 $\hat\tau_\textsc{S}$ 为 statistic 的未 studentized FRT、以 $t_\textsc{S}$ 为 statistic 的 studentized FRT、以及以 $t_{\textsc{L},\textsc{S}}$ 为 statistic 的 covariate-adjusted studentized FRT。若要更贴近 \citet{zhao2020caFRT} 的 Figure 1，还应加入他们图中列出的其他 statistics，例如未 studentized 的 covariate-adjusted estimator、pooled regression coefficient 或没有正确分层的 permutation statistic；实现方式是在 \ri{p\_frt} 中替换 \ri{stat} 函数即可。
+
+读图时应关注三点。第一，在 strong null 下，只要 statistic 对 observed assignment 和 permuted assignments 使用同一规则，FRT 的 $p_\frt$ 有 randomization validity；这是 Chapter \ref{ch::frt-cre} 的基本结论。第二，在 weak null 但存在 effect heterogeneity 时，未 studentized statistics 的 permutation distribution 可能与真实 sampling distribution 不匹配，机制见 \cref{sec::strong-weak-cre-frt}。第三，$t_{\textsc{L},\textsc{S}}$ 同时使用 SRE 的分层结构、covariate adjustment 和 studentization，因此是 \citet{zhao2020caFRT} 推荐的分析工具。
+
+\emph{Remark / 用途：} 这道题的实务价值在于把“复现一张图”转化为可审计的 simulation protocol：写清 finite population、assignment mechanism、statistics、FRT 计算方式、Monte Carlo 次数和 rejection-rate 汇总方式。只要这些元素固定，图中的每个点都可复现；若没有原文 Figure 1 的精确 DGP，就只能报告复现框架和对不同 statistics 的理论预期，不能编造 empirical size 数值。
+\end{exercisesolution}

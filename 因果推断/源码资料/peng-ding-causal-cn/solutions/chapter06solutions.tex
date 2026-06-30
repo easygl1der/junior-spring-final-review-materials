@@ -1,0 +1,695 @@
+\chapter{Solutions to Chapter 6: Rerandomization and Regression Adjustment}
+\label{sol:chapter06}
+
+\begin{exercisesolution}{FRT under ReM}{在接受集合上重新随机化}
+令
+\[
+\mathcal{Z}_{\mathrm{ReM}}
+=\{\boldsymbol{z}:\sum_{i=1}^n z_i=n_1,\ M(\boldsymbol{z})\leq a\}
+\]
+表示 ReM 的接受集合。ReM 的 assignment mechanism 是 CRE 在事件 $M\leq a$ 上的条件分布：
+\[
+\pr_{\mathrm{ReM}}(\boldsymbol{Z}=\boldsymbol{z})
+=\frac{\mathbb{I}(\boldsymbol{z}\in\mathcal{Z}_{\mathrm{ReM}})}
+{|\mathcal{Z}_{\mathrm{ReM}}|}.
+\]
+因此，在 sharp null hypothesis $\HF$ 下，observed outcomes 对所有可接受 assignments 都固定不变；随机性只来自 $\boldsymbol{Z}$ 在 $\mathcal{Z}_{\mathrm{ReM}}$ 上的均匀分布。给定任意 test statistic
+\[
+T=T(\boldsymbol{Z},\boldsymbol{Y},\boldsymbol{X}),
+\]
+ReM 下的 FRT $p$-value 应计算为
+\[
+p_{\frt,\mathrm{ReM}}
+=\frac{1}{|\mathcal{Z}_{\mathrm{ReM}}|}
+\sum_{\boldsymbol{z}\in\mathcal{Z}_{\mathrm{ReM}}}
+\mathbb{I}\{T(\boldsymbol{z},\boldsymbol{Y},\boldsymbol{X})
+\geq T(\boldsymbol{Z}^{\mathrm{obs}},\boldsymbol{Y},\boldsymbol{X})\},
+\]
+其中方向可以根据 alternative 改成 lower tail 或 two-sided tail。若接受集合太大，则用 Monte Carlo 近似：
+\begin{lstlisting}
+draw_rem <- function(n, n1, X, a) {
+  repeat {
+    z <- sample(c(rep(1, n1), rep(0, n - n1)))
+    taux <- colMeans(X[z == 1, , drop = FALSE]) -
+            colMeans(X[z == 0, , drop = FALSE])
+    Sx <- cov(X)
+    M <- drop(t(taux) %*% solve(n / (n1 * (n - n1)) * Sx, taux))
+    if (M <= a) return(z)
+  }
+}
+
+Tfun <- function(z, y, X) mean(y[z == 1]) - mean(y[z == 0])
+Tobs <- Tfun(zobs, y, X)
+Tmc <- replicate(R, Tfun(draw_rem(n, n1, X, a), y, X))
+pval <- mean(Tmc >= Tobs)
+\end{lstlisting}
+
+\emph{Reference / 用途：} 这个做法直接对应 \cref{sec::covariate-adjusted-frt-intro} 中的 FRT 思想，只是把 CRE 的 assignment space 换成 ReM 的接受集合。它解释了为什么 \citet{bruhn2009pursuit,morgan2012rerandomization} 强调：分析阶段必须尊重设计阶段的约束 $M\leq a$。忽略 ReM 而用 CRE 的 randomization distribution 会使用错误的 reference distribution，通常导致过保守或失准的推断。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Invariance of the Mahalanobis Distance}{非退化线性变换下 $M$ 不变}
+设新的 covariate 为
+\[
+X_i^\ast=b_0+BX_i,
+\]
+其中 $B$ 可逆。Treatment-control covariate 均值差变为
+\[
+\hat{\tau}_{X^\ast}
+=n_1^{-1}\sum_i Z_iX_i^\ast-n_0^{-1}\sum_i(1-Z_i)X_i^\ast
+=B\hat{\tau}_X,
+\]
+因为两组中常数项 $b_0$ 相互抵消。Finite population covariance matrix 变为
+\[
+S_{X^\ast}^2
+=(n-1)^{-1}\sum_i(X_i^\ast-\bar X^\ast)(X_i^\ast-\bar X^\ast)\tran
+=BS_X^2B\tran.
+\]
+所以
+\[
+\cov(\hat{\tau}_{X^\ast})
+=\frac{n}{n_1n_0}BS_X^2B\tran.
+\]
+由矩阵逆公式，
+\[
+\{\cov(\hat{\tau}_{X^\ast})\}^{-1}
+=(B\tran)^{-1}\left(\frac{n}{n_1n_0}S_X^2\right)^{-1}B^{-1}.
+\]
+因此新的 Mahalanobis distance 为
+\begin{eqnarray*}
+M^\ast
+&=&(B\hat{\tau}_X)\tran
+(B\tran)^{-1}\left(\frac{n}{n_1n_0}S_X^2\right)^{-1}B^{-1}
+(B\hat{\tau}_X)\\
+&=&\hat{\tau}_X\tran
+\left(\frac{n}{n_1n_0}S_X^2\right)^{-1}
+\hat{\tau}_X
+=M.
+\end{eqnarray*}
+这证明了 \cref{lemma::invariance-mdistance}。
+
+\emph{Remark / 用途：} 这个性质说明 ReM 的 balance criterion 不依赖 covariates 的单位、中心化方式或非奇异线性重参数化。实践中，把 covariates 标准化、旋转或换成 full-rank contrasts，不会改变基于 Mahalanobis distance 的接受集合。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Bias of the difference-in-means estimator under rerandomization}{对称接受集合给出 unbiasedness}
+在一般 rerandomization 中，接受集合为
+\[
+\mathcal{A}=\{\boldsymbol{z}:\sum_i z_i=n_1,\ \phi(\boldsymbol{z},\boldsymbol{X})=1\}.
+\]
+条件在接受集合上以后，
+\[
+E_{\mathcal{A}}(\hat{\tau})
+=\sum_{i=1}^n\left\{\frac{E_{\mathcal{A}}(Z_i)}{n_1}Y_i(1)
+-\frac{1-E_{\mathcal{A}}(Z_i)}{n_0}Y_i(0)\right\}.
+\]
+若 $n_1=n_0$ 且
+\[
+\phi(\boldsymbol{Z},\boldsymbol{X})
+=\phi(\boldsymbol{1}_n-\boldsymbol{Z},\boldsymbol{X}),
+\]
+则映射 $\boldsymbol{z}\mapsto\boldsymbol{1}_n-\boldsymbol{z}$ 是接受集合到自身的一一对应，并且把 $Z_i$ 换成 $1-Z_i$。因此
+\[
+E_{\mathcal{A}}(Z_i)=E_{\mathcal{A}}(1-Z_i)=1/2.
+\]
+又因为 $n_1=n_0=n/2$，
+\[
+E_{\mathcal{A}}(\hat{\tau})
+=\sum_i\left\{\frac{1/2}{n/2}Y_i(1)-\frac{1/2}{n/2}Y_i(0)\right\}
+=n^{-1}\sum_i\{Y_i(1)-Y_i(0)\}
+=\tau.
+\]
+
+下面验证 Mahalanobis ReM 的对称性。若 $n_1=n_0$，则把 assignment 换成补集时，
+\[
+\hat{\tau}_X(\boldsymbol{1}_n-\boldsymbol{Z})
+=n_0^{-1}\sum_i(1-Z_i)X_i-n_1^{-1}\sum_iZ_iX_i
+=-\hat{\tau}_X(\boldsymbol{Z}).
+\]
+Mahalanobis distance 是二次型，所以
+\[
+M(\boldsymbol{1}_n-\boldsymbol{Z})=M(\boldsymbol{Z}).
+\]
+于是 $\mathbb{I}\{M\leq a\}$ 满足上面的 symmetry condition。
+
+如果条件不成立，bias 可以出现。取 $n=2,n_1=n_0=1$，并令 criterion 只接受 $\boldsymbol{Z}=(1,0)$。设
+\[
+Y_1(1)=Y_1(0)=0,\qquad Y_2(1)=0,\quad Y_2(0)=10.
+\]
+则
+\[
+\tau=\frac{(0-0)+(0-10)}{2}=-5,
+\]
+但唯一被接受的 assignment 下
+\[
+\hat{\tau}=Y_1(1)-Y_2(0)=-10.
+\]
+所以 $E_{\mathcal{A}}(\hat{\tau})=-10\neq -5$。这里的失败来自 criterion 不满足补集对称。若 $n_1\neq n_0$，补集 assignment 甚至不再属于同一个 CRE assignment space，类似配对论证不能使用，也不能一般保证 unbiasedness。
+
+\emph{Remark / 用途：} 这个题说明 ReM 不自动保证 difference-in-means unbiased。Unbiasedness 来自接受集合的设计对称性。Mahalanobis ReM 在 balanced design 下有这个好性质，但任意 ad hoc balance rule 可能破坏 randomization 的边际平衡。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Equivalent form of $R^2$ in the CRE}{用线性投影解释 multiple correlation}
+令
+\[
+V_\tau=\var(\hat{\tau})
+=\frac{S^2(1)}{n_1}+\frac{S^2(0)}{n_0}-\frac{S^2(\tau)}{n},
+\qquad
+V_X=\cov(\hat{\tau}_X)=\frac{n}{n_1n_0}S_X^2.
+\]
+在 CRE 下，$\hat{\tau}$ 对 $\hat{\tau}_X$ 的 squared multiple correlation coefficient 可写为
+\[
+R^2=\frac{\cov(\hat{\tau},\hat{\tau}_X)V_X^{-1}
+\cov(\hat{\tau}_X,\hat{\tau})}{V_\tau}.
+\]
+由 \citet{Neyman:1923} 的向量形式，也就是 \cref{hw::vector-neyman1923} 中使用的结果，
+\[
+\cov(\hat{\tau},\hat{\tau}_X)
+=\frac{S_{Y(1)X}}{n_1}+\frac{S_{Y(0)X}}{n_0}
+-\frac{S_{\tau X}}{n}.
+\]
+因为 $S_{\tau X}=S_{Y(1)X}-S_{Y(0)X}$，上式化简为
+\[
+\cov(\hat{\tau},\hat{\tau}_X)
+=\frac{n}{n_1n_0}
+\left\{\frac{n_0}{n}S_{Y(1)X}+\frac{n_1}{n}S_{Y(0)X}\right\}.
+\]
+于是
+\[
+\cov(\hat{\tau},\hat{\tau}_X)V_X^{-1}
+\cov(\hat{\tau}_X,\hat{\tau})
+=\frac{n_0}{n_1}S^2(1\mid X)
++\frac{n_1}{n_0}S^2(0\mid X)
++2S\{Y(1)\mid X,Y(0)\mid X\},
+\]
+其中 $Y(z)\mid X$ 表示 $Y_i(z)$ 在 $(1,X_i)$ 上的 finite population linear projection，相关投影方差公式见下一题。
+
+另一方面，projection 后的 individual causal effect 为
+\[
+\tau_i\mid X=Y_i(1)\mid X-Y_i(0)\mid X,
+\]
+因此
+\[
+S^2(\tau\mid X)
+=S^2(1\mid X)+S^2(0\mid X)
+-2S\{Y(1)\mid X,Y(0)\mid X\}.
+\]
+把 covariance 项消去，可得
+\begin{eqnarray*}
+&&\cov(\hat{\tau},\hat{\tau}_X)V_X^{-1}
+\cov(\hat{\tau}_X,\hat{\tau})\\
+&=&
+\frac{S^2(1\mid X)}{n_1}
++\frac{S^2(0\mid X)}{n_0}
+-\frac{S^2(\tau\mid X)}{n}.
+\end{eqnarray*}
+代回 $R^2$ 的定义，即得 \cref{prop::rsquared-forms} 中的公式。
+
+在 constant causal effect 下，$\tau_i=\tau$，所以 $S^2(\tau)=S^2(\tau\mid X)=0$ 且 $Y_i(1)=Y_i(0)+\tau$。因此
+\[
+S^2(1)=S^2(0),\qquad S^2(1\mid X)=S^2(0\mid X),
+\]
+从而
+\[
+R^2=\frac{(n_1^{-1}+n_0^{-1})S^2(0\mid X)}
+{(n_1^{-1}+n_0^{-1})S^2(0)}
+=\frac{S^2(0\mid X)}{S^2(0)}.
+\]
+
+\emph{Reference / 用途：} 这个证明把 \cref{thm::remasymptotics} 中的 $R^2$ 解释为 outcome mean difference 可由 covariate imbalance 线性解释的比例。它也说明 ReM 的 efficiency gain 与 covariates 对 potential outcomes 的 predictive strength 直接相关。
+\end{exercisesolution}
+
+\begin{exercisesolution}{More on linear projections of the potential outcomes onto covariates}{projection variance 的矩阵公式}
+因为本章假设 $\bar X=0$，$Y_i(1)$ 在 $(1,X_i)$ 上的 finite population OLS projection 可写为
+\[
+\tilde Y_i(1)=\bar Y(1)+\tilde\beta_1\tran X_i,
+\]
+其中 $\tilde\beta_1$ 最小化
+\[
+\sum_i\{Y_i(1)-\alpha-\beta\tran X_i\}^2.
+\]
+Normal equations 给出
+\[
+\tilde\beta_1=(S_X^2)^{-1}S_{XY(1)}.
+\]
+Projection 的 finite population variance 为
+\begin{eqnarray*}
+S^2(1\mid X)
+&=&(n-1)^{-1}\sum_i(\tilde\beta_1\tran X_i)^2\\
+&=&\tilde\beta_1\tran S_X^2\tilde\beta_1\\
+&=&S_{Y(1)X}(S_X^2)^{-1}S_X^2(S_X^2)^{-1}S_{XY(1)}\\
+&=&S_{Y(1)X}(S_X^2)^{-1}S_{XY(1)}.
+\end{eqnarray*}
+同理，
+\[
+S^2(0\mid X)
+=S_{Y(0)X}(S_X^2)^{-1}S_{XY(0)}.
+\]
+由于 $\tau_i=Y_i(1)-Y_i(0)$，
+\[
+S_{\tau X}=S_{Y(1)X}-S_{Y(0)X},\qquad
+S_{X\tau}=S_{XY(1)}-S_{XY(0)}.
+\]
+所以
+\[
+S^2(\tau\mid X)
+=S_{\tau X}(S_X^2)^{-1}S_{X\tau}.
+\]
+
+\emph{Remark / 用途：} 这些公式是 finite population 版本的 explained variance。它们给 \cref{prop::rsquared-forms} 中的 $S^2(z\mid X)$ 和 $S^2(\tau\mid X)$ 一个可计算表达式，也说明为什么要求 $S_X^2$ 非奇异：否则 projection coefficient 不唯一。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Comparing the true variances within the family of linearly adjusted estimator}{optimal projection coefficients}
+令
+\[
+e_i(1;\beta_1)=Y_i(1)-\bar Y(1)-\beta_1\tran X_i,\qquad
+e_i(0;\beta_0)=Y_i(0)-\bar Y(0)-\beta_0\tran X_i.
+\]
+对固定的 $(\beta_1,\beta_0)$，$\hat{\tau}(\beta_1,\beta_0)$ 是 adjusted potential outcomes 的均值差，所以由 \cref{eq::neyman23var}
+\[
+\var\{\hat{\tau}(\beta_1,\beta_0)\}
+=\frac{S^2\{e(1;\beta_1)\}}{n_1}
++\frac{S^2\{e(0;\beta_0)\}}{n_0}
+-\frac{S^2\{e(1;\beta_1)-e(0;\beta_0)\}}{n}.
+\]
+把 $\beta_z$ 写为
+\[
+\beta_z=\tilde\beta_z+\delta_z,\qquad z=0,1,
+\]
+其中 $\tilde\beta_z$ 是 $Y_i(z)$ 在 $(1,X_i)$ 上的 projection coefficient。Projection residual
+\[
+r_i(z)=Y_i(z)-\bar Y(z)-\tilde\beta_z\tran X_i
+\]
+与 $X_i$ 有 finite population covariance 零。因此，任意涉及 $r_i(z)$ 与 $\delta_z\tran X_i$ 的 finite population covariance 项都为零。
+
+于是 adjusted residual 可以分解为
+\[
+e_i(z;\beta_z)=r_i(z)-\delta_z\tran X_i.
+\]
+把这个正交分解代入上面的 Neyman variance formula，所有 cross terms 消失，得到
+\[
+\var\{\hat{\tau}(\beta_1,\beta_0)\}
+=\var\{\hat{\tau}(\tilde\beta_1,\tilde\beta_0)\}
++\var\{\hat{\tau}(\delta_1,\delta_0)\},
+\]
+其中第二项正是
+\[
+\var\{\hat{\tau}(\beta_1,\beta_0)
+-\hat{\tau}(\tilde\beta_1,\tilde\beta_0)\}.
+\]
+这就是题目要求的分解。
+
+\emph{Reference / 用途：} 这与 \citet[][Example 9]{li2017general} 的结论一致。它说明若我们可以知道两个 potential outcome surfaces 对 covariates 的 projection slopes，那么用 $(\tilde\beta_1,\tilde\beta_0)$ 做 adjustment 在真实 repeated-sampling variance 意义下最优。实际中 \citet{lin2013} estimator 用样本内 OLS slopes 近似这一不可观测目标。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Lin's estimator for covariate adjustment}{交互回归等于两组分别回归的截距差}
+考虑回归
+\[
+Y_i=\alpha+\tau_{\textsc{L}}Z_i+\eta\tran X_i+\delta\tran(Z_iX_i)+\varepsilon_i.
+\]
+当 $Z_i=0$ 时，fitted regression 为
+\[
+\alpha+\eta\tran X_i.
+\]
+当 $Z_i=1$ 时，fitted regression 为
+\[
+\alpha+\tau_{\textsc{L}}+(\eta+\delta)\tran X_i.
+\]
+因此这个单个 pooled regression 等价于在 control group 中拟合
+\[
+Y_i=\gamma_0+\beta_0\tran X_i+\varepsilon_i
+\]
+并在 treatment group 中拟合
+\[
+Y_i=\gamma_1+\beta_1\tran X_i+\varepsilon_i,
+\]
+其中参数对应关系为
+\[
+\gamma_0=\alpha,\qquad \beta_0=\eta,\qquad
+\gamma_1=\alpha+\tau_{\textsc{L}},\qquad
+\beta_1=\eta+\delta.
+\]
+所以 pooled regression 中 $Z_i$ 的 coefficient 为
+\[
+\hat{\tau}_\textsc{L}=\hat\gamma_1-\hat\gamma_0.
+\]
+而 \cref{eq::lin-intercepts} 已经说明，两组分别回归得到的 linearly adjusted estimator 满足
+\[
+\hat{\tau}(\hat\beta_1,\hat\beta_0)=\hat\gamma_1-\hat\gamma_0.
+\]
+于是
+\[
+\hat{\tau}_\textsc{L}=\hat{\tau}(\hat\beta_1,\hat\beta_0),
+\]
+这证明了 \cref{prop::lin-ols}。
+
+\emph{Remark / 用途：} 这个证明完全是 linear algebra，不依赖 linear model 正确。它解释了为什么实务中可以用一个包含 treatment-covariate interactions 的 OLS 直接实现 \citet{lin2013} estimator，并配合 EHW standard error 做 Neymanian inference。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Predictive and projective estimators}{linear predictors 下都等于 Lin estimator}
+由 \cref{eq::pred-y1-linear,eq::pred-y0-linear}，
+\[
+\hat\mu_1(X)=\hat\gamma_1+\hat\beta_1\tran X,\qquad
+\hat\mu_0(X)=\hat\gamma_0+\hat\beta_0\tran X.
+\]
+OLS normal equations 在 treatment group 和 control group 内分别给出
+\[
+\sum_{Z_i=1}\{Y_i-\hat\mu_1(X_i)\}=0,\qquad
+\sum_{Z_i=0}\{Y_i-\hat\mu_0(X_i)\}=0.
+\]
+因此
+\[
+\sum_{Z_i=1}Y_i=\sum_{Z_i=1}\hat\mu_1(X_i),\qquad
+\sum_{Z_i=0}Y_i=\sum_{Z_i=0}\hat\mu_0(X_i).
+\]
+把这两个等式代入 predictive estimator \cref{eq::predictive-estimator-generic}，得到
+\[
+\hat\tau_{\mathrm{pred}}
+=n^{-1}\sum_i\{\hat\mu_1(X_i)-\hat\mu_0(X_i)\}.
+\]
+这正是 projective estimator \cref{eq::projective-estimator-generic}。所以
+\[
+\hat\tau_{\mathrm{pred}}=\hat\tau_{\mathrm{proj}}.
+\]
+
+进一步，由本章约定 $\bar X=0$，
+\[
+\hat\tau_{\mathrm{proj}}
+=n^{-1}\sum_i
+\{\hat\gamma_1-\hat\gamma_0+(\hat\beta_1-\hat\beta_0)\tran X_i\}
+=\hat\gamma_1-\hat\gamma_0.
+\]
+由上一题或 \cref{eq::lin-intercepts}，
+\[
+\hat\gamma_1-\hat\gamma_0=\hat\tau_\textsc{L}.
+\]
+因此
+\[
+\hat\tau_{\mathrm{pred}}=\hat\tau_{\mathrm{proj}}=\hat\tau_\textsc{L},
+\]
+即 \cref{eq::predictiveestimator,eq::projectiveestimator}。
+
+\emph{Remark / 用途：} 这个题给出 \citet{lin2013} estimator 的 imputation 解释：它既可以看作只填补 missing potential outcomes 的 predictive estimator，也可以看作对所有 units 投影两个 potential outcome surfaces 后求平均差。这个解释对理解 machine learning adjustment 很有帮助，但一般 predictors 下二者不必相等。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Equivalent form of the covariate-adjusted estimator}{adjusting for covariate imbalance}
+由 \cref{eq::linear-adj-1}，
+\[
+\hat\tau(\beta_1,\beta_0)
+=\hat\tau-\beta_1\tran\hat{\bar X}(1)+\beta_0\tran\hat{\bar X}(0).
+\]
+又由于全样本 covariate 已中心化，
+\[
+n_1\hat{\bar X}(1)+n_0\hat{\bar X}(0)=0.
+\]
+同时
+\[
+\hat\tau_X=\hat{\bar X}(1)-\hat{\bar X}(0).
+\]
+解出
+\[
+\hat{\bar X}(1)=\frac{n_0}{n}\hat\tau_X,\qquad
+\hat{\bar X}(0)=-\frac{n_1}{n}\hat\tau_X.
+\]
+代回得
+\[
+\hat\tau(\beta_1,\beta_0)
+=\hat\tau-\left(\frac{n_0}{n}\beta_1+\frac{n_1}{n}\beta_0\right)\tran\hat\tau_X.
+\]
+令
+\[
+\gamma=\frac{n_0}{n}\beta_1+\frac{n_1}{n}\beta_0,
+\]
+即得 \cref{eq::linear-covariate-imbalance}。
+
+把 $\beta_1,\beta_0$ 换成两组 OLS 得到的 $\hat\beta_1,\hat\beta_0$，并令
+\[
+\hat\gamma=\frac{n_0}{n}\hat\beta_1+\frac{n_1}{n}\hat\beta_0,
+\]
+再由 \cref{prop::lin-ols} 中 $\hat\tau_\textsc{L}=\hat\tau(\hat\beta_1,\hat\beta_0)$，得到
+\[
+\hat\tau_\textsc{L}
+=\hat\tau-\hat\gamma\tran\hat\tau_X,
+\]
+这就是 \cref{eq::lin-covariate-imbalance}。
+
+\emph{Remark / 用途：} 这个形式最直接地说明 regression adjustment 在做什么：它从 raw difference-in-means 中减去 covariate imbalance 的线性预测部分。若 $\hat\tau$ 与 $\hat\tau_X$ 相关，这个 subtraction 可以减少 variance。
+\end{exercisesolution}
+
+\begin{exercisesolution}{ANCOVA also adjusts for covariate imbalance}{Frisch--Waugh--Lovell 形式}
+考虑 ANCOVA 回归
+\[
+Y_i=\alpha+\tau_\textsc{F}Z_i+\gamma_\textsc{F}\tran X_i+e_i.
+\]
+令 $\hat\gamma_\textsc{F}$ 为 $X_i$ 的 OLS coefficient。给定 $\hat\gamma_\textsc{F}$ 后，把 outcome residualize 为
+\[
+Y_i^\ast=Y_i-\hat\gamma_\textsc{F}\tran X_i.
+\]
+由 Frisch--Waugh--Lovell theorem，$\hat\tau_\textsc{F}$ 等于 $Y_i^\ast$ 对 $(1,Z_i)$ 回归时 $Z_i$ 的 coefficient。带 intercept 的二元 treatment 回归 coefficient 就是两组均值差，因此
+\[
+\hat\tau_\textsc{F}
+=\{ \hat{\bar Y}(1)-\hat\gamma_\textsc{F}\tran\hat{\bar X}(1)\}
+-\{ \hat{\bar Y}(0)-\hat\gamma_\textsc{F}\tran\hat{\bar X}(0)\}.
+\]
+整理即得
+\[
+\hat\tau_\textsc{F}
+=\hat\tau-\hat\gamma_\textsc{F}\tran
+\{\hat{\bar X}(1)-\hat{\bar X}(0)\}
+=\hat\tau-\hat\gamma_\textsc{F}\tran\hat\tau_X.
+\]
+
+\emph{Reference / 用途：} 这个结果与 \cref{eq::lin-covariate-imbalance} 平行。区别在于 ANCOVA 使用共同 slope $\hat\gamma_\textsc{F}$，而 \citet{lin2013} estimator 允许 treatment 和 control 的 slopes 不同，并用 weighted average $\hat\gamma$ 调整 covariate imbalance。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Regression adjustment / post-stratification of CRE}{离散 covariate 下 Lin estimator 等于 post-stratification}
+设离散 covariate $C_i\in\{1,\ldots,K\}$，第 $k$ 层大小为 $n_{[k]}$，比例为 $\pi_{[k]}=n_{[k]}/n$。Post-stratification estimator 为
+\[
+\hat\tau_\textsc{PS}
+=\sum_{k=1}^K\pi_{[k]}
+\left\{\hat{\bar Y}_{[k]}(1)-\hat{\bar Y}_{[k]}(0)\right\}.
+\]
+现在用 $K-1$ 个 centered dummy variables 表示 $C_i$。包含 intercept、$Z_i$、这些 centered dummies 以及 $Z_i$ 与 dummies 的 interactions 的 Lin regression，等价于在 treatment group 和 control group 内分别把 $Y_i$ 对 strata dummies 做 saturated regression。Saturated regression 在每个 stratum 内的 fitted value 正好等于该 stratum 内对应 treatment arm 的 sample mean：
+\[
+\hat\mu_1(C_i=k)=\hat{\bar Y}_{[k]}(1),\qquad
+\hat\mu_0(C_i=k)=\hat{\bar Y}_{[k]}(0).
+\]
+由 predictive/projective 解释，
+\[
+\hat\tau_\textsc{L}
+=n^{-1}\sum_{i=1}^n\{\hat\mu_1(C_i)-\hat\mu_0(C_i)\}.
+\]
+按 strata 分组求和，
+\[
+\hat\tau_\textsc{L}
+=\sum_{k=1}^K\frac{n_{[k]}}{n}
+\left\{\hat{\bar Y}_{[k]}(1)-\hat{\bar Y}_{[k]}(0)\right\}
+=\hat\tau_\textsc{PS}.
+\]
+这证明了 \cref{prop::lin=ps-discrete}。
+
+\emph{Remark / 用途：} 这个结果把 \cref{sec::poststra-cre} 中的 post-stratification 与本章 regression adjustment 接在一起：离散 covariate 的 saturated regression adjustment 本质上就是按 cell 求均值再加权。若某个 stratum 中 treatment 或 control 样本为空，两边都可能没有良好定义；题目已说明可忽略这种退化情形。
+\end{exercisesolution}
+
+\begin{exercisesolution}{More on the difference-in-difference estimator in the CRE}{gain score 的 Neyman variance}
+令
+\[
+g_i(1)=Y_i(1)-X_i,\qquad g_i(0)=Y_i(0)-X_i.
+\]
+则
+\[
+\hat\tau(1,1)
+=n_1^{-1}\sum_iZ_i\{Y_i-X_i\}
+-n_0^{-1}\sum_i(1-Z_i)\{Y_i-X_i\}
+\]
+就是 potential outcomes $g_i(1)$ 和 $g_i(0)$ 的 difference-in-means estimator。由于 CRE 下均值差 unbiased，
+\[
+E\{\hat\tau(1,1)\}
+=\bar g(1)-\bar g(0)
+=\bar Y(1)-\bar Y(0)
+=\tau.
+\]
+由 \cref{eq::neyman23var}，
+\[
+\var\{\hat\tau(1,1)\}
+=\frac{S_g^2(1)}{n_1}+\frac{S_g^2(0)}{n_0}
+-\frac{S^2(\tau)}{n},
+\]
+因为 $g_i(1)-g_i(0)=Y_i(1)-Y_i(0)=\tau_i$。题中的 estimator
+\[
+\hat V(1,1)
+=\frac{\hat S_g^2(1)}{n_1}+\frac{\hat S_g^2(0)}{n_0}
+\]
+满足
+\[
+E\{\hat V(1,1)\}
+=\frac{S_g^2(1)}{n_1}+\frac{S_g^2(0)}{n_0}
+=\var\{\hat\tau(1,1)\}+\frac{S^2(\tau)}{n}.
+\]
+所以它 conservative；等号成立当且仅当 $S^2(\tau)=0$，即 individual causal effects constant。
+
+下面比较 $\hat\tau(0,0)$ 和 $\hat\tau(1,1)$。记 $S_X^2$ 为 scalar covariate 的 finite population variance，并令
+\[
+S_{Y(z)X}=\beta_zS_X^2,\qquad z=0,1.
+\]
+由 adjusted potential outcomes 的 variance 展开，
+\[
+S^2\{Y(z)-X\}=S^2(z)+S_X^2-2S_{Y(z)X}
+=S^2(z)+(1-2\beta_z)S_X^2.
+\]
+同时
+\[
+\{Y_i(1)-X_i\}-\{Y_i(0)-X_i\}=\tau_i,
+\]
+所以两个 estimators 的 Neyman variance 只在前两个 marginal variance 项上不同。于是
+\begin{eqnarray*}
+&&\var\{\hat\tau(0,0)\}-\var\{\hat\tau(1,1)\}\\
+&=&
+\frac{S^2(1)-S^2\{Y(1)-X\}}{n_1}
++\frac{S^2(0)-S^2\{Y(0)-X\}}{n_0}\\
+&=&
+\frac{(2\beta_1-1)S_X^2}{n_1}
++\frac{(2\beta_0-1)S_X^2}{n_0}.
+\end{eqnarray*}
+因为 $S_X^2\geq0$，在非退化情形 $S_X^2>0$ 下，
+\[
+\var\{\hat\tau(0,0)\}\geq\var\{\hat\tau(1,1)\}
+\]
+当且仅当
+\[
+\frac{2\beta_1-1}{n_1}+\frac{2\beta_0-1}{n_0}\geq0.
+\]
+两边乘以 $n_1n_0/n$，得到等价条件
+\[
+2\frac{n_0}{n}\beta_1+2\frac{n_1}{n}\beta_0\geq1.
+\]
+
+\emph{Reference / 用途：} 这正是 \cref{sec::difference-in-difference-CRE} 中 gain score estimator 的 formal justification。若 lagged outcome $X$ 对两个 potential outcomes 的 slopes 足够接近 $1$，则 subtracting $X$ 能显著降低 variance；若 slopes 很小或方向相反，gain score 反而可能损失效率。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Data re-analyses of the Penn Bonus Experiment}{strata 内 Lin adjustment 的可复现框架}
+本题需要真实 Penn Bonus Experiment 数据。这里不伪造 point estimate、standard error 或 confidence interval；给出可复现分析框架。目标是保留 \cref{chapter::stratification-poststratification} 中的 block indicator \texttt{quarter}，在每个 stratum 内使用除 treatment、outcome、block 以外的 covariates 做 \citet{lin2013} regression adjustment，然后按 strata 权重加总，正如 \cref{sec::covariate-SRE}。
+
+一个稳健实现如下：
+\begin{lstlisting}
+library(sandwich)
+
+lin_one_stratum <- function(dat, yname, zname, xnames) {
+  y <- dat[[yname]]
+  z <- dat[[zname]]
+  X <- dat[, xnames, drop = FALSE]
+  X <- as.data.frame(lapply(X, function(v) v - mean(v, na.rm = TRUE)))
+  fitdat <- data.frame(y = y, z = z, X)
+
+  fit <- lm(y ~ z * ., data = fitdat)
+  tau <- coef(fit)["z"]
+  V <- vcovHC(fit, type = "HC2")["z", "z"]
+  c(tau = tau, V = V, n = nrow(dat))
+}
+
+analyze_penn <- function(penndata) {
+  penndata$y <- log(penndata$duration)
+  yname <- "y"
+  zname <- "treatment"
+  bname <- "quarter"
+  xnames <- setdiff(names(penndata), c(yname, zname, bname,
+                                      "duration"))
+
+  pieces <- split(penndata, penndata[[bname]])
+  out <- do.call(rbind, lapply(pieces, lin_one_stratum,
+                               yname = yname, zname = zname,
+                               xnames = xnames))
+  pi <- out[, "n"] / sum(out[, "n"])
+  tau <- sum(pi * out[, "tau"])
+  se <- sqrt(sum(pi^2 * out[, "V"]))
+  ci <- tau + c(-1, 1) * qnorm(0.975) * se
+  c(tau = tau, se = se, ci.lower = ci[1], ci.upper = ci[2])
+}
+\end{lstlisting}
+
+比较时，应同时报告 \cref{sec::sre-neyman-example} 中没有 regression adjustment 的 SRE estimator：
+\[
+\hat\tau_\textsc{S}=\sum_k\pi_{[k]}\hat\tau_{[k]},
+\qquad
+\hat V_\textsc{S}=\sum_k\pi_{[k]}^2
+\left\{\frac{\hat S_{[k]}^2(1)}{n_{[k]1}}
++\frac{\hat S_{[k]}^2(0)}{n_{[k]0}}\right\}.
+\]
+两种分析的差异主要体现在 point estimator 是否因 covariate imbalance correction 而移动，以及 estimated standard error 是否下降。
+
+\emph{Remark / 用途：} 这道题的重点不是某个固定数值，而是工作流：在 SRE 中不能把所有 strata 混在一起随意回归；应在 strata 内中心化 covariates、做 Lin adjustment，再按 $\pi_{[k]}$ 汇总。若某个 stratum 样本太小或 covariates 太多，需要减少 covariates、使用 ridge/LASSO 类方法，或回到未调整的 stratum estimator。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Missing outcomes in randomized experiments}{imputation 的敏感性分析框架}
+Missing outcomes 会改变 estimand 和 estimator 的解释。若直接删除 missing units，分析对象变成 observed-outcome subpopulation，并可能破坏原始 randomization 的可比性。题目要求比较不同 imputation methods，因此应把每一种 imputation 视为一个 sensitivity analysis，而不是把其中任何一种自动当作真值。
+
+第一种方法是 arm-specific mean imputation。对 treatment arm 中 missing outcomes，用 treatment arm observed mean 填补；对 control arm 同理：
+\begin{lstlisting}
+impute_arm_mean <- function(y, z) {
+  out <- y
+  for (zz in c(0, 1)) {
+    idx <- z == zz
+    out[idx & is.na(out)] <- mean(out[idx], na.rm = TRUE)
+  }
+  out
+}
+\end{lstlisting}
+这种方法通常会改变 point estimate 和 standard error。Point estimate 是否改变取决于原分析是否已经等价地使用了 observed means；standard error 往往会被低估，因为 imputed values 被当作已知数。
+
+第二种方法是 arm-specific linear regression imputation。分别在 treatment 和 control 中，用 observed outcomes 对 covariates 拟合模型，再预测同 arm 的 missing outcomes：
+\begin{lstlisting}
+impute_arm_lm <- function(dat, yname, zname, xnames) {
+  out <- dat[[yname]]
+  for (zz in c(0, 1)) {
+    idx <- dat[[zname]] == zz
+    obs <- idx & !is.na(out)
+    mis <- idx & is.na(out)
+    fit <- lm(reformulate(xnames, response = yname),
+              data = dat[obs, , drop = FALSE])
+    out[mis] <- predict(fit, newdata = dat[mis, , drop = FALSE])
+  }
+  out
+}
+\end{lstlisting}
+这种方法利用 covariates，可能比 mean imputation 更稳定，但依赖 outcome model。它也不能自动反映 imputation uncertainty。
+
+更系统的做法至少包括三类。第一，complete-case analysis，并明确 estimand 是 observed cases 中的 effect；第二，multiple imputation，在每个 arm 内建立 imputation model，多次抽取 missing values 后用 Rubin's rules 或 randomization-based 重复分析汇总；第三，worst-case 或 tipping-point sensitivity analysis，对 missing outcomes 给出合理上下界，观察 causal conclusion 是否稳定。框架如下：
+\begin{lstlisting}
+analyze_once <- function(y.completed, z, block = NULL, X = NULL) {
+  ## Use the SRE or Lin-adjusted SRE estimator from the previous problem.
+}
+
+res.mean <- analyze_once(impute_arm_mean(y, z), z, block, X)
+res.lm <- analyze_once(impute_arm_lm(dat, "y", "treatment", xnames),
+                       z, block, X)
+
+impute_arm_lm_with_noise <- function(dat, yname, zname, xnames) {
+  out <- dat[[yname]]
+  for (zz in c(0, 1)) {
+    idx <- dat[[zname]] == zz
+    obs <- idx & !is.na(out)
+    mis <- idx & is.na(out)
+    fit <- lm(reformulate(xnames, response = yname),
+              data = dat[obs, , drop = FALSE])
+    sigma <- summary(fit)$sigma
+    pred <- predict(fit, newdata = dat[mis, , drop = FALSE])
+    out[mis] <- pred + rnorm(sum(mis), 0, sigma)
+  }
+  out
+}
+
+B <- 200
+res.mi <- replicate(B, {
+  yb <- impute_arm_lm_with_noise(dat, "y", "treatment", xnames)
+  analyze_once(yb, z, block, X)
+})
+\end{lstlisting}
+
+\emph{Reference / 用途：} 这道题延续 \cref{sec::covariate-SRE} 和本章 regression adjustment 的思想，但提醒我们 missing outcomes 不是普通 covariate imbalance。Imputation model 是额外假设；报告时应并列展示 complete-case、mean imputation、regression imputation 和 sensitivity analysis 的结果，而不是只给一个看似精确的数字。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Recommended reading}{设计阶段与分析阶段使用 covariates 的统一视角}
+\citet{li2019rerandomization} 的核心贡献是把 rerandomization 和 regression adjustment 放在同一个 potential outcomes framework 下比较。设计阶段的 ReM 通过限制 $\hat\tau_X$ 改善 covariate balance；分析阶段的 \citet{lin2013} estimator 通过从 $\hat\tau$ 中减去 $\hat\gamma\tran\hat\tau_X$ 调整 realized imbalance。二者都利用了 $\hat\tau$ 与 $\hat\tau_X$ 的相关性。
+
+与本章最相关的阅读路径是：先读 \citet{morgan2012rerandomization} 理解 Mahalanobis ReM，再读 \citet{lin2013} 理解 regression adjustment，最后读 \citet{li2018asymptotic,li2019rerandomization} 理解 ReM、regression adjustment 以及二者结合时的 asymptotic distribution 和 efficiency comparison。
+
+\emph{Remark / 用途：} 本章的统一观点很实用：covariates 可以在 design 阶段使用，也可以在 analysis 阶段使用；如果实验前能控制 assignment，就用 rerandomization 改善平衡；如果实验已经完成，就用 regression adjustment 处理 realized imbalance；如果两者都能做，则可以结合。
+\end{exercisesolution}

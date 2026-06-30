@@ -1,0 +1,364 @@
+\chapter{Solutions to Chapter 11: The Central Role of the Propensity Score in Observational Studies for Causal Effects}
+\label{sol:chapter11}
+
+\begin{exercisesolution}{Another version of \cref{thm::pscore-dimreduction}}{principal unobserved covariate 的 balancing 性质}
+本题的关键是把
+\[
+W=\{X,Y(1),Y(0)\}
+\]
+看成一个大的 covariate vector。按照 \cref{def::pscore} 的一般定义，
+\[
+e(W)=e\{X,Y(1),Y(0)\}=\pr(Z=1\mid W).
+\]
+我们要证明
+\[
+Z\ind W\mid e(W),
+\]
+也就是 \cref{eq::principal-covariate-ind}。由于 $Z$ 是 binary，证明
+\[
+\pr\{Z=1\mid W,e(W)\}=\pr\{Z=1\mid e(W)\}
+\]
+即可。
+
+左边很直接。因为 $e(W)$ 是 $W$ 的函数，
+\[
+\pr\{Z=1\mid W,e(W)\}
+=\pr(Z=1\mid W)
+=e(W).
+\]
+右边使用 tower property：
+\begin{eqnarray*}
+\pr\{Z=1\mid e(W)\}
+&=&E\{Z\mid e(W)\}\\
+&=&E\{E(Z\mid W,e(W))\mid e(W)\}\\
+&=&E\{E(Z\mid W)\mid e(W)\}\\
+&=&E\{e(W)\mid e(W)\}\\
+&=&e(W).
+\end{eqnarray*}
+所以两边相等，从而
+\[
+Z\ind \{Y(1),Y(0),X\}\mid e\{X,Y(1),Y(0)\}.
+\]
+
+\paragraph{Remark.}
+这个证明没有用到 ignorability。它只是 binary treatment assignment mechanism 的一个概率恒等式：任何变量 $W$ 都可以通过
+\[
+\pr(Z=1\mid W)
+\]
+压缩成一个 balancing score。真正有用的地方在于，当 $W=X$ 且 strong ignorability 成立时，这个 balancing score 可由 observed covariates 表示；而本题中的 $W=\{X,Y(1),Y(0)\}$ 包含不可同时观测的 potential outcomes，因此更像一个概念上的基准。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Another version of \cref{thm::pscore-dimreduction}}{weak ignorability 的 propensity-score 降维}
+固定 $z\in\{0,1\}$。题设只要求
+\[
+Z\ind Y(z)\mid X,
+\]
+而不是 joint independence
+\[
+Z\ind \{Y(1),Y(0)\}\mid X.
+\]
+因此证明也必须逐个 potential outcome 进行。因为 $Z$ 是 binary，只需证明
+\[
+\pr\{Z=1\mid Y(z),e(X)\}=\pr\{Z=1\mid e(X)\}.
+\]
+
+先看左边。由 tower property，
+\begin{eqnarray*}
+\pr\{Z=1\mid Y(z),e(X)\}
+&=&E\{Z\mid Y(z),e(X)\}\\
+&=&E[E\{Z\mid Y(z),e(X),X\}\mid Y(z),e(X)]\\
+&=&E[E\{Z\mid Y(z),X\}\mid Y(z),e(X)]\\
+&=&E\{E(Z\mid X)\mid Y(z),e(X)\}\\
+&=&E\{e(X)\mid Y(z),e(X)\}\\
+&=&e(X).
+\end{eqnarray*}
+其中第四个等号使用了 $Z\ind Y(z)\mid X$。右边同样为
+\begin{eqnarray*}
+\pr\{Z=1\mid e(X)\}
+&=&E\{Z\mid e(X)\}\\
+&=&E[E\{Z\mid X,e(X)\}\mid e(X)]\\
+&=&E\{E(Z\mid X)\mid e(X)\}\\
+&=&E\{e(X)\mid e(X)\}\\
+&=&e(X).
+\end{eqnarray*}
+于是
+\[
+Z\ind Y(z)\mid e(X).
+\]
+由于 $z=0,1$ 任意，\cref{thm::pscore-dimension-reduction-weak-ig} 得证。
+
+\paragraph{Remark.}
+这个练习对应 \cref{thm::pscore-dimreduction} 的 weak-ignorability 版本。区别在于，weak ignorability 只能逐个 $Y(z)$ 降维；它并不自动给出
+\[
+Z\ind \{Y(1),Y(0)\}\mid e(X).
+\]
+这一点和 Chapter 10 中 ``pairwise independence 不推出 joint independence'' 的练习是同一个逻辑警告。
+\end{exercisesolution}
+
+\begin{exercisesolution}{More results on the IPW estimators}{HT 的 location non-invariance 与 Hajek 的 normalizing}
+先证明 \cref{prop::no-invariance-HT}。记估计 propensity score 为 $\hat e_i=\hat e(X_i)$。HT estimator 为
+\[
+\hat{\tau}^{\textup{ht}}
+=\frac{1}{n}\sumn \frac{Z_iY_i}{\hat e_i}
+-\frac{1}{n}\sumn \frac{(1-Z_i)Y_i}{1-\hat e_i}.
+\]
+若把每个 observed outcome 改为 $Y_i+c$，新的 HT estimator 为
+\begin{eqnarray*}
+\hat{\tau}^{\textup{ht}}(c)
+&=&\frac{1}{n}\sumn \frac{Z_i(Y_i+c)}{\hat e_i}
+-\frac{1}{n}\sumn \frac{(1-Z_i)(Y_i+c)}{1-\hat e_i}\\
+&=&\hat{\tau}^{\textup{ht}}
++c\left\{
+\frac{1}{n}\sumn \frac{Z_i}{\hat e_i}
+-\frac{1}{n}\sumn \frac{1-Z_i}{1-\hat e_i}
+\right\}\\
+&=&\hat{\tau}^{\textup{ht}}
++c(\hat 1_{\textsc{T}}-\hat 1_{\textsc{C}}).
+\end{eqnarray*}
+这正是 \cref{prop::no-invariance-HT} 的结论。有限样本中一般没有
+\[
+\hat 1_{\textsc{T}}=\hat 1_{\textsc{C}},
+\]
+所以 HT estimator 会随着 outcome 的平移而改变。
+
+其次，若使用真实 propensity score $e(X)$，则
+\begin{eqnarray*}
+E\left\{\frac{1}{n}\sumn \frac{Z_i}{e(X_i)}\right\}
+&=&E\left\{\frac{Z}{e(X)}\right\}\\
+&=&E\left[E\left\{\frac{Z}{e(X)}\mid X\right\}\right]\\
+&=&E\left\{\frac{E(Z\mid X)}{e(X)}\right\}\\
+&=&E(1)\\
+&=&1.
+\end{eqnarray*}
+同理，
+\begin{eqnarray*}
+E\left\{\frac{1}{n}\sumn \frac{1-Z_i}{1-e(X_i)}\right\}
+&=&E\left\{\frac{1-Z}{1-e(X)}\right\}\\
+&=&E\left[E\left\{\frac{1-Z}{1-e(X)}\mid X\right\}\right]\\
+&=&E\left\{\frac{1-E(Z\mid X)}{1-e(X)}\right\}\\
+&=&1.
+\end{eqnarray*}
+这说明 $\hat 1_{\textsc{T}}$ 与 $\hat 1_{\textsc{C}}$ 的目标都是常数 $1$，但 finite-sample realization 不必等于 $1$。
+
+最后证明 Hajek estimator 的 location invariance。写
+\[
+A_1=\sumn \frac{Z_iY_i}{\hat e_i},\quad
+B_1=\sumn \frac{Z_i}{\hat e_i},\qquad
+A_0=\sumn \frac{(1-Z_i)Y_i}{1-\hat e_i},\quad
+B_0=\sumn \frac{1-Z_i}{1-\hat e_i}.
+\]
+则
+\[
+\hat\tau^{\textup{hajek}}=\frac{A_1}{B_1}-\frac{A_0}{B_0}.
+\]
+若 $Y_i$ 改为 $Y_i+c$，则
+\[
+A_1\mapsto A_1+cB_1,\qquad A_0\mapsto A_0+cB_0.
+\]
+因此
+\[
+\hat\tau^{\textup{hajek}}(c)
+=\frac{A_1+cB_1}{B_1}-\frac{A_0+cB_0}{B_0}
+=\frac{A_1}{B_1}+c-\frac{A_0}{B_0}-c
+=\hat\tau^{\textup{hajek}}.
+\]
+
+\paragraph{Remark.}
+HT 与 Hajek 的差别不是 identification 层面的差别，而是 finite-sample normalization 的差别。\cref{thm::pscore-weighting} 保证 unnormalized weights 在 expectation 上正确；Hajek estimator 进一步要求样本中 treated 和 control 两侧的总权重都被校准为 $1$。这个小修正常常显著改善有限样本稳定性。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Re-analysis of \citet{Rosenbaum::1983JRSSB}}{五个 propensity-score strata 的二元结局分析}
+本题的数据已经按估计 propensity score 分成五个 strata。每个 stratum 的总人数都是
+\[
+303,
+\]
+所以总体 stratum weight 都是
+\[
+\pi_k=\frac{303}{1515}=\frac{1}{5}.
+\]
+令 $\hat p_{k1}$ 和 $\hat p_{k0}$ 分别表示第 $k$ 个 stratum 中 surgical group 与 medical group 的 improvement proportions。基于 propensity-score stratification 的 average causal effect estimator 为
+\[
+\hat\tau_{\mathrm{strat}}
+=\sum_{k=1}^5\pi_k(\hat p_{k1}-\hat p_{k0}).
+\]
+由 \cref{table::rr1983table1}，
+\[
+\hat p_{k1}-\hat p_{k0}
+=0.19,\ 0.30,\ 0.35,\ 0.41,\ 0.31.
+\]
+因此
+\[
+\hat\tau_{\mathrm{strat}}
+=\frac{1}{5}(0.19+0.30+0.35+0.41+0.31)
+=0.312.
+\]
+这表示在按 propensity score 分层调整后，surgical therapy 相对于 medical therapy 的 6 个月 functional improvement probability 约高 $31.2$ 个百分点。
+
+接下来给出 standard error。二元 outcome 下，可用
+\[
+\hat V_{\mathrm{strat}}
+=\sum_{k=1}^5\pi_k^2
+\left\{
+\frac{\hat s_{k1}^2}{n_{k1}}
++\frac{\hat s_{k0}^2}{n_{k0}}
+\right\},
+\]
+其中
+\[
+\hat s_{kz}^2=\frac{n_{kz}}{n_{kz}-1}\hat p_{kz}(1-\hat p_{kz})
+\]
+是 binary outcome 的 within-group sample variance。代入表中人数和 proportions，得到
+\[
+\widehat{\se}(\hat\tau_{\mathrm{strat}})=0.0319.
+\]
+于是 normal approximation 的 95\% confidence interval 为
+\[
+0.312\pm 1.96(0.0319)=[0.250,\ 0.374].
+\]
+
+下面的代码复现上述计算。由于表中 improvement proportions 只给出两位小数，结果对应 rounded table values。
+\begin{lstlisting}
+tab <- data.frame(
+  stratum = 1:5,
+  n1 = c(26, 68, 98, 164, 234),
+  p1 = c(0.54, 0.70, 0.70, 0.71, 0.70),
+  n0 = c(277, 235, 205, 139, 69),
+  p0 = c(0.35, 0.40, 0.35, 0.30, 0.39)
+)
+
+tab$nk <- tab$n1 + tab$n0
+N <- sum(tab$nk)
+tab$pi <- tab$nk / N
+
+est <- sum(tab$pi * (tab$p1 - tab$p0))
+s1sq <- tab$n1 / (tab$n1 - 1) * tab$p1 * (1 - tab$p1)
+s0sq <- tab$n0 / (tab$n0 - 1) * tab$p0 * (1 - tab$p0)
+se <- sqrt(sum(tab$pi^2 * (s1sq / tab$n1 + s0sq / tab$n0)))
+c(est = est, se = se, lwr = est - 1.96 * se, upr = est + 1.96 * se)
+\end{lstlisting}
+
+\paragraph{Remark.}
+这个分析的力量来自表格设计本身：Rosenbaum and Rubin 先用大量 covariates 估计 propensity score，再把问题压缩成五个可比较的 strata。由于原始 individual-level outcomes 不在表中，我们不能恢复未四舍五入的 exact counts；因此这里的数值应理解为基于 published rounded proportions 的近似再分析。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Balancing score and propensity score: more theoretical results}{propensity score 是最粗的 balancing score}
+我们证明 \cref{thm::balancingscore}。先证明必要性：若 $b(X)$ 是 balancing score，即
+\[
+Z\ind X\mid b(X),
+\]
+则 $e(X)$ 是 $b(X)$ 的函数。因为 $b(X)$ 本身是 $X$ 的函数，
+\begin{eqnarray*}
+e(X)
+&=&\pr(Z=1\mid X)\\
+&=&\pr\{Z=1\mid X,b(X)\}\\
+&=&\pr\{Z=1\mid b(X)\}.
+\end{eqnarray*}
+右边只依赖于 $b(X)$。因此只要定义
+\[
+f(u)=\pr\{Z=1\mid b(X)=u\},
+\]
+就有
+\[
+e(X)=f\{b(X)\}.
+\]
+这说明任何 balancing score 都必须至少包含 propensity score 中的信息；也就是说，$b(X)$ 比 $e(X)$ 更细。
+
+再证明充分性：若存在函数 $f(\cdot)$ 使得
+\[
+e(X)=f\{b(X)\},
+\]
+则 $b(X)$ 是 balancing score。由于 $Z$ 是 binary，只需证明
+\[
+\pr\{Z=1\mid X,b(X)\}=\pr\{Z=1\mid b(X)\}.
+\]
+左边为
+\[
+\pr\{Z=1\mid X,b(X)\}=\pr(Z=1\mid X)=e(X)=f\{b(X)\}.
+\]
+右边为
+\begin{eqnarray*}
+\pr\{Z=1\mid b(X)\}
+&=&E\{Z\mid b(X)\}\\
+&=&E\{E(Z\mid X)\mid b(X)\}\\
+&=&E\{e(X)\mid b(X)\}\\
+&=&E[f\{b(X)\}\mid b(X)]\\
+&=&f\{b(X)\}.
+\end{eqnarray*}
+所以两边相等，从而
+\[
+Z\ind X\mid b(X).
+\]
+\cref{thm::balancingscore} 得证。
+
+\paragraph{Remark.}
+``最粗''的意思是信息压缩的方向：$e(X)$ 可以从任何 balancing score $b(X)$ 中恢复出来。因此 $e(X)$ 是所有 balancing scores 共同必须保留的 assignment information。若为了 subgroup analysis 加上 $X_1$，令
+\[
+b(X)=\{e(X),X_1\},
+\]
+那么 $e(X)$ 显然是 $b(X)$ 的函数，所以 $b(X)$ 仍是 balancing score。这就是 \cref{eq::subgroup-ignorability} 背后的概率结构。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Some basics of subgroup effects}{subgroup ATE 的 IPW 表示与估计量}
+记
+\[
+G_{x_1}=\mathbb{I}(X_1=x_1),\qquad p_{x_1}=\pr(X_1=x_1).
+\]
+目标参数为
+\[
+\tau(x_1)=E\{Y(1)-Y(0)\mid X_1=x_1\}
+=\frac{E[G_{x_1}\{Y(1)-Y(0)\}]}{p_{x_1}}.
+\]
+在 ignorability 和 overlap 条件下，先识别 treated potential-outcome mean 的 subgroup numerator：
+\begin{eqnarray*}
+E\left\{\frac{G_{x_1}ZY}{e(X)}\right\}
+&=&E\left\{\frac{G_{x_1}ZY(1)}{e(X)}\right\}\\
+&=&E\left[E\left\{\frac{G_{x_1}ZY(1)}{e(X)}\mid X\right\}\right]\\
+&=&E\left[\frac{G_{x_1}}{e(X)}E\{ZY(1)\mid X\}\right]\\
+&=&E\left[\frac{G_{x_1}}{e(X)}E(Z\mid X)E\{Y(1)\mid X\}\right]\\
+&=&E[G_{x_1}E\{Y(1)\mid X\}]\\
+&=&E\{G_{x_1}Y(1)\}.
+\end{eqnarray*}
+同理，
+\[
+E\left\{\frac{G_{x_1}(1-Z)Y}{1-e(X)}\right\}
+=E\{G_{x_1}Y(0)\}.
+\]
+两式相减并除以 $p_{x_1}$，得到题目所给的 identification formula：
+\[
+\tau(x_1)
+=E\left\{
+\frac{\mathbb{I}(X_1=x_1)ZY}{e(X)}
+-\frac{\mathbb{I}(X_1=x_1)(1-Z)Y}{1-e(X)}
+\right\}\Big/\pr(X_1=x_1).
+\]
+
+令 $\hat e_i=\hat e(X_i)$，$G_i(x_1)=\mathbb{I}(X_{i1}=x_1)$，以及
+\[
+n_{x_1}=\sumn G_i(x_1).
+\]
+对应的 subgroup HT estimator 可以写成
+\[
+\hat\tau^{\textup{ht}}(x_1)
+=\frac{1}{n_{x_1}}\sumn G_i(x_1)
+\left\{
+\frac{Z_iY_i}{\hat e_i}
+-\frac{(1-Z_i)Y_i}{1-\hat e_i}
+\right\}.
+\]
+等价地，它是用 empirical subgroup probability $n_{x_1}/n$ 估计 $p_{x_1}$ 后的 plug-in estimator。
+
+对应的 subgroup Hajek estimator 分别 normalizes treated 和 control weights：
+\[
+\hat\tau^{\textup{hajek}}(x_1)
+=
+\frac{\sumn G_i(x_1)Z_iY_i/\hat e_i}
+{\sumn G_i(x_1)Z_i/\hat e_i}
+-
+\frac{\sumn G_i(x_1)(1-Z_i)Y_i/(1-\hat e_i)}
+{\sumn G_i(x_1)(1-Z_i)/(1-\hat e_i)}.
+\]
+它把 subgroup 内的 treated pseudo-population 和 control pseudo-population 分别校准到同一个 subgroup。
+
+\paragraph{Remark.}
+subgroup analysis 的一个常见误区是只在 propensity score model 里加入 subgroup indicator，却没有在估计阶段明确 target population。上面的公式说明，若目标是 $\tau(x_1)$，则 weighting 不仅要调整 $X$，还要把 averaging distribution 限制在 $X_1=x_1$ 的 subgroup 内。换言之，propensity score 解决 comparability，indicator $G_{x_1}$ 决定目标人群。
+\end{exercisesolution}

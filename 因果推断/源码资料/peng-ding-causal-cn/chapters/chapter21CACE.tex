@@ -1,0 +1,723 @@
+ 
+\chapter{An Experimental Perspective of the Instrumental Variable}
+ \label{chapter::iv-experiment}
+
+
+
+{\it instrumental variable method} 一直是计量经济学中的有力工具。它可以在 treatment 和 outcome 之间不满足 unconfoundedness 的研究中识别因果效应。它依赖一个满足若干条件的额外变量，称为 {\it instrumental variable} (IV)。第一次学习这些条件时，它们未必容易消化。从某种意义上说，IV 方法像是魔术。本章从 encouragement design 出发，给出一个不那么像魔术的视角。这也再次呼应 \citet{dorn1953philosophy} 的建议：观测研究的设计者总应问自己下面这个问题：\footnote{这段引文之前也出现在\cref{chapter::observational-studies}。}
+\begin{quote}
+如果可以通过 controlled experimentation 来做这项研究，
+它应当怎样进行？
+\end{quote} 
+IV 方法的实验类比，是 {\it encouragement design} 中的 {\it noncompliance} \citep{zelen1979new, powers1984effects, holland1986statistics}。 
+
+
+
+\section{Encouragement Design and Noncompliance}
+
+考虑一个实验，实验单元用 $i = 1,\ldots, n$ 表示。令 $Z_i$ 为分配到的 treatment，$1$ 表示 treatment，$0$ 表示 control。令 $D_i$ 为实际接受的 treatment，$1$ 表示 treatment，$0$ 表示 control。当某个单元 $i$ 满足 $Z_i \neq D_i$ 时，noncompliance 问题就出现了。Noncompliance 是非常常见的问题，尤其是在实验单元是人的 encouragement design 中。在这些情形下，实验者不能强迫单元接受 treatment，而只能鼓励他们这么做。
+令 $Y_i$ 为我们关心的 outcome。
+
+现在考虑对 $Z$ 进行 complete randomization，并暂时忽略协变量 $X$。相对于 treatment assignment 的两个水平 $1$ 和 $0$，我们有实际接受 treatment 的潜在值 $\{  D_i(1), D_i(0) \}$，以及 outcome 的潜在值 $\{ Y_i(1), Y_i(0)  \}$。
+对应的观测值分别为 $D_i = Z_i D_i(1) + (1-Z_i) D_i(0)$ 和 $Y_i = Z_i Y_i(1) + (1-Z_i) Y_i(0)$。
+为简化记号，我们假设 $\{  Z_i, D_i(1), D_i(0) ,Y_i(1), Y_i(0)  \}_{i=1}^n \iidsim \{  Z, D(1), D(0) ,Y(1), Y(0)  \}$，并且在不会造成混淆时省略下标 $i$。
+
+
+我们从 CRE 开始。
+\begin{assumption}[randomization]
+\label{assume::random}
+$Z\ind \{D(1), D(0) ,Y(1), Y(0)   \}$. 
+\end{assumption}
+
+Randomization 允许我们识别 $Z$ 对 $D$ 和 $Y$ 的平均因果效应：
+$$
+\tau_D = E\{  D(1) - D(0) \} = E(D\mid Z=1) - E(D \mid Z=0)
+$$
+and
+$$
+\tau_Y = E\{  Y(1) - Y(0) \} = E(Y\mid Z=1) - E(Y\mid Z=0).  
+$$
+我们可以用简单的均值差估计量 $\hat{\tau}_D$ 和 $\hat{\tau}_Y$ 分别估计 $\tau_D$ 和 $\tau_Y$。
+
+
+报告估计量 $\hat{\tau}_Y$ 及其标准误，称为 intention-to-treat (ITT) analysis。它估计的是 treatment assignment 对 outcome 的效应，而\cref{assume::random} 中的 CRE 为这一分析提供了依据。不过，它未必回答真正的科学问题，也就是实际接受的 treatment 对 outcome 的因果效应。
+
+
+
+
+\section{Latent Compliance Status and Effects}
+
+\subsection{Nonparametric identification}
+
+
+沿着 \citet{imbens1994identification} 和 \citet{angrist1996identification} 的思路，我们根据 $U_i = \{  D_i(1), D_i(0) \}$ 的联合潜在值对总体分层。因为 $D$ 是二元变量，所以共有四种可能组合：
+\begin{eqnarray*}
+U_i=\left \{ \begin{array} {ll}
+\at  , & \text{if} \hspace{2mm} D_i(1)=1 \hspace{2mm} \text{and} \hspace{2mm} D_i(0)=1; \\
+\cp  , & \text{if} \hspace{2mm} D_i(1)=1 \hspace{2mm} \text{and} \hspace{2mm} D_i(0)=0; \\
+\df  ,& \text{if} \hspace{2mm} D_i(1)=0 \hspace{2mm} \text{and} \hspace{2mm} D_i(0)=1; \\
+\nt  , & \text{if} \hspace{2mm} D_i(1)=0 \hspace{2mm} \text{and} \hspace{2mm} D_i(0)=0,
+\end{array}
+\right.  
+\end{eqnarray*}
+其中 ``$\at$'' 表示 ``always taker''，``$\cp$'' 表示 ``complier''，``$\df$'' 表示 ``defier''，``$\nt$'' 表示 ``never taker''。
+由于我们不能同时观测 $D_i(1)$ 和 $D_i(0)$，$U_i$ 是描述单元 $i$ compliance behavior 的潜在变量。换言之，这些 compliance type 形成了由潜在值定义的 principal strata。
+
+
+基于 $U$，我们可以用全概率公式把 $Z$ 对 $Y$ 的平均因果效应分解为四项：
+\begin{eqnarray} 
+\tau_Y &=& E\{ Y(1) - Y(0) \mid U=\at  \} \pr(U = \at )  \nonumber  \\
+&&+ E\{ Y(1) - Y(0) \mid U=\cp   \} \pr(U = \cp ) \nonumber  \\
+&&+ E\{ Y(1) - Y(0) \mid U=\df  \} \pr(U = \df ) \nonumber  \\
+&&+ E\{ Y(1) - Y(0) \mid U=\nt  \} \pr(U = \nt ) . \label{eq::decompose-ate-y-cace}
+\end{eqnarray}  
+因此，$\tau_Y $ 是四个潜在子群效应的加权平均。下面我们进一步考察这些潜在群体。
+
+
+
+下面的\cref{assume::Mono} 把 \cref{eq::decompose-ate-y-cace} 中的第三项限制为零。
+\begin{assumption}[monotonicity]
+\label{assume::Mono}
+$\pr(U_i = \df) = 0$，或者对所有 $i$ 都有 $D_i(1)\geq D_i(0)$；也就是说，不存在 defiers。
+\end{assumption}
+
+当分配到 control arm 的单元无法获得 treatment，即对所有单元都有 $D_i(0) = 0$ 时，{\it one-sided noncompliance} 会自动保证\cref{assume::Mono} 成立。在 randomization 下，\cref{assume::Mono} 有一个可检验含义：
+\begin{equation}
+\label{eq::test-mono}
+\pr(D=1\mid Z=1) \geq \pr(D=1\mid Z=0).
+\end{equation}
+但是，\cref{assume::Mono} 比不等式 \cref{eq::test-mono} 强得多。前者在个体层面限制 $D_i(1)$ 和 $D_i(0)$，而后者只在平均意义下限制它们。尽管如此，当可检验含义 \cref{eq::test-mono} 成立时，我们不能用观测数据反驳\cref{assume::Mono}。
+
+
+下面的\cref{assume::ER} 基于这样一种机制，把 \cref{eq::decompose-ate-y-cace} 中的第一项和最后一项限制为零：treatment assignment 对 outcome 的影响只能通过实际接受的 treatment 发生。
+\begin{assumption}[exclusion restriction]
+\label{assume::ER}
+对 $U_i=\at$ 的 always takers 和 $U_i = \nt$ 的 never takers，有 $Y_i(1) = Y_i(0)$。
+\end{assumption}
+
+
+\cref{assume::ER} 的一个等价说法是：对所有 $i$，$D_i(1) =  D_i(0)$ 必须推出 $Y_i(1) =  Y_i(0)$。它要求 treatment assignment 只有在改变实际接受的 treatment 时，才会影响 outcome。在 double-blind RCTs 中\footnote{一般来说，实验最好采用盲法，以避免 placebo effects、患者预期等带来的各种偏差。在 double-blind RCTs 中，医生和患者都不知道 treatment；在 single-blind RCTs 中，患者不知道 treatment，但医生知道。有时，实验不可能做到 double-blind，甚至不可能做到 single-blind；这类试验称为 open trials。}，这一点在生物学上是可信的，因为 outcome 只依赖实际接受的 treatment。也就是说，如果 treatment assignment 没有改变实际接受的 treatment，它也不会改变 outcome。如果 treatment assignment 对 outcome 存在不经过实际接受 treatment 的 {\it direct effects}\footnote{这里我非正式地使用 ``direct effects''。关于这一概念更详细的讨论，见后面的\cref{chapter::mediation,chapter::cde}。}，exclusion restriction 就可能被违反。例如，有些 RCTs 并非 double-blinded，此时 treatment assignment 可能通过一些未知路径影响 outcome。
+
+
+
+
+
+在\cref{assume::Mono,assume::ER} 下，分解式 \cref{eq::decompose-ate-y-cace} 只剩第二项：
+\begin{eqnarray}
+\label{eq::aceY}
+\tau_Y  = E\{ Y(1) - Y(0) \mid U=\cp   \} \pr(U = \cp ).
+\end{eqnarray}
+类似地，我们可以把 $Z$ 对 $D$ 的平均因果效应分解为四项：
+\begin{eqnarray*}
+\tau_D &=& E\{ D(1) - D(0) \mid U=\at  \} \pr(U = \at ) \\
+&&+ E\{ D(1) - D(0) \mid U=\cp   \} \pr(U = \cp ) \\
+&&+ E\{ D(1) - D(0) \mid U=\df  \} \pr(U = \df ) \\
+&&+ E\{ D(1) - D(0) \mid U=\nt  \} \pr(U = \nt )  \\
+&=& 0\times \pr(U = \at ) 
++ 1 \times \pr(U = \cp ) 
++ (-1)\times   \pr(U = \df )
++ 0 \times  \pr(U = \nt ) ,
+\end{eqnarray*}
+在\cref{assume::Mono} 下，这化简为
+\begin{eqnarray}
+\label{eq::aceD}
+\tau_D  = \pr(U = \cp ) .
+\end{eqnarray}
+由 \cref{eq::aceD} 可知，compliers 的比例 $\pi_\cp = \pr(U = \cp)$ 等于 treatment assigned 对 $D$ 的平均因果效应；这是 CRE 下可识别的量。虽然我们不能仅凭观测数据知道所有 compliers 是谁，但可以根据 \cref{eq::aceD} 识别他们在总体中的比例。
+结合 \cref{eq::aceY} 和 \cref{eq::aceD}，得到下面的结果。
+
+
+\begin{theorem}
+\label{thm::CACE-identification}
+在\cref{assume::Mono,assume::ER} 下，有
+$$
+E\{ Y(1) - Y(0) \mid U=\cp   \} = \frac{ \tau_Y  }{ \tau_D}
+$$
+if $\tau_D \neq 0$. 
+\end{theorem}
+
+
+ 
+
+沿着 \citet{imbens1994identification} 和 \citet{angrist1996identification} 的思路，我们定义下面这个新的因果效应。
+
+\begin{definition}[CACE or LATE]\label{def::CACE}
+定义
+$$
+\tau_\cp  =  E\{ Y(1) - Y(0) \mid U=\cp   \}  
+$$
+为 ``complier average causal effect (CACE)'' 或 ``local average treatment effect (LATE)''。它有如下等价形式：
+\begin{eqnarray*}
+\tau_\cp  &=&  E\{ Y(1) - Y(0) \mid D(1) = 1 , D(0) = 0  \} \\
+&=&    E\{ Y(1) - Y(0) \mid D(1)  >  D(0)    \} . 
+\end{eqnarray*}
+\end{definition}
+
+CACE 是在满足 $ D(1) = 1 , D(0) = 0$ 的 compliers 中，$Z$ 对 $Y$ 的平均因果效应；等价地，在 monotonicity 下，它是在满足 $ D(1)  >  D(0)$ 的单元中的平均因果效应。
+根据\cref{def::CACE}，可以把\cref{thm::CACE-identification} 改写为
+$$
+\tau_\cp  = \frac{ \tau_Y  }{ \tau_D} ,
+$$
+也就是说，CACE 或 LATE 等于 $Z$ 对 $Y$ 的平均因果效应与其对 $D$ 的平均因果效应之比。在\cref{assume::random} 下，我们进一步识别 CACE。
+
+
+\begin{corollary}
+\label{corollary::identification-CACE}
+在\cref{assume::random,assume::Mono,assume::ER} 下，有
+$$
+\tau_\cp = \frac{ E(Y\mid Z=1) - E(Y\mid Z=0) }{ E(D\mid Z=1) - E(D \mid Z=0) } .
+$$
+\end{corollary}
+
+
+因此，在 CRE、monotonicity 和 exclusion restriction 下，我们可以非参数地把 CACE 识别为 outcome 均值差与实际接受 treatment 均值差的比值。
+
+
+
+\subsection{Estimation}
+\label{sec::estimation-IV}
+
+
+根据\cref{corollary::identification-CACE}，我们可以用一个简单比值估计 $\tau_\cp$：
+$$
+\hat{\tau}_\cp  = \frac{  \hat{\tau}_Y }{  \hat{\tau}_D  } ,
+$$ 
+这称为 Wald estimator \citep{wald1940fitting}，也称为 IV estimator。在上面的讨论中，$Z$ 是 $D$ 的 IV。
+
+
+
+我们可以根据下面的启发式推导得到方差估计量（见\cref{thm::delta-method}）：
+$$
+\hat{\tau}_\cp - \tau_\cp  = ( \hat{\tau}_Y  -  \tau_\cp\hat{\tau}_D)/\hat{\tau}_D 
+\approx  ( \hat{\tau}_Y  -  \tau_\cp\hat{\tau}_D)/ \tau_D 
+= \hat{\tau}_A / \tau_D ,
+$$ 
+其中 $\hat{\tau}_A$ 是 adjusted outcome $A_i = Y_i -  \tau_\cp D_i$ 的均值差。因此，$\hat{\tau}_\cp$ 的渐近方差近似等于 $\hat{\tau}_A$ 的方差除以 $\tau_D^2$。
+方差估计按以下步骤进行：
+\begin{enumerate}
+%[(\thesection.1)]
+\item
+得到 adjusted outcomes $\hat{A}_i =  Y_i -  \hat{\tau}_\cp D_i\ (i=1, \ldots, n)$；
+
+\item
+基于 adjusted outcomes 得到 Neyman-type 方差估计：
+$$
+\hat{V}_{\hat{A}} = \frac{\hat{S}_{\hat{A}}^2(1)}{n_1} + \frac{\hat{S}_{\hat{A}}^2(0)}{n_0},
+$$
+其中 $\hat{S}_{\hat{A}}^2(1)$ 和 $\hat{S}_{\hat{A}}^2(0)$ 分别是 treatment 组和 control 组中 $\hat{A}_i $ 的样本方差；
+
+\item
+得到最终方差估计量 $ \hat{V}_{\hat{A}} /  \hat{\tau}_D ^2 $。
+\end{enumerate}
+
+
+上述方差估计量的论证见\cref{problem::var-iv-estimate}。另外，我们也可以用 bootstrap 近似 $\hat{\tau}_\cp $ 的方差。
+下面的函数可以计算点估计量 $\hat{\tau}_\cp $，并分别用公式 $\hat{V}_{\hat{A}} $ 和 bootstrap 计算标准误。
+
+\begin{lstlisting}
+## IV point estimator
+IV_Wald = function(Z, D, Y)
+{
+       tau_D = mean(D[Z==1]) - mean(D[Z==0])
+       tau_Y = mean(Y[Z==1]) - mean(Y[Z==0])
+       CACE  = tau_Y/tau_D
+       
+       c(tau_D, tau_Y, CACE)
+}
+
+## IV se via the delta method
+IV_Wald_delta = function(Z, D, Y)
+{
+       est         = IV_Wald(Z, D, Y)
+       AdjustedY   = Y - D*est[3]
+       VarAdj      = var(AdjustedY[Z==1])/sum(Z) + 
+                          var(AdjustedY[Z==0])/sum(1 - Z)
+       
+       c(est[3], sqrt(VarAdj)/abs(est[1]))
+}
+
+##IV se via the bootstrap
+IV_Wald_bootstrap = function(Z, D, Y, n.boot = 200)
+{
+       est      = IV_Wald(Z, D, Y)
+       
+       CACEboot  = replicate(n.boot, {
+         id.boot = sample(1:length(Z), replace = TRUE)
+         IV_Wald(Z[id.boot], D[id.boot], Y[id.boot])[3]
+       })
+       
+       c(est[3], sd(CACEboot))
+}
+\end{lstlisting}
+
+
+在原假设 $\tau_\cp = 0$ 下，我们可以用 $\hat{V}_Y /  \hat{\tau}_D ^2$ 近似方差，其中 $\hat{V}_Y$ 是 $Y$ 的均值差的 Neyman-type 方差估计。如果真实的 $\tau_\cp$ 不为零，这个方差估计量并不一致。因此，它适合用于检验，而不适合用于估计。尽管如此，它揭示了 ITT estimator 和 Wald estimator 之间的关系。ITT estimator $\hat{\tau}_Y$ 的估计标准误为 $\sqrt{ \hat{V}_Y}$。Wald estimator $ \hat{\tau}_Y / \hat{\tau}_D$ 本质上等于 ITT estimator 乘以 $1/\hat{\tau}_D > 1$，所以其绝对值更大；与此同时，它的估计标准误也按同样的倍数增加。
+基于方差估计量 $\hat{V}_Y $ 和 $\hat{V}_Y /  \hat{\tau}_D ^2$，$\tau_Y$ 和 $\tau_\cp$ 的置信区间分别为
+$$
+\hat{\tau}_Y \pm z_{1-\alpha/2} \sqrt{ \hat{V}_Y}
+$$
+and
+$$
+\hat{\tau}_Y  / \hat{\tau}_D \pm z_{1-\alpha/2} \sqrt{ \hat{V}_Y}  / \hat{\tau}_D
+= 
+\left( \hat{\tau}_Y \pm z_{1-\alpha/2} \sqrt{ \hat{V}_Y}  \right) / \hat{\tau}_D 
+$$
+其中 $z_{1-\alpha/2}$ 是标准正态随机变量的 $1-\alpha/2$ 上分位数。
+这些置信区间给出相同的定性结论，因为它们会同时覆盖或不覆盖零。从某种意义上说，虽然 IV analysis 的程序更复杂，但它给出的定性信息与对 $Y$ 的 ITT analysis 相同。
+
+
+
+
+\section{Covariates}
+
+\subsection{Covariate adjustment in the CRE}
+
+现在考虑带协变量的 completely randomized experiments，并假设
+$$
+Z\ind \{ D(1), D(0), Y(1), Y(0), X \}.
+$$
+有了协变量 $X$，我们可以分别对 $D$ 和 $Y$ 使用 \citet{lin2013} 的估计量 $\hat{\tau}_{D,\textsc{L}}$ 和 $\hat{\tau}_{Y,\textsc{L}}$，从而得到 $\hat{\tau}_{\cp, \textsc{L}} = \hat{\tau}_{Y,\textsc{L}} / \hat{\tau}_{D,\textsc{L}}$。
+我们可以用 bootstrap 近似 $\hat{\tau}_{\cp, \textsc{L}} $ 的渐近方差。下面的函数可以计算点估计量 $\hat{\tau}_{\cp, \textsc{L}}p $ 以及基于 bootstrap 的标准误。
+ 
+\begin{lstlisting}
+## covariate adjustment in IV analysis
+IV_Lin = function(Z, D, Y, X)
+{
+  X     = scale(as.matrix(X))
+  tau_D = lm(D ~ Z + X + Z*X)$coef[2]
+  tau_Y = lm(Y ~ Z + X + Z*X)$coef[2]
+  CACE  = tau_Y/tau_D
+  
+  c(tau_D, tau_Y, CACE)
+}
+
+
+##IV_adj se via the bootstrap
+IV_Lin_bootstrap = function(Z, D, Y, X, n.boot = 200)
+{
+  X         = scale(as.matrix(X))
+  est       = IV_Lin(Z, D, Y, X)
+  CACEboot  = replicate(n.boot, {
+    id.boot = sample(1:length(Z), replace = TRUE)
+    IV_Lin(Z[id.boot], D[id.boot], Y[id.boot], X[id.boot, ])[3]
+  })
+  
+  c(est[3], sd(CACEboot))
+}
+\end{lstlisting}
+
+\subsection{Covariates in conditional randomization or unconfounded observational studies}
+\label{section::unconfounded-IV}
+
+如果 randomization 条件化成立，也就是
+$$
+Z\ind \{ D(1), D(0), Y(1), Y(0) \} \mid  X,
+$$
+那么必须调整协变量以避免偏差。分析仍然直接，因为我们已经在\cref{part::observational-studies} 中讨论过许多估计量，可以分别用来估计 $ Z$ 对 $D$ 和 $Y$ 的效应。只需把它们代入比值公式 $\hat{\tau}_\cp = \hat{\tau}_Y / \hat{\tau}_D$，并用 bootstrap 近似渐近方差。
+这里我不实现相应的估计量和方差估计量，而把它留作\cref{hw::iv-conditional-x}。
+
+
+
+\section{Weak IV}
+
+\subsection{A procedure robust to weak IV}
+ 
+即使 $\tau_D >0$，$\hat{\tau}_D$ 仍有正概率等于零，因此 $\hat{\tau}_\cp$ 的方差为无穷大（见\cref{problem::infinite-var-iv}）。前面 Normal approximation 给出的方差，并不是 $\hat{\tau}_\cp$ 本身的方差，而是其渐近分布的方差。这是一个细微的技术点。当 $ \tau_D$ 接近 $0$ 时，也就是 weak IV 情形，比值估计量 $\hat{\tau}_\cp = \hat{\tau}_Y / \hat{\tau}_D$ 的有限样本性质很差。在这种情形下，$\hat{\tau}_\cp$ 有有限样本偏差，渐近分布也非正态，相应的 Wald-type 置信区间覆盖性质较差。在 $Y$ 为二元 outcome 的简单情形中，我们知道 $\tau_Y$ 必须落在 $-1$ 和 $1$ 之间，但不能保证 $\hat{\tau}_\cp$ 也落在 $-1$ 和 $1$ 之间。
+从检验角度看，有一个简单解决方案。
+$$
+H_0: \tau_\cp  = 0 \Longleftrightarrow H_0': \tau_Y = 0
+$$
+if $\tau_D > 0$. 
+因此，我们只需检验 $H_0'$，也就是 $Z$ 对 $Y$ 的平均因果效应为零。这呼应了\cref{sec::estimation-IV} 中关于 ITT analysis 和 IV analysis 关系的讨论。
+
+
+从估计角度看，虽然点估计量的有限样本性质很差，我们仍可把注意力放在置信区间上。因为 $\tau_\cp = \tau_Y / \tau_D$，这类似于统计学中经典的 Fieller--Creasy problem。下面讨论一种受 \citet{fieller1954some} 启发的 $\tau_\cp$ 置信区间构造策略；见\cref{sec::fc-problem}。
+由置信区间和假设检验之间的对偶性（见\cref{section::duality-ci-testing}），我们可以通过反演一系列原假设来构造 $\tau_\cp$ 的置信集：
+$$
+H_0(b): \tau_\cp = b . 
+$$ 
+给定真实值 $\tau_\cp = b$，有
+$$
+ \tau_Y  - b  \tau_D  = 0.
+$$
+原假设 $H_0(b)$ 等价于 adjusted outcome $A_i( b) = Y_i - b  D_i $ 上平均因果效应为零的原假设：
+$$
+H_0(b): \tau_{A(b)} = 0 .
+$$
+
+
+令 $ \hat{\tau}_A(b)$ 为 $\tau_{A(b)} $ 的一个通用点估计量，并令 $\hat{V}_A( b )$ 为相应的方差估计量。点估计量和方差估计量依赖具体设定。
+在无协变量的 CRE 中，$ \hat{\tau}_A(b)$ 是 outcome $A_i( b)$ 的均值差，$\hat{V}_A( b )$ 是 Neyman-type 方差估计量。
+在有协变量的 CRE 中，$ \hat{\tau}_A(b)$ 是 \citet{lin2013} 对 outcome $A_i( b)$ 的估计量，$\hat{V}_A( b )$ 是把 $Y_i - b D_i$ 对 $(Z_i, X_i, Z_i X_i)$ 做相应 OLS 拟合时的 EHW 方差估计量，并带有\cref{sec::cre-superpop} 中讨论的 correction term\footnote{如果采用 finite-population 视角，则不需要这个 correction。}。
+在 unconfounded observational studies 中，我们可以基于本书\cref{part::observational-studies} 中的许多已有策略，得到 $A_i( b)$ 上平均因果效应的估计量及其相应方差估计量。
+
+
+基于 $ \hat{\tau}_A(b)$ 和 $\hat{V}_A( b )$，可以为 $H_0(b)$ 构造 Wald-type test。反演这些检验，可以得到 $\tau_\cp$ 的如下置信集：
+$$
+\left\{  b:    \frac{   \hat{\tau}_A^2(b)  }{  \hat{V}_A(b)  } \leq z_{1-\alpha/2}^2 \right\}
+$$
+其中 $z_{1-\alpha/2}$ 是标准正态随机变量的 $1-\alpha/2$ 上分位数。
+这接近计量经济学中的 Anderson--Rubin-type confidence interval \citep{anderson1950asymptotic}。由于它与 \citet{fieller1954some} 的联系，我称其为 Fieller--Anderson--Rubin (FAR) confidence interval。
+当 IV 较强时，这些 weak-IV confidence intervals 会退化为渐近置信区间；而当 IV 较弱时，它们有额外保证。我建议实践中使用它们。
+
+
+\begin{example}\label{eg::FAR-CI-noX}
+为了获得对 FAR confidence interval 的直观理解，我们考察无协变量 CRE 这个简单情形。置信区间中的二次不等式化为
+\begin{eqnarray*}
+&& (\hat{\tau}_Y  - b   \hat{\tau}_D)^2 \\ 
+& \leq & z_{1-\alpha/2}
+\left[      n_1^{-1} \{  \hat{S}_Y^2(1)  + b^2\hat{S}_D^2(1) - 2 b \hat{S}_{YD}(1)  \}  \right. \\
+&& \left. 
+ + n_0^{-1} \{  \hat{S}_Y^2(0)  + b^2\hat{S}_D^2(0) - 2 b \hat{S}_{YD}(0)  \}    \right] ,
+\end{eqnarray*}
+其中 $\{ \hat{S}_Y^2(1) ,  \hat{S}_D^2(1) , \hat{S}_{YD}(1)  \}$ 和 $ \{ \hat{S}_Y^2(0), \hat{S}_D^2(0),\hat{S}_{YD}(0) \} $ 分别是 treatment 组和 control 组中 $Y$ 与 $D$ 的样本方差和协方差。
+置信集可以是闭区间、两个不相交区间、空集，或者整条实线。详细讨论留给\cref{para::FAR-CI-cases}。
+\end{example}
+ 
+
+
+
+\subsection{Implementation and simulation}\label{sec::FARci-simulation}
+
+
+下面的函数可以计算作为 $b$ 函数的一列 $p$-values。函数 \ri{FARci} 不使用协变量；函数 \ri{FARciX} 使用协变量，并依赖\cref{sec::simulation-CRE-superp} 中定义的函数 \ri{linestimator}。
+
+\begin{lstlisting}
+FARci = function(Z, D, Y, Lower, Upper, grid)
+{
+  CIrange = seq(Lower, Upper, grid)
+  Pvalue  = sapply(CIrange, function(t){
+    Y_t       = Y - t*D
+    Tauadj    = mean(Y_t[Z==1]) - mean(Y_t[Z==0])
+    VarAdj    = var(Y_t[Z==1])/sum(Z) + 
+      var(Y_t[Z==0])/sum(1 - Z)
+    Tstat     = Tauadj/sqrt(VarAdj)
+    (1 - pnorm(abs(Tstat)))*2
+  })
+  
+  return(list(CIrange = CIrange, Pvalue  = Pvalue))
+}
+
+FARciX = function(Z, D, Y, X, Lower, Upper, grid)
+{
+  CIrange = seq(Lower, Upper, grid)
+  X       = scale(X)
+  Pvalue  = sapply(CIrange, function(t){
+    Y_t       = Y - t*D
+    linest    = linestimator(Z, Y_t, X)
+    Tstat     = linest[1]/linest[3]
+    (1 - pnorm(abs(Tstat)))*2
+  })
+  
+  return(list(CIrange = CIrange, Pvalue  = Pvalue))
+}
+\end{lstlisting}
+
+\cref{fg::FAR-ci-simulation} 展示了不同 $\pi_\cp$ 下，模拟数据中 $p$-value 如何随 $b$ 变化。\cref{fig::FARci-realization1,fig::FARci-realization2} 基于同一数据生成过程的两次实现，细节留在 \ri{R} 代码中。在\cref{fig::FARci-realization1} 中，FAR confidence sets 都是闭区间；而在\cref{fig::FARci-realization2} 中，当 $\pi_\cp = 0.2$ 和 $\pi_\cp = 0.1$ 时，置信集不是闭区间。当 $\pi_\cp = 0.5$ 时，两次实现中的置信集形状保持稳定。
+
+\begin{figure}
+\centering
+\begin{subfigure}[b]{0.45\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{figures/FARci_simulation1.pdf}
+                \caption{Realization 1}
+                \label{fig::FARci-realization1}
+        \end{subfigure}%
+\begin{subfigure}[b]{0.45\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{figures/FARci_simulation2.pdf}
+                \caption{Realization 2}
+                \label{fig::FARci-realization2}
+        \end{subfigure}%
+\caption{基于不同 $\pi_\cp$ 的模拟数据得到的 FAR confidence interval：两次实现}\label{fg::FAR-ci-simulation}
+\end{figure}
+
+
+
+\section{Application}
+\label{sec::cace-application}
+
+
+\ri{mediation} 包包含来自 Job Search Intervention Study (JOBS II) 的数据集 \ri{jobs}。JOBS II 是一个 randomized field experiment，用来研究 job training intervention 对失业劳动者的效果。变量 \ri{treat} 表示参与者是否被随机选入 JOBS II training program，变量 \ri{comply} 表示参与者是否实际参加 JOBS II program。我们关心的一个 outcome 是 \ri{job_seek}，它衡量求职 self-efficacy 的水平，取值从 1 到 5。协变量包括 \ri{sex}, \ri{age}, \ri{marital}, \ri{nonwhite}, \ri{educ} 和 \ri{income}。
+
+ \begin{lstlisting}
+> jobsdata = read.csv("jobsdata.csv")
+> Z = jobsdata$treat
+> D = jobsdata$comply
+> Y = jobsdata$job_seek
+> getX     = lm(treat ~ sex + age + marital 
++               + nonwhite + educ + income,
++               data = jobsdata)
+> X = model.matrix(getX)[, -1]
+\end{lstlisting}
+
+
+我们可以用 $\hat{\tau}_\cp$ 估计 $\tau_\cp$，并基于 $\hat{V}_{\hat{A}}$ 和 bootstrap 得到标准误。还可以进一步做 covariate adjustment，得到 $\hat{\tau}_{\cp,\textsc{L}}$，并基于 bootstrap 得到标准误。结果如下。不同方法下的点估计量和标准误都比较稳定。
+ \begin{lstlisting}
+> ## without covariates
+> res = rbind(IV_Wald_delta(Z, D, Y),
++             IV_Wald_bootstrap(Z, D, Y, n.boot = 10^3))
+> ## with covariates 
+> res = rbind(res, 
++             IV_Lin_bootstrap(Z, D, Y, X, n.boot = 10^3)) 
+> res = cbind(res, res[, 1] - 1.96*res[, 2],
++             res[, 1] + 1.96*res[, 2])
+> row.names(res) = c("delta", "bootstrap", "with covariates")
+> colnames(res)  = c("est", "se", "lower CI", "upper CI")
+> round(res, 3)
+                  est    se lower CI upper CI
+delta           0.109 0.081   -0.050    0.268
+bootstrap       0.109 0.083   -0.054    0.271
+with covariates 0.118 0.082   -0.042    0.278
+\end{lstlisting}
+
+
+
+也可以通过反演检验来构造 FAR confidence sets。它们与上面的置信区间相近。
+ \begin{lstlisting}
+                   lower CI upper CI
+without covariates   -0.050    0.267
+with covariates      -0.047    0.282
+\end{lstlisting}
+
+\cref{fig::FAR-p-value} 画出了一系列检验对应的 $p$-values。
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width = \textwidth]{figures/farci_jobs.pdf}
+\caption{通过反演检验得到的 $\tau_\cp$ 置信区间：上图不做 covariate adjustment，下图做 covariate adjustment}\label{fig::FAR-p-value}
+\end{figure}
+
+
+
+
+\section{Interpreting the CACE}\label{eq::interpret-iv-double}
+
+潜在结果记号 $\{ D(1), D(0), Y(1), Y(0)  \}$ 是相对于 treatment assigned $Z$ 的假想干预而言的。因此，$\tau_\cp$ 是在 compliers 中 treatment assigned 对 outcome 的平均因果效应。幸运的是，对 compliers 有 $D=Z$，所以我们也可以把 $\tau_\cp$ 解释为在 compliers 中实际接受的 treatment 对 outcome 的平均因果效应。这部分回答了科学问题。
+
+ 
+
+有些论文使用不同记号。例如，\citet{angrist1996identification} 用 $Y_i(z,d)$ 表示 two-by-two factorial experiment\footnote{``factorial experiment'' 这一名称来自实验设计文献 \citep{dasgupta2014causal}。实验者把多个因素随机分配给每个单元。factorial experiment 中的 treatment 有多个水平。} 中单元 $i$ 在 treatment assigned 为 $z$、treatment received 为 $d$ 时的潜在结果。\citet[][Section 3.1]{angrist2022empirical} 评论了这一记号选择的思想史。在这个记号下，exclusion restriction assumption 具有如下形式。
+
+
+
+\begin{assumption}[exclusion restriction]
+\label{assume::ER-double-index}
+对所有 $i$，$Y_i(z,d) = Y_i(d)$；也就是说，potential outcome 只是 $d$ 的函数。
+\end{assumption}
+
+
+根据下面的因果图，\cref{assume::ER-double-index} 排除了从 $Z$ 到 $Y$ 的直接箭头。在这种情形下，$Z$ 是 $D$ 的 IV。
+\begin{center}
+$
+\xymatrix{
+ && & U  \ar[dl] \ar[dr] &\\
+Z \ar[rr] &&D \ar[rr]&&Y
+}
+$
+\end{center}
+在\cref{assume::ER-double-index} 下，扩展记号 $Y_i(z,d)$ 退化为 $Y_i(d)$，这也解释了 ``exclusion restriction'' 这个名称。因此，对 $d=0,1$ 有 $Y_i(1,d) = Y_i(0,d)$；再结合\cref{assume::Mono}，可推出
+\begin{eqnarray*}
+Y_i(z=1) - Y_i(z=0) &=& Y_i(1, D_i(1)) - Y_i(0, D_i(0)) \\
+&=& \left \{ \begin{array} {ll}
+0 , & \text{if} \hspace{2mm}  U_i = \at, \\
+0 , & \text{if}  \hspace{2mm}  U_i = \nt,\\
+Y_i(d=1) - Y_i(d=0) ,& \text{if} \hspace{2mm} U_i = \cp.
+\end{array}
+\right.  
+\end{eqnarray*}
+在上面的表达中，我特意强调 potential outcomes 是相对于 $z$、$d$，还是同时相对于二者定义的，以避免混淆。
+前面对 $\tau_Y$ 的分解仍然成立，并给出下面这个来自 \citet{imbens1994identification} 和 \citet{angrist1996identification} 的结果。
+
+回顾 $D$ 上的平均因果效应 $\tau_D = E\{D(1)  - D(0) \}$，定义 $Y$ 上的平均因果效应为 $\tau_Y = E\{ Y(D(1)) - Y(D(0))  \}$，并定义 complier average causal effect 为
+$$
+\tau_\cp =  E\{  Y(d=1) - Y(d=0) \mid U = \cp \}.
+$$
+
+\begin{theorem}\label{thm::iv-double-index}
+在\cref{assume::Mono,assume::ER-double-index} 下，有
+$$
+Y(D(1)) - Y(D(0)) = \{  D(1)  - D(0) \} \times \{ Y(d=1) - Y(d=0) \}
+$$
+and  
+$
+\tau_\cp   =   \tau_Y /  \tau_D  .
+$
+\end{theorem}
+
+证明几乎与\cref{thm::CACE-identification} 的证明相同，只需修改记号。我把它留作\cref{para::iv-alternative-form-theorem}。从 $Y_i(d)$ 这个记号出发，把 $\tau_\cp$ 解释为 compliers 中实际接受的 treatment 对 outcome 的平均因果效应会更方便。
+
+
+
+ 
+
+
+
+
+ 
+\section{Homework problems}
+
+
+
+ 
+\homeworksolutionref{21}
+\paragraph{Variance of the Wald estimator}\label{problem::infinite-var-iv}
+
+证明 $\var(\hat{\tau}_\cp) = \infty$。
+
+
+
+\paragraph{Asymptotic variance of the Wald estimator and its estimation}\label{problem::var-iv-estimate}
+
+
+考虑 $n\rightarrow \infty$ 的大样本情形。
+先证明 $\sqrt{n}(\hat{\tau}_\cp - \tau_\cp) \rightarrow \textsc{N}(0, V)$ 依分布收敛，并求出 $V$。然后证明 $\hat{V}_{\hat{A}} /V \rightarrow 1$ 依概率收敛。
+
+ 
+ 
+ 
+\paragraph{Proof of the main theorem of  \citet{imbens1994identification} and \citet{angrist1996identification}} 
+ \label{para::iv-alternative-form-theorem}
+ 
+ 证明\cref{thm::iv-double-index}。
+ 
+
+
+\paragraph{More on the FAR confidence set}\label{para::FAR-CI-cases}
+
+\cref{eg::FAR-CI-noX} 中的置信集可以是闭区间、两个不相交区间、空集，或者整条实线。找出每种情形对应的精确条件。
+ 
+ 
+ \paragraph{More simulation for the FAR confidence set}\label{para::FAR-CI-simulation-X}
+
+\cref{fg::FAR-ci-simulation} 展示了不使用协变量时的 FAR confidence sets。请在 CRE 中对调整协变量后的 FAR confidence sets 做平行模拟。
+ 
+ 
+\paragraph{Binary IV and ordinal treatment received}\label{para::iv-ordinal-treatment}
+
+\citet{angrist1995two} 讨论了一个更一般的设定：二元 IV $Z$、有序的 treatment received $D \in \{0,1,\ldots, J\}$，以及 outcome $Y$。有序的 treatment received 相对于二元 IV 有潜在结果 $D(1)$ 和 $D(0)$；outcome 相对于二元 IV 和有序 treatment received 同时有潜在结果 $Y(z,d)$。请把\cref{eq::interpret-iv-double} 中的讨论以及相应 IV assumptions 扩展到下面的设定。
+
+\begin{assumption}\label{assumption::iv-ordinal-treatment}
+我们有
+(1) randomization：$Z\ind \{   D(z),  Y(z,d)  : z=0,1; d = 0,1,\ldots, J \}$；
+(2) monotonicity：$D(1) \geq D(0)$；
+(3) exclusion restriction：对所有 $z=0,1$ 和 $ d = 0,1,\ldots, J $，都有 $Y(z,d) = Y(d)$。
+\end{assumption}
+
+他们证明了下面的\cref{thm::iv-ordinal-treatment}。
+
+\begin{theorem}\label{thm::iv-ordinal-treatment}
+在\cref{assumption::iv-ordinal-treatment} 下，有
+$$
+\frac{  E(Y\mid Z=1) - E(Y\mid Z=0) }{ E(D\mid Z=1) - E(D\mid Z=0)  }
+= \sum_{j=1}^J  w_j E\{  Y(j) - Y(j-1)  \mid D(1) \geq j > D(0) \}
+$$
+其中
+$$
+w_j = \frac{   \pr\{  D(1) \geq j > D(0)   \}   }{   \sum_{j'=1}^J  \pr\{  D(1) \geq j' > D(0)   \}   }.
+$$
+\end{theorem}
+
+
+
+证明\cref{thm::iv-ordinal-treatment}。
+
+Remark: 
+当 $J=1$ 时，\cref{thm::iv-ordinal-treatment} 化为\cref{thm::iv-double-index}。对一般的 $J$，它说明标准 IV formula 识别的是若干潜在子群效应的加权平均。权重正比于由 $  D(1) \geq j > D(0) $ 定义的潜在群体的概率，而潜在子群效应 $E\{  Y(j) - Y(j-1)  \mid D(1) \geq j > D(0) \}$ 比较的是 treatment received 的相邻水平。不过，由于这些潜在群体彼此重叠，这个加权平均未必容易解释。
+
+
+
+证明可能比较繁琐。
+一个技巧是把 treatment assignment $z$ 下的 treatment received 和 outcome 写成
+$$
+D(z) = \sum_{j=0}^J j 1\{ D(z) = j\} ,\quad 
+Y(D(z)) = \sum_{j=0}^J  Y(j)1\{ D(z) = j\} 
+$$
+从而得到
+$$
+D(1) - D(0) = \sum_{j=0}^J j [ 1\{ D(1) = j\} -1\{ D(0) = j\} ]
+$$
+and
+$$
+ Y(D(1))  - Y(D(0))   = 
+\sum_{j=0}^J Y(j)   [ 1\{ D(1) = j \}   - 1\{ D(0) = j \}  ].
+$$
+然后使用下面的 {\it Abel's lemma}，也称为 {\it summation by parts}：
+$$
+\sum_{j=0}^J  f_j (g_{j+1} - g_j) 
+= 
+f_J g_{J+1} - f_0 g_0  - \sum_{j=1}^J g_j  (f_j - f_{j-1})
+$$
+其中 $(f_j)$ 和 $(g_j)$ 是适当指定的序列。
+
+
+
+
+
+ 
+ 
+
+
+\paragraph{Data analysis: a flu shot encouragement design \citep{mcdonald1992effects}}\label{problem::flushot}
+ 
+
+\ri{fludata.txt} 中的数据来自 \citet{mcdonald1992effects} 的 randomized encouragement design，后来也由 \citet{hirano2000assessing} 重新分析。它包含以下变量：
+
+\begin{tabular}{ll}
+\hline 
+\texttt{assign} & 是否被二元鼓励接种流感疫苗\\
+\texttt{receive} & 是否实际接种流感疫苗的二元指示变量\\
+\texttt{outcome} & 流感相关住院的二元 outcome\\
+\texttt{age} & 患者年龄\\
+\texttt{sex} & 患者性别\\
+\texttt{race} & 患者种族\\
+\texttt{copd} &  chronic obstructive pulmonary disease\\
+\texttt{dm} & diabetes\\
+\texttt{heartd} & heart disease\\
+\texttt{renal} & renal disease\\
+\texttt{liverd} & liver disease\\
+\hline 
+\end{tabular}
+
+
+分别在调整和不调整协变量的情况下分析该数据。
+ 
+
+
+\paragraph{IV estimation conditional on covariates}\label{hw::iv-conditional-x}
+
+用 \ri{R} 实现\cref{section::unconfounded-IV} 中提到的估计量及其相应方差估计量。
+
+Remark: 这个问题对\cref{hw::analyze-karolinska-iv} 有用。
+
+
+
+\paragraph{Data analysis: the Karolinska data}\label{hw::analyze-karolinska-iv}
+
+重访\cref{hw::Karolinska-dr}。
+\citet{rubin2008objective} 把 Karolinska data 用作 IV method 的例子。在 \texttt{karolinska.txt} 中，患者是否在 large volume hospital 被诊断，可以看作患者是否在 large volume hospital 接受治疗的 IV。在给定其他观测协变量后，这是可信的。更多细节见 \citet{rubin2008objective} 的分析。
+
+
+在假设 IV 给定观测协变量后随机分配的条件下，重新分析该数据。
+
+ 
+ 
+ \paragraph{Data analysis: a job training program}
+
+\texttt{jobtraining.rtf} 文件包含数据文件 \texttt{X.csv} 和 \texttt{Y.csv} 的说明。
+
+\texttt{X.csv} 数据集包含 pretreatment covariates。你也可以把 sampling weight 变量 \texttt{wgt} 视为一个协变量。许多既有分析都做了这个简化，尽管在 survey data 的统计分析中，这始终是一个有争议的问题。
+分别在使用和不使用协变量的情况下做分析。
+
+\texttt{Y.csv} 数据集包含 sampling weight、treatment assigned、treatment received，以及许多 post-treatment variables。因此，取决于你关心的问题，这个数据集包含许多 outcomes。数据本身也有不少复杂性。第一，有些 outcomes 缺失。第二，失业个体没有工资。第三，outcomes 在时间上被重复观测。分析数据时，请详细说明你选择的研究问题和估计量。
+
+Remark: 
+\citet{schochet2008does} 分析了原始数据。
+\citet{frumento2012evaluating} 基于后面\cref{chapter::principal-stratification} 中的框架，给出了更复杂的分析。
+
+
+ \paragraph{Recommended reading}
+
+\citet{angrist1996identification} 连接了计量经济学中的 IV 视角和基于潜在结果的统计因果推断，并通过一个应用展示了它的用处。
+
+关于 IV 的其他早期参考文献包括 \citet{permutt1989simultaneous}, \citet{sommer1991estimating}, \citet{baker1994paired} 和 \citet{cuzick1997adjusting}。

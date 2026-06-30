@@ -1,0 +1,308 @@
+\chapter{Solutions to Chapter 10: Observational Studies, Selection Bias, and Nonparametric Identification of Causal Effects}
+\label{sol:chapter10}
+
+\begin{exercisesolution}{A simple identity}{ATE 是 ATT 与 ATC 的加权平均}
+本题的关键是不要把 $\tau$、$\tau_\textsc{T}$ 和 $\tau_\textsc{C}$ 看成三个互不相关的 estimands。它们都是同一个 individual causal effect
+\[
+\Delta=Y(1)-Y(0)
+\]
+在不同 population 上的均值。因此只要对 $\Delta$ 使用 total expectation law，就得到
+\begin{align*}
+\tau
+&=E\{Y(1)-Y(0)\} \\
+&=E(\Delta) \\
+&=E(\Delta\mid Z=1)\pr(Z=1)
+  +E(\Delta\mid Z=0)\pr(Z=0) \\
+&=\pr(Z=1)\tau_\textsc{T}
+  +\pr(Z=0)\tau_\textsc{C}.
+\end{align*}
+这就证明了所需恒等式。
+
+\paragraph{Remark.}
+这个 identity 的用途是澄清三个 causal effects 的关系：$\tau$ 是 overall population 的平均效应，$\tau_\textsc{T}$ 和 $\tau_\textsc{C}$ 分别是 treated 与 control subpopulations 的平均效应。若 treatment effect heterogeneous，$\tau_\textsc{T}$ 与 $\tau_\textsc{C}$ 可以相差很大；此时 $\tau$ 只是用样本中 treatment prevalence 加权后的 mixture。它也解释了为什么后续章节在讨论 ATT、ATC 或 overlap population effects 时，必须先明确 target population。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Nonparametric identification of other causal effects}{distribution 与 quantile 的识别}
+本题把 \cref{thm::identification-formula} 从 mean causal effect 推广到 distributional scale。设
+\[
+S_z(y)=\pr\{Y(z)>y\},\qquad
+F_z(y)=\pr\{Y(z)\leq y\}=1-S_z(y).
+\]
+在 \cref{assume:weak-ignorability} 下，对每个 $z=0,1$ 都有
+\[
+Y(z)\ind Z\mid X.
+\]
+于是对任意固定的 $y$，事件 $\{Y(z)>y\}$ 的 conditional probability 满足
+\begin{align*}
+\pr\{Y(z)>y\mid X\}
+&=\pr\{Y(z)>y\mid Z=z,X\} \\
+&=\pr(Y>y\mid Z=z,X),
+\end{align*}
+其中第二个等号来自 consistency：当 $Z=z$ 时，observed outcome $Y=Y(z)$。再对 $X$ 取平均，得到
+\begin{align*}
+S_z(y)
+&=E[\pr\{Y(z)>y\mid X\}] \\
+&=E\{\pr(Y>y\mid Z=z,X)\}.
+\end{align*}
+右边完全由 observed data distribution of $(Y,Z,X)$ 决定。因此
+\[
+\textsc{DCE}_y
+=S_1(y)-S_0(y)
+=E\{\pr(Y>y\mid Z=1,X)-\pr(Y>y\mid Z=0,X)\}
+\]
+对每个 $y$ 都是 nonparametrically identifiable。
+
+由 $S_z(y)$ 可得 $F_z(y)=1-S_z(y)$，所以 $Y(z)$ 的 marginal distribution 也可识别。令
+\[
+Q_z(q)=\inf\{y:F_z(y)\geq q\}
+\]
+为 $Y(z)$ 的第 $q$ 个 quantile。因为 $F_z$ 已经由 observed data distribution 唯一确定，$Q_z(q)$ 也由 observed data distribution 唯一确定。因此
+\[
+\textsc{QCE}_q=Q_1(q)-Q_0(q)
+\]
+对每个 $q$ 都是 nonparametrically identifiable。
+
+\paragraph{Remark.}
+这里识别的是两个 marginal distributions 的差异，而不是 joint distribution of $\{Y(1),Y(0)\}$。这一区分很重要：$\textsc{QCE}_q$ 只需要分别知道 $Y(1)$ 与 $Y(0)$ 的 marginal quantiles；而 individual causal effect 的 quantile
+\[
+\text{quantile}_q\{Y(1)-Y(0)\}
+\]
+需要知道 $Y(1)$ 与 $Y(0)$ 如何在同一个 unit 上配对。observed data 在 ignorability 下给出了两个 marginal distributions，却没有给出 counterfactual pair 的 dependence structure；所以后者一般不可识别。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Outcome imputation estimator in the fully interacted logistic model}{logistic average partial effect}
+本题是 \cref{eg::reg-binary} 的 fully interacted 版本。记 logistic link 为
+\[
+\Lambda(u)=\frac{\exp(u)}{1+\exp(u)}.
+\]
+题设模型可写成
+\[
+E(Y\mid Z,X)
+=\Lambda\{\beta_0+\beta_z Z+\beta_x\tran X+\beta_{xz}\tran XZ\}.
+\]
+因此在 $Z=1$ 与 $Z=0$ 下的 outcome mean predictors 分别是
+\[
+\mu_1(X;\beta)
+=\Lambda(\beta_0+\beta_z+\beta_x\tran X+\beta_{xz}\tran X),
+\qquad
+\mu_0(X;\beta)
+=\Lambda(\beta_0+\beta_x\tran X).
+\]
+在 \cref{assume:weak-ignorability} 下，average causal effect 的 outcome regression representation 是
+\[
+\tau
+=E\{\mu_1(X;\beta)-\mu_0(X;\beta)\}.
+\]
+令 $\hat\beta_0,\hat\beta_z,\hat\beta_x,\hat\beta_{xz}$ 为 fully interacted logistic regression 的 MLE。对应的 outcome imputation estimator 为
+\[
+\hat\tau_{\mathrm{logit,int}}
+=\frac{1}{n}\sum_{i=1}^n
+\left[
+\Lambda\{\hat\beta_0+\hat\beta_z+\hat\beta_x\tran X_i+\hat\beta_{xz}\tran X_i\}
+-\Lambda(\hat\beta_0+\hat\beta_x\tran X_i)
+\right].
+\]
+展开写就是
+\[
+\hat\tau_{\mathrm{logit,int}}
+=\frac{1}{n}\sum_{i=1}^n
+\left[
+\frac{\exp(\hat\beta_0+\hat\beta_z+\hat\beta_x\tran X_i+\hat\beta_{xz}\tran X_i)}
+{1+\exp(\hat\beta_0+\hat\beta_z+\hat\beta_x\tran X_i+\hat\beta_{xz}\tran X_i)}
+-
+\frac{\exp(\hat\beta_0+\hat\beta_x\tran X_i)}
+{1+\exp(\hat\beta_0+\hat\beta_x\tran X_i)}
+\right].
+\]
+
+\paragraph{Remark.}
+这个 estimator 不是 $\hat\beta_z$。在 nonlinear models 中，coefficient lives on the link scale，而 $\tau$ lives on the outcome-probability scale。fully interacted model 允许 treatment effect 在 probability scale 上随 $X$ 变化；因此需要先对每个 unit impute both potential outcome probabilities，再对 covariate empirical distribution averaging。这正是 \cref{sec::outcome-regression} 中 general outcome regression estimator 的 logistic 特例。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Data analysis: stratification and regression}{homocyst 数据的 overlap 与 model dependence}
+本题分析 \cref{eg::nhanes2005-2006} 中的 smoking and homocysteine example。使用 \ri{senstrat} package 中的 \ri{homocyst} 数据，原始样本量为 $n=2475$，其中 never smokers 为 $1963$，daily smokers 为 $512$。由 \ri{female, age3, ed3, bmi3, pov2} 组合形成的 strata 一共有 $108$ 个。
+
+\begin{enumerate}[(1)]
+\item
+在 $108$ 个 strata 中，有 $18$ 个 strata 只含 treated units 或只含 control units。其中 $5$ 个 strata 只含 treated units，共 $10$ 个 units；$13$ 个 strata 只含 control units，共 $114$ 个 units。因此 one-sided strata 中共有 $124$ 个 units，占全部样本的
+\[
+\frac{124}{2475}=0.0501.
+\]
+删除这些 strata 后，保留 $2351$ 个 units 和 $90$ 个 two-sided strata。
+
+在 retained sample 上，令 $n_{[k]}$ 为第 $k$ 个 stratum 的样本量，$\pi_{[k]}=n_{[k]}/2351$。stratified estimator 为
+\[
+\hat\tau_{\mathrm{strat}}
+=\sum_k\pi_{[k]}
+\left\{
+\bar Y_{[k]1}-\bar Y_{[k]0}
+\right\},
+\]
+variance estimator 为
+\[
+\hat V_{\mathrm{strat}}
+=\sum_k\pi_{[k]}^2
+\left\{
+\frac{s_{[k]1}^2}{n_{[k]1}}
++\frac{s_{[k]0}^2}{n_{[k]0}}
+\right\}.
+\]
+计算得到
+\[
+\hat\tau_{\mathrm{strat}}=1.671,\qquad
+\widehat{\se}(\hat\tau_{\mathrm{strat}})=0.487.
+\]
+相应的 normal approximation 95\% confidence interval 为
+\[
+1.671\pm1.96(0.487)=[0.716,\ 2.625].
+\]
+这个估计量对应 retained overlap population，而不是原始 $2475$ 个 units 的 full empirical population。
+
+\item
+在全样本上运行 additive OLS
+\[
+Y_i=\alpha+\tau Z_i+\gamma\tran X_i+\varepsilon_i,
+\]
+其中 $X_i$ 包含 \ri{female, age3, ed3, bmi3, pov2} 的 factor coding。使用 HC2 robust standard error，得到
+\[
+\hat\tau_{\mathrm{OLS,full}}=1.376,\qquad
+\widehat{\se}=0.356.
+\]
+删除 one-sided strata 后，重新运行同一个 additive OLS，得到
+\[
+\hat\tau_{\mathrm{OLS,trim}}=1.406,\qquad
+\widehat{\se}=0.361.
+\]
+两者很接近，说明在这个数据集中，one-sided strata 的删除对 additive OLS coefficient 的影响不大。
+
+\item
+\citet{lin2013} 的 estimator 使用 treatment 与 centered covariates 的 fully interacted OLS：
+\[
+Y_i=\alpha+\tau Z_i+\gamma\tran (X_i-\bar X)
++\delta\tran Z_i(X_i-\bar X)+\varepsilon_i.
+\]
+由于 covariates 已中心化，$Z_i$ 的 coefficient 就是 empirical covariate distribution 上的 average treatment effect estimator。使用 HC2 robust standard error，在全样本上得到
+\[
+\hat\tau_{\mathrm{Lin,full}}=1.463,\qquad
+\widehat{\se}=0.341.
+\]
+删除 one-sided strata 后，在 retained sample 上得到
+\[
+\hat\tau_{\mathrm{Lin,trim}}=1.491,\qquad
+\widehat{\se}=0.345.
+\]
+
+如果不删除只含 treated units 或只含 control units 的 strata，fully saturated stratum analysis 会出现不可估计的 interaction terms。具体地，拟合 \ri{homocysteine $\sim$ z * factor(st)} 时，全样本模型有 $216$ 个 nominal coefficients，但 rank 只有 $198$，有 $18$ 个 aliased coefficients。这正好对应 $18$ 个 one-sided strata：在这些 strata 内没有 within-stratum treated-control comparison。相比之下，Lin estimator 只对较低维 covariates 做 interactions，因此仍然可以数值拟合；但它的 causal interpretation 仍依赖 outcome model extrapolation，而不是这些 one-sided strata 内真实存在的 direct comparison。
+
+\item
+三个分析给出的 point estimates 都为正：
+\[
+1.671\quad(\text{stratified}),\qquad
+1.406\quad(\text{additive OLS, trimmed}),\qquad
+1.491\quad(\text{Lin, trimmed}).
+\]
+它们都表明 daily smokers 的 homocysteine level 高于 never smokers。最可信的主分析应是删除 one-sided strata 后的 stratified analysis，或作为 sensitivity check 的 Lin regression adjustment。
+
+理由有三点。第一，stratification 直接尊重本题中离散 covariates 形成的 exact strata，与 \cref{sec::identification-ignorability} 中 conditional comparison 的思想最接近。第二，删除 one-sided strata 明确承认了 overlap limitation，避免在没有 within-stratum comparison 的区域做不可见的 extrapolation。第三，additive OLS 依赖 homogeneous linear adjustment；Lin estimator 放松了 homogeneous effect 的限制，但仍比 exact stratification 更依赖 model specification。综合来看，报告时应把 trimmed stratified estimate 作为最透明的 benchmark，并用 additive OLS 与 Lin estimator 展示结果对 modeling choices 的稳定性。
+\end{enumerate}
+
+下面是生成上述数值的可复现代码框架。
+\begin{lstlisting}
+library(senstrat)
+library(sandwich)
+data(homocyst)
+
+d <- homocyst
+d$female <- factor(d$female)
+d$age3 <- factor(d$age3)
+d$ed3 <- factor(d$ed3)
+d$bmi3 <- factor(d$bmi3)
+d$pov2 <- factor(d$pov2)
+
+tab <- aggregate(z ~ st, data = d, FUN = function(x)
+  c(n = length(x), n1 = sum(x == 1), n0 = sum(x == 0)))
+tab <- data.frame(st = tab$st, n = tab$z[, "n"],
+                  n1 = tab$z[, "n1"], n0 = tab$z[, "n0"])
+one.sided <- subset(tab, n1 == 0 | n0 == 0)
+keep.st <- tab$st[tab$n1 > 0 & tab$n0 > 0]
+dk <- subset(d, st %in% keep.st)
+
+byres <- do.call(rbind, lapply(split(dk, dk$st), function(dd) {
+  y1 <- dd$homocysteine[dd$z == 1]
+  y0 <- dd$homocysteine[dd$z == 0]
+  c(n = nrow(dd), n1 = length(y1), n0 = length(y0),
+    tau = mean(y1) - mean(y0),
+    s1 = if (length(y1) > 1) var(y1) else 0,
+    s0 = if (length(y0) > 1) var(y0) else 0)
+}))
+pi.k <- byres[, "n"] / nrow(dk)
+tau.strat <- sum(pi.k * byres[, "tau"])
+v.strat <- sum(pi.k^2 * (byres[, "s1"] / byres[, "n1"] +
+                         byres[, "s0"] / byres[, "n0"]))
+
+fit.full <- lm(homocysteine ~ z + female + age3 + ed3 + bmi3 + pov2,
+               data = d)
+fit.trim <- lm(homocysteine ~ z + female + age3 + ed3 + bmi3 + pov2,
+               data = dk)
+
+lin.fit <- function(dat) {
+  mm <- model.matrix(~ female + age3 + ed3 + bmi3 + pov2,
+                     data = dat)[, -1, drop = FALSE]
+  mmc <- scale(mm, center = TRUE, scale = FALSE)
+  dat2 <- data.frame(y = dat$homocysteine, z = dat$z, mmc)
+  fit <- lm(y ~ z * ., data = dat2)
+  c(coef = coef(fit)["z"],
+    se = sqrt(diag(vcovHC(fit, type = "HC2")))["z"])
+}
+\end{lstlisting}
+
+\paragraph{Remark.}
+这个例子展示了 observational studies 中一个常见而具体的困难：conditioning set 越丰富，ignorability 越 plausible；但 strata 越细，overlap 越容易破裂。统计分析的可信度不只取决于 standard error，还取决于估计量是否主要来自真实比较，还是来自 model extrapolation。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Ignorability versus strong ignorability}{pairwise independence 不推出 joint independence}
+本题要构造一个例子，使得
+\[
+Y(1)\ind Z,\qquad Y(0)\ind Z,
+\]
+但
+\[
+\{Y(1),Y(0)\}\nind Z.
+\]
+为简单起见，令没有 covariates，即 $X$ 是常数。
+
+令 $A$ 和 $B$ 是相互独立的 Bernoulli$(1/2)$ random variables，并定义
+\[
+Z=A,\qquad Y(1)=B,\qquad Y(0)=A\oplus B,
+\]
+其中 $\oplus$ 表示 mod 2 addition，也就是 exclusive-or。我们先检查 weak ignorability。显然 $Y(1)=B$ 与 $Z=A$ 独立。对 $Y(0)=A\oplus B$，有
+\[
+\pr(Y(0)=1\mid A=0)=\pr(B=1)=\frac{1}{2},
+\]
+以及
+\[
+\pr(Y(0)=1\mid A=1)=\pr(1\oplus B=1)=\pr(B=0)=\frac{1}{2}.
+\]
+所以 $Y(0)$ 与 $A$ 独立，也即 $Y(0)\ind Z$。因此 \cref{assume:weak-ignorability} 成立。
+
+但是 strong ignorability 不成立。事实上，给定 pair $(Y(1),Y(0))=(B,A\oplus B)$，可以唯一恢复
+\[
+A=Y(1)\oplus Y(0).
+\]
+也就是说，$Z=A$ 是 potential outcomes vector 的确定函数。因此
+\[
+\pr\{Z=1\mid Y(1)=0,Y(0)=1\}=1,
+\]
+而
+\[
+\pr(Z=1)=\frac{1}{2}.
+\]
+所以
+\[
+\{Y(1),Y(0)\}\nind Z,
+\]
+\cref{assume:strong-ignorability} 不成立。
+
+\paragraph{Remark.}
+这个例子说明，``分别独立'' 不等于 ``联合独立''。对 average causal effect 的识别，通常只需要分别处理 $Y(1)$ 与 $Y(0)$ 的 conditional means 或 marginal distributions；但如果问题涉及 potential outcomes vector 的 joint law，例如 individual effect $Y(1)-Y(0)$ 的 distribution，就必须额外小心。observational studies 中许多看似细微的 independence distinction，实质上是在区分 marginal causal quantities 与 joint causal quantities。
+\end{exercisesolution}

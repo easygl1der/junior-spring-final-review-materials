@@ -1,0 +1,319 @@
+\chapter{Bridging Finite and Super Population Causal Inference}\label{chapter::bridging}
+ \chaptermark{Bridging finite and super population causal inference}
+
+
+ 
+
+
+前面我们一直关注 randomized experiments 中的 finite population 视角。这个视角把所有 potential outcomes 都看作固定数值。即使 potential outcomes 本身是 random variables，在 finite population 视角下我们也可以对它们取条件。这个视角的优点是
+\begin{enumerate}
+\item
+它聚焦于实验设计；
+\item
+它对结果的数据生成过程只需要很少的假设。
+\end{enumerate}
+不过，这个视角常被批评为只有 {\it  internal validity}，但不一定有 {\it external validity}；下面给出二者的非正式定义。 
+
+\begin{definition}
+[internal validity]
+统计分析对手头的研究样本有效。 
+\end{definition}
+
+
+\begin{definition}
+[external validity]
+统计分析对研究样本之外更广泛的 population 有效。 
+\end{definition}
+
+
+
+显然，所有实验者都希望自己的实验不仅有 internal validity，也有 external validity。由于所有统计性质都是在我们已有 units 的 potential outcomes 上取条件得到的，在 finite population 视角下，结论只关于这些观测到的 units。于是一个自然的问题出现了：finite population 的结果能否推广到更大的 population？ 
+
+
+
+这是对 conditional on the potential outcomes 的 finite population framework 的一个合理批评。不过，这也可能是一个哲学问题。我们观测到的是一个 finite population，因此任何实验设计和分析都直接给出关于这个 finite population 的信息。Randomization 只是在给定这些 units 的 potential outcomes 时保证 internal validity。结果的 external validity 取决于 units 的 sampling process。如果这个 finite population 是我们感兴趣的某个更大 population 的 representative sample，那么实验结果当然也具有 external validity。否则，基于 randomization inference 的结果可能无法推广。要严谨地讨论这个问题，我们需要一个包含两层随机性的框架：一层来自 units 的 sampling process，另一层来自 treatment 的 random assignment。关于这一思想的形式化讨论，见 \citet{miratrix2018worth} 和 \citet{abadie2020sampling}。\footnote{\citet{pearl2014external} 从 causal diagrams 的角度讨论了 {\it transportability} 问题。}
+  
+  
+  
+  
+对一些统计学家来说，这只是一个技术问题。我们可以改变统计框架，假设 units 是从某个 superpopulation 中抽样而来。这样所有陈述都关于目标 population。这是一个方便的框架，尽管它并没有真正解决上面提到的问题。下面我介绍这个框架，目的有两个：
+\begin{enumerate}
+\item
+它为 randomized experiments 提供一个不同视角；
+\item
+它充当本书 Parts \ref{part::rcts} 和  \ref{part::observational-studies} 之间的桥梁。
+\end{enumerate}
+后一个目的更重要，因为 superpopulation framework 使我们能够为 treatment 非随机分配的 observational studies 推导出更丰富的结果。 
+
+
+
+
+
+\section{CRE}\label{sec::cre-superpop}
+
+假设 
+$$
+\{  Z_i, Y_i(1), Y_i(0),  X_i  \}_{i=1}^n  \iidsim \{  Z, Y(1), Y(0), X \}
+$$ 
+来自一个 superpopulation。因此，对这个 population 中的量，我们可以省略下标 $i$。稍微滥用一点记号，我们把 population average causal effect 定义为
+$$
+\tau  = E\{  Y(1)  - Y(0)\}  = E\{  Y(1)  \} -  E\{ Y(0)\} .
+$$
+在 superpopulation framework 下，我们可以如下表述 CRE。
+
+\begin{definition}
+[CRE under the superpopulation framework]
+\label{def::cre-superpopulation}
+我们有
+$$
+Z \ind \{  Y(1), Y(0), X \} .
+$$
+\end{definition}
+
+在 Definition \ref{def::cre-superpopulation} 下，average causal effect 可以写作
+\begin{eqnarray}
+\tau &=& E\{  Y(1) \mid Z=1\}  - E\{  Y(0) \mid Z=0 \}   \nonumber  \\
+&=& E( Y \mid Z=1)  - E(  Y \mid Z=0 ),
+\label{eq::cre-identifiable}
+\end{eqnarray}
+它等于 outcomes 期望之差。\eqref{eq::cre-identifiable} 的第一行是利用 randomization 价值的关键一步。由于 $\tau  $ 可以表示为 observables 分布的函数，它是 {\it nonparametrically identifiable}\footnote{在 causal inference 中，如果一个参数可以由 observed variables 的分布确定，而不需要施加进一步的 parametric assumptions，我们就说它是 nonparametrically identifiable。更形式化的讨论见后面的 Definition \ref{def::nonparametric-identification}。} 的。公式 \eqref{eq::cre-identifiable} 立即给出一个 moment estimator $\hat{\tau}$，也就是前面定义过的 outcomes 均值之差。给定 $\boldsymbol{Z}$ 后，这就成为一个比较两个独立样本均值的标准 two-sample problem。我们有
+$$
+E(  \hat{\tau} \mid \boldsymbol{Z}) = \tau
+$$
+以及
+$$
+\var (  \hat{\tau} \mid \boldsymbol{Z}) =   \frac{ \var\{ Y(1) \}}{n_1} + \frac{ \var\{ Y(0) \}}{n_0}.
+$$
+在 IID sampling 下，sample variances 是 population variances 的 unbiased estimators，所以 \citet{Neyman:1923} 的 variance estimator 对 $\var (  \hat{\tau} \mid \boldsymbol{Z}) $ 是 unbiased 的。在这个 superpopulation framework 下，保守性问题消失了。
+
+
+我们也可以讨论 covariate adjustment。基于 OLS decompositions（见 Chapter \ref{appendix::basic-linear-regression}）
+\begin{eqnarray}
+Y(1) &=& \gamma_1 + \beta_1\tran X + \varepsilon(1),\label{eq::ols-decomposition-y1}\\
+Y(0) &=& \gamma_0 + \beta_0\tran X + \varepsilon(0),\label{eq::ols-decomposition-y0}
+\end{eqnarray}
+我们有
+\begin{eqnarray*}
+\tau  &=& E\{  Y(1)  - Y(0)\} \\
+&=& \gamma_1  -  \gamma_0 + (\beta_1 - \beta_0)\tran E(X),
+\end{eqnarray*}
+因为包含了 intercepts，residuals $  \varepsilon(1)$ 和 $\varepsilon(0)$ 的均值为零。
+我们可以分别用 treated data 和 control data 做 OLS，估计 \eqref{eq::ols-decomposition-y1} 和 \eqref{eq::ols-decomposition-y0} 中的系数。系数的样本版本为 $\hat{\gamma}_1, \hat{\beta}_1, \hat{\gamma}_0, \hat{\beta}_0$，因此 $\tau $ 的一个 covariate-adjusted estimator 是
+$$
+\hat{\tau}_\text{adj} =  \hat \gamma_1  - \hat  \gamma_0 + (\hat \beta_1 - \hat \beta_0)\tran \bar{X}.
+$$
+如果我们对 covariates 做中心化，使 $ \bar{X} = 0$，上面的 estimator 就化为 \citet{lin2013} 的 estimator
+$$
+\hat{\tau}_\textsc{L} = \hat \gamma_1  - \hat  \gamma_0,
+$$
+它等于含有 treatment-covariates interactions 的 pooled regression 中 $Z$ 的系数；见 Proposition \ref{prop::lin-ols}。 
+
+
+
+遗憾的是，在 super population framework 下，由于 covariates 的 sample mean $\bar{X} $ 带来额外不确定性，EHW variance estimator 对 $\hat{\tau}_\textsc{L}$ 并不适用。\citet{berk2013covariance}, \citet{negi2020revisiting} 和 \citet{zhao2020caFRT} 提出通过加入一个额外项来修正 EHW variance estimator：
+\begin{equation}\label{eq::lin-ehw-correction}
+(\hat \beta_1 - \hat \beta_0)\tran S_X^2  (\hat \beta_1 - \hat \beta_0)  / n
+\end{equation}
+其中 $\hat \beta_1 - \hat \beta_0$ 等于得到 \citet{lin2013} estimator 时 interaction $Z_iX_i$ 的系数，而 $S_X^2$ 是 covariates 的 finite-population covariance matrix。
+一个概念上更简单但计算更密集的方法，是使用 bootstrap 来估计 variance；见 Chapter \ref{sec::bootstrap} 和 Problem \ref{hw::variance-bootstrap-superpopulation}。 
+
+
+
+\section{Simulation under the CRE: the super population perspective}
+\label{sec::simulation-CRE-superp}
+
+
+下面的 \ri{linestimator} 函数可以计算 \citet{lin2013} 的 estimator、EHW standard error，以及基于 \eqref{eq::lin-ehw-correction} 的 super population 修正 standard error。 
+\begin{lstlisting}
+library("car")
+linestimator = function(Z, Y, X){
+  ## standardize X
+  X      = scale(X)
+  n      = dim(X)[1]
+  p      = dim(X)[2]
+  
+  ## fully interacted OLS
+  linreg = lm(Y ~ Z*X)
+  est    = coef(linreg)[2]
+  vehw   = hccm(linreg)[2, 2]
+  
+  ## super population correction
+  inter  = coef(linreg)[(p+3):(2*p+2)]
+  vsuper = vehw + sum(inter*(cov(X)%*%inter))/n
+  
+  c(est, sqrt(vehw), sqrt(vsuper))
+}
+\end{lstlisting}
+
+
+接着我用 simulation 比较 EHW standard error 和 corrected standard error。
+我选择 sample size $n=500$，并使用 2000 次 Monte Carlo repetitions。Potential outcomes 关于 covariates 是非线性的，error terms 也不是 Normal 的。真实的 average causal effect 等于 $0$。
+\begin{lstlisting}
+res = replicate(2000, {
+  n  = 500
+  X  = matrix(rnorm(n*2), n, 2)
+  Y1 = X[, 1] + X[, 1]^2 + runif(n, -0.5, 0.5)
+  Y0 = X[, 2] + X[, 2]^2 + runif(n, -1, 1)
+  Z  = rbinom(n, 1, 0.6)
+  Y  = Z*Y1 + (1-Z)*Y0
+  linestimator(Z, Y, X)
+})
+\end{lstlisting}
+
+
+下面的结果验证了理论。第一，\citet{lin2013} 的 estimator 几乎是 unbiased 的。
+第二，平均 EHW standard error 小于 empirical standard deviation，导致 95\% confidence intervals 的 coverage 不足。
+第三，super population 的平均 corrected standard error 与 empirical standard deviation 几乎相同，因此 95\% confidence intervals 的 coverage 更准确。  
+\begin{lstlisting}
+> ## bias
+> mean(res[1, ])
+[1] -0.0001247585
+> ## empirical standard deviation
+> sd(res[1, ])
+[1] 0.1507773
+> ## estimated EHW standard error
+> mean(res[2, ])
+[1] 0.1388657
+> ## coverage based on EHW standard error
+> mean((res[1, ]-1.96*res[2, ])*(res[1, ]+1.96*res[2, ])<=0)
+[1] 0.927
+> ## estimated super population standard error
+> mean(res[3, ])
+[1] 0.1531519
+> ## coverage based on population standard error
+> mean((res[1, ]-1.96*res[3, ])*(res[1, ]+1.96*res[3, ])<=0)
+[1] 0.9525
+\end{lstlisting}
+
+\section{Extension to the SRE}
+
+我们可以把 Section \ref{sec::cre-superpop} 中的讨论推广到 SRE，因为它等价于 strata 内彼此独立的 CREs。 
+%The discussion will also extend to the MPE since it is a special case of the SRE. 
+下面的记号会与 Chapter \ref{chapter::stratification-poststratification} 中的记号略有不同。 
+
+
+假设 
+$$
+\{ Z_i,  Y_i(1), Y_i(0) ,  X_i  \}  \iidsim \{ Z,  Y(1), Y(0), X  \} .
+$$ 
+有一个离散 covariate $ X_i \in \{ 1,\ldots, K\}$，我们可以如下表述 SRE。
+
+
+\begin{definition}
+[SRE under the super population framework]\label{def::sre-superpopulation}
+我们有 
+$$
+Z\ind\{  Y(1), Y(0) \} \mid   X  .
+$$
+\end{definition}
+
+
+在 Definition \ref{def::sre-superpopulation} 下，conditional average causal effect 可以改写为
+\begin{eqnarray*}
+\tau_{[k]}  &=&  E\{   Y(1) -  Y(0)  \mid X= k \} \\
+&=& E(Y\mid Z=1, X=k) - E(Y\mid Z=0, X=k),
+\end{eqnarray*}
+因此 average causal effect 可以改写为
+\begin{eqnarray*}
+\tau &=&   E\{   Y(1) -  Y(0)   \}  \\
+&=& \sum_{k=1}^K \pr(X = k) E\{   Y(1) -  Y(0)  \mid X = k \} \\
+&=& \sum_{k=1}^K \pr(X  = k) \tau_{[k]} .
+\end{eqnarray*}
+%
+% The covariates $ X_i $'s are fixed with marginal proportions $\pi_{[k]} = \#\{ i:  X_i  = k \} / n$ for  $k=1,\ldots, K$. 
+%The MPE corresponds to the case in which $K=n/2$ and there is only one treated and one control unit with $ X_i  = k$ for all $k=1,\ldots, K$. 
+%The stratum-specific average causal effect is
+%$$
+%\tau_{[k]} = E\{  Y_{[k]}(1) -  Y_{[k]}(0) \} ,
+%$$
+%and the population average causal effect is
+%$$
+%\tau  = \sum_{k=1}^K \pi_{[k]} \tau_{[k]} .
+%$$
+Section \ref{sec::cre-superpop} 中的讨论在所有 strata 内都成立，因此我们可以推导 SRE 的 superpopulation analog。当每个 stratum 内的 treatment 和 control units 都超过两个时，我们可以用 $\hat{V}_\textsc{S}$ 作为 $\var( \hat{\tau}_\textsc{S} )$ 的 variance estimator。 
+
+
+%Unsurprisingly, the MPE is more subtle since $\hat{V}_\textsc{S}$ is not well defined. With $\{\hat{\tau}_{[1]} , \ldots, \hat{\tau}_{[n/2]} \}$, we can use  
+%$$
+%\hat{V} = \frac{1}{  n/2(n/2-1) } \sum_{k=1}^{n/2} (  \hat{\tau}_{[k]} -  \hat{\tau}_\textsc{S})^2
+%$$
+%to estimate the variance of $\hat{\tau}_\textsc{S}$. Similar to our proof before, we can show that 
+%\begin{eqnarray}
+%\label{eq::super-pop-mpe-var}
+%E(\hat{V}) - \var( \hat{\tau}_\textsc{S} ) =  \frac{1}{  n/2(n/2-1) } \sum_{k=1}^{n/2} ( \tau_{[k]} -  \tau)^2 \geq 0,
+%\end{eqnarray}
+%so $\hat{V} $ is still a conservative variance estimator. Unlike the CRE and SRE, the conservativeness issue does not go away for the MPE even under the superpopulation framework. 
+%  
+%  
+%Sometimes, we may further assume that the covariates are random draws in the SRE and MPE:
+%$$
+%\{Z_i,  Y_i(1), Y_i(0) ,  X_i    \}  \iidsim \{   Z_i,  Y_i(1), Y_i(0) ,  X_i   \}
+%$$
+%with
+%$$
+%Z \ind\{  Y(1), Y(0) \} \mid  x  .
+%$$
+%The population average causal effect simplifies to
+%$$
+%\tau  = E\{  Y(1) -  Y(0) \}
+%=\sum_{k=1}^K  E\{  Y(1) -  Y(0) \mid x = k \} \pr(x  = k).
+%$$
+%The estimators remain unchanged. This framework brings mathematical convenience due to the IID assumption. However, it seems especially awkward in the MPE when the pair indicators are IID which invalidates the motivation for the experimental design itself. We should impose IID assumptions with caution. 
+
+
+我们稍后会在 Part \ref{part::observational-studies} 中看到 Definition \ref{def::sre-superpopulation} 的精确形式。 
+  
+
+ \section{Homework Problems}
+ 
+\homeworksolutionref{09}
+\paragraph{OLS decomposition of the observed outcome under the CRE}\label{hw::ols-decompose-cre}
+
+基于 \eqref{eq::ols-decomposition-y1} 和 \eqref{eq::ols-decomposition-y0}，证明 observed outcome 关于 treatment、covariates 及其 interaction 的 OLS decomposition 为
+$$
+Y= \alpha_0 + \alpha_Z  Z +
+\alpha_X \tran X + \alpha_{ZX} \tran X Z + \varepsilon 
+$$
+其中 
+$$
+\alpha_0 = \gamma_0 ,\quad
+\alpha_Z = \gamma_1 - \gamma_0,\quad
+\alpha_X  =  \beta_0, \quad
+\alpha_{ZX} = \beta_1 - \beta_0
+$$
+且
+$$
+\varepsilon  = Z \varepsilon (1) + (1-Z) \varepsilon (0). 
+$$
+也就是说，
+$$
+(\alpha_0, \alpha_Z, \alpha_X , \alpha_{ZX} )
+=\arg\min_{a_0, a_Z, a_X, a_{ZX}   }  E  (  Y - a_0 - a_Z Z - a_X\tran X -a_{ZX} \tran X Z)^2.
+$$ 
+ 
+ 
+\paragraph{Variance estimation of \citet{lin2013}'s estimator under the super population framework}\label{hw::variance-bootstrap-superpopulation}
+ 
+在 super population framework 下，模拟 $\{  X_i, Z_i, Y_i(1), Y_i(0) \}_{i=1}^n$，并令 \eqref{eq::ols-decomposition-y1} 和 \eqref{eq::ols-decomposition-y0} 中的 $\beta_1 \neq \beta_0$。在每个 simulated dataset 中计算 \citet{lin2013} 的 estimator。
+比较 true variance 和下列 estimated variances：
+\begin{enumerate}
+\item
+EHW robust variance estimator；
+\item
+带有 \eqref{eq::lin-ehw-correction} 中定义的 correction term 的 EHW robust variance estimator；
+\item
+bootstrap variance estimator，其中 covariates 在开始时中心化，但不对每个 bootstrap sample 重新中心化；
+\item
+bootstrap variance estimator，其中 covariates 对每个 bootstrap sample 重新中心化。
+\end{enumerate}
+
+  
+ 
+% \paragraph{Variance estimation in the MPE}
+% Show \eqref{eq::super-pop-mpe-var} under the super population framework. 
+
+
+\paragraph{Recommended reading}
+
+
+\citet{ding2017bridging} 对 average causal effect 的 finite population inference 和 superpopulation inference 给出了统一讨论。 

@@ -1,0 +1,264 @@
+ 
+\chapter{Controlled Direct Effect}
+ \label{chapter::cde}
+
+
+\cref{chapter::mediation} 中 mediation analysis 的表述依赖于 nested potential outcomes；从根本上说，某些 nested potential outcomes 在任何物理实验中都不可观测。若我们坚持 \cref{sec::popper-science} 回顾的 Popper 科学哲学，那么 causal parameter 应当只由某些实验下可观测的量来定义。本章讨论带有 intermediate variable 时因果推断的另一种观点。在这种观点下，我们只定义 direct effect，而不能定义 indirect effect。
+
+
+
+
+
+\section{Definition of the controlled direct effect}
+
+
+我们把 $Z$ 和 $M$ 看作两个可以操控的 treatment factor，并对 $z=0,1$ 与 $m\in \mathcal{M}$ 定义 potential outcome $Y(z,m)$。基于这些 potential outcomes，可以如下定义 { \it controlled direct effect} (CDE)。
+
+\begin{definition}
+[CDE]
+定义
+$$
+\CDE (m)  = E\{  Y(1,m)  - Y(0,m)\}.
+$$
+\end{definition}
+  
+ 
+按照定义，$\CDE (m) $ 是当 intermediate variable 被固定为 $m$ 时 treatment 的平均 causal effect。
+参数 $\CDE(m)$ 可以刻画在把 mediator 固定为 $m$ 时 treatment 的 direct effect。不过，这一表述不能刻画 indirect effect。特别地，参数
+$
+E\{  Y(z,1) - Y(z,0)\}
+$
+只是在把 treatment 固定为 $z$ 时，衡量 mediator 对 outcome 的 effect。这并不是 indirect effect 的一个有意义定义。
+
+
+
+\section{Identification and estimation of the controlled direct effect}
+
+
+为了识别 $\CDE(m)$，我们需要下面的假设；它要求在给定 $X$ 后，$Z$ 和 $M$ 被 joint randomized。
+
+
+\begin{assumption}\label{assume::si-cde}
+Sequential ignorability 要求
+$$
+Z\ind Y(z,m) \mid X, \quad M \ind  Y(z,m) \mid (Z,X)
+$$
+或者，等价地（见 \cref{para::sr-jr}），
+$$
+(Z,M) \ind  Y(z,m) \mid X.
+$$
+\end{assumption}
+
+我将重点讨论 $Z$ 和 $M$ 都是二元变量的情形。
+从数学上看，我们完全可以把这个问题视为一个具有四个 treatment level 的 observational study：
+$$
+(z,m) \in \{  (0,0), (0,1), (1,0), (1,1) \} .
+$$
+下面的定理把二元 treatment observational study 的结果推广到这里，并基于 outcome regression、IPW 和 doubly robust estimation 来识别
+$$
+\mu_{zm} = E\{  Y(z,m) \}.
+$$
+
+
+定义
+$$ 
+\mu_{zm}(x) = E(Y\mid Z=z,M=m, X=x) 
+$$
+为给定 treatment、mediator 和 covariates 后的 conditional outcome mean。再定义
+\begin{eqnarray*}
+e_{zm}(x)  &=&  \pr(Z=z,M=m\mid X=x)  \\
+&=& \pr(Z=z\mid X=x) \pr( M=m\mid Z=z, X=x)
+\end{eqnarray*} 
+为给定 covariates 后 $Z$ 与 $M$ 取联合值的概率。
+
+\begin{theorem}
+\label{thm::cde-identification}
+在 \cref{assume::si-cde} 下，有
+$$
+\mu_{zm} = E\{  \mu_{zm}(X) \}
+= E \left\{   \frac{I(Z=z, M=m) Y}{  e_{zm}(X)  }  \right\} .
+$$
+此外，分别以 working models $e_{zm}(X, \alpha) $ 和 $\mu_{zm}(X, \beta) $ 表示 $e_{zm}(X) $ 与 $\mu_{zm}(X) $，则有 doubly robust 公式
+$$
+\mu_{zm}^{\textup{dr}}  = E\{  \mu_{zm}(X, \beta) \} + E \left[   \frac{I(Z=z, M=m) \{ Y - \mu_{zm}(X, \beta)  \}}{  e_{zm}(X, \alpha)  }  \right],
+$$
+若 $e_{zm}(X, \alpha) = e_{zm}(X)$ 或 $\mu_{zm}(X, \beta)  = \mu_{zm}(X)$ 二者之一成立，则上式等于 $\mu_{zm} $。
+\end{theorem}
+
+
+
+\cref{thm::cde-identification} 的证明与标准 unconfounded observational studies 中的证明类似。\cref{para::obs-multi-valued-Z} 给出一个一般结果。
+基于 outcome mean model，可以得到 $\mu_{zm}(x)$ 的估计 $\hat{\mu}_{zm}(x) $。基于 treatment model，可以得到 $\pr(Z=z\mid X = x)$ 的估计 $\hat{e}_z(x)$；基于 intermediate variable model，可以得到 $\pr(M=m\mid Z=z, X=x)$ 的估计 $\hat{e}_m(z,x)$。于是可以用 outcome regression 估计 $\mu_{zm} $：
+$$
+\hat{\mu}_{zm}^\text{reg} = n^{-1} \sumn  \hat{\mu}_{zm}(X_i),
+$$
+也可以用 IPW：
+\begin{eqnarray*}
+\hat{\mu}_{zm}^\text{ht} &=& n^{-1}\sumn  \frac{  I(Z_i=z, M_i=m) Y_i  }{  \hat{e}_z(X_i)  \hat{e}_m(z,X_i)  } , \\
+\hat{\mu}_{zm}^\text{haj} &=&  \sumn  \frac{  I(Z_i=z, M_i=m) Y_i  }{  \hat{e}_z(X_i)  \hat{e}_m(z,X_i)  } \Big /  \sumn  \frac{  I(Z_i=z, M_i=m)    }{  \hat{e}_z(X_i)  \hat{e}_m(z,X_i)  }, 
+\end{eqnarray*}
+或用 augmented IPW：
+$$
+\hat{\mu}_{zm}^\text{dr} = \hat{\mu}_{zm}^\text{reg}  +  n^{-1} \sumn  \frac{  I(Z_i=z, M_i=m) \{ Y_i - \hat{\mu}_{zm}(X_i)\}   }{  \hat{e}_z(X_i)  \hat{e}_m(z,X_i)  } .
+$$
+然后可以用 $\hat{\mu}_{1m}^* - \hat{\mu}_{0m}^*\ (*=\text{reg}, \text{ht}, \text{haj}, \text{dr} )$ 估计 $\CDE(m)$，并用 bootstrap 近似 standard error。
+
+
+
+
+如果愿意假设一个 linear outcome model，则 controlled direct effect 会简化为 treatment 的系数。下面的 \cref{eg::cde-linear} 给出细节。
+\begin{example}
+\label{eg::cde-linear}
+在 \cref{assume::si-cde} 与 linear outcome model
+$$
+E(Y\mid Z,M,X) = \theta_0 + \theta_1 Z + \theta_2 M +   \theta_4\tran X,
+$$
+下，可以证明
+$
+\CDE(m) 
+$
+等于系数 $ \theta_1$；这与 Baron--Kenny 方法中的 natural direct effect 一致。证明留给 \cref{problem::cde-linear}。
+\end{example}
+
+
+
+
+
+
+
+\section{Discussion}
+
+controlled direct effect 的表述不涉及 nested 或先验 counterfactual potential outcomes；其识别也不需要 cross-world counterfactual independence assumption。参数 $\CDE(m)$ 可以刻画在把 mediator 固定为 $m$ 时 treatment 的 direct effect。不过，这一表述不能刻画 indirect effect。
+我在 \cref{table::causal-intermediate-frameworks} 总结了 intermediate variables 的几种 causal framework。
+ 
+\begin{table}
+\centering 
+\caption{Causal frameworks for intermediate variables}\label{table::causal-intermediate-frameworks}
+\begin{tabular}{cccc}
+\hline 
+chapter & framework & direct effect & indirect effect   \\
+\hline 
+\cref{chapter::principal-stratification} & principal stratification & $\tau(1,1),\ \tau(0,0)$ & ?  \\
+\cref{chapter::mediation} & mediation analysis & $\NDE$ & $\NIE$  \\
+\cref{chapter::cde}& controlled direct effect & $\CDE(m)$ & ?  \\
+\hline 
+\end{tabular}
+\end{table} 
+ 
+mediation analysis framework 可以把 total effect 分解为 natural direct effect 和 natural indirect effect，但它需要 nested potential outcomes 与 cross-world independence。
+principal stratification 和 controlled direct effect frameworks 不能定义 indirect effects，但它们不涉及 nested potential outcomes 与 cross-world independence。
+此外，principal stratification framework 并不一定要求 $M$ 位于从 treatment 到 outcome 的 causal pathway 上。不过，它的识别和估计涉及对 mixture distributions 的分解，这在统计上是一项并不平凡的任务。
+
+
+
+  
+  \section{Homework problems}
+
+\homeworksolutionref{28}
+\paragraph{$\CDE$ and $\NDE$}\label{problem::cde-nde}
+
+证明：在 cross-world independence
+$
+Y(z,m) \ind M(z') \mid X
+$
+对所有 $z,z'$ 与 $m$ 都成立时，conditional controlled direct effect $\CDE(m\mid x) = E\{  Y(1,m)  - Y(0,m)\mid X=x\}$ 与 conditional natural direct effect $\NDE(x) = E\{   Y(1,M_0) - Y(0, M_0) \mid X=x  \}$ 满足如下关系：
+$$
+\NDE(x) = \sum_m \CDE(m\mid x) \pr(M_0 = m\mid X=x)
+$$
+其中 $M$ 是离散变量。若没有 cross-world independence，这一关系一般还成立吗？
+  
+  
+  
+  \paragraph{Observational studies with a multi-valued treatment}\label{para::obs-multi-valued-Z}
+  
+\cref{thm::cde-identification} 是下面这个关于 multiple treatment levels 的 unconfounded observational studies 定理的一个特例 \citep{imai2004causal, cattaneo2010efficient}。下面我先给出一般问题和定理。
+
+
+
+考虑一个 observational study，其中 treatment 为多值变量 $Z \in \{ 1, \ldots, K \}$，covariates 为 $X$，outcome 为 $Y$。个体 $i$ 有 $K$ 个 potential outcomes $Y_i(1), \ldots, Y_i(K)$，分别对应 $K$ 个 treatment levels。一般地，可以用 potential outcomes 的对比来定义 causal effect：
+$$
+\tau_C  = \sum_{k=1}^K C_k   E\{  Y(k) \}
+$$
+其中 $  \sum_{k=1}^K C_k  = 0$。两两比较的典型选择是
+$$
+\tau_{k,k'} = E\{   Y(k) - Y(k') \}.
+$$
+因此，关键是在下面的 ignorability 和 overlap assumptions 下，基于 IID 数据 $(Z_i,  X_i, Y_i)_{i=1}^n$ 识别并估计 potential outcome means $\mu_k  =  E\{  Y(k) \}$。
+
+
+
+\begin{assumption}
+\label{assume::ignorability-multi-valued-Z}
+$Z\ind \{ Y (1), \ldots, Y (K) \} \mid X$ 且对 $k=1,\ldots, K$，有 $\pr(Z = k \mid X) > 0$。
+\end{assumption}
+
+
+
+定义 generalized propensity score 为
+$$
+e_k(X) = \pr(Z = k \mid X), 
+$$
+并定义 conditional outcome mean 为
+$$
+\mu_k(X) = E(   Y \mid Z=k,  X )
+$$
+其中 $k=1, \ldots, K$。于是有下面的定理。
+
+\begin{theorem}
+\label{thm::treatment-multi-valued-Z}
+在 \cref{assume::ignorability-multi-valued-Z} 下，有
+$$
+\mu_{k} = E\{  \mu_{k}(X) \}
+= E \left\{   \frac{I(Z = k) Y}{  e_{k}(X)  }  \right\} .
+$$
+此外，分别以 working models $e_{k}(X, \alpha) $ 和 $\mu_{k}(X, \beta) $ 表示 $e_{k}(X) $ 与 $\mu_{k}(X) $，则有 doubly robust 公式
+$$
+\mu_{k}^{\textup{dr}}  = E\{  \mu_{k}(X, \beta) \} + E \left[   \frac{I(Z=k) \{ Y - \mu_{k}(X, \beta)  \}}{  e_{k}(X, \alpha)  }  \right],
+$$
+若 $e_{k}(X, \alpha) = e_{k}(X)$ 或 $\mu_{k}(X, \beta)  = \mu_{k}(X)$ 二者之一成立，则上式等于 $\mu_{k} $。
+\end{theorem}
+
+
+证明 \cref{thm::treatment-multi-valued-Z}。
+
+
+Remark: 若把 \cref{thm::cde-identification} 中的 $(Z,M)$ 视为一个具有四个 levels 的 treatment，则 \cref{thm::cde-identification} 是 \cref{thm::treatment-multi-valued-Z} 的一个特例。$  \CDE (m) $ 是 $\tau_C $ 的一个特例。
+
+
+  
+  \paragraph{$\CDE$ in the linear outcome model}\label{problem::cde-linear}
+  
+  证明：在 \cref{assume::si-cde} 下，若 $E(Y\mid Z, M, X ) = \theta_0 + \theta_1 Z + \theta_2 M +   \theta_4\tran X$，则
+  $$
+  \CDE (m) = \theta_1
+  $$
+  对所有 $m$ 成立；
+  若 $E(Y\mid Z, M, X ) = \theta_0 + \theta_1 Z + \theta_2 M + \theta_3 ZM +    \theta_4\tran X$，则
+  $$
+\CDE(m) =   \theta_1 + \theta_3 m. 
+  $$
+  
+  
+    \paragraph{$\CDE$ in the logistic outcome model}\label{problem::cde-logit}
+  
+  证明：对二元 outcome，在 \cref{assume::si-cde} 下，若
+  $$
+  \logit \{ \pr(Y = 1\mid Z, M, X ) \} = \theta_0 + \theta_1 Z + \theta_2 M +   \theta_4\tran X ,
+  $$ 
+  则
+  $$
+  \CDE (m) = E\{ \expit( \theta_0 + \theta_1  + \theta_2 m +   \theta_4\tran X ) - \expit( \theta_0    + \theta_2 m +   \theta_4\tran X ) \} ; 
+  $$
+  若
+  $$
+  \logit \{ \pr(Y = 1\mid Z, M, X ) \} = \theta_0 + \theta_1 Z + \theta_2 M + \theta_3 ZM +    \theta_4\tran X,
+  $$ 
+  则
+  $$
+\CDE(m) =  E\{ \expit( \theta_0 + \theta_1  + \theta_2 m  +\theta_3 m +   \theta_4\tran X ) - \expit( \theta_0    + \theta_2 m +   \theta_4\tran X ) \}.
+  $$
+  
+  
+  
+   
+

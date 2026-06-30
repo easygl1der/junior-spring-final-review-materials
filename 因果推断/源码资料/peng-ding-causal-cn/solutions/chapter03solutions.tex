@@ -1,0 +1,351 @@
+\chapter{Solutions to Chapter 3: The Completely Randomized Experiment and the Fisher Randomization Test}
+\label{sol:chapter03}
+
+\begin{exercisesolution}{Exactness of $p_\frt$}{randomization distribution 下 $p$-value 的 finite-sample validity}
+回忆 \cref{eq::exactpvalue}。在 $\HF$ 下，observed outcome vector $\boldsymbol{Y}$ 固定，随机性只来自 CRE 的 treatment vector $\boldsymbol{Z}$。令
+\[
+T_m=T(\boldsymbol{z}^m,\boldsymbol{Y}),\qquad m=1,\ldots,M,
+\]
+其中 $M=\binom{n}{n_1}$。Observed statistic $T_{\mathrm{obs}}=T(\boldsymbol{Z},\boldsymbol{Y})$ 等概率地取这些 $T_m$ 中的一个值。FRT $p$-value 可写成
+\[
+p_\frt(\boldsymbol{z}^m)
+=M^{-1}\sum_{\ell=1}^M \mathbb{I}(T_\ell\geq T_m).
+\]
+要证明 \cref{eq::p-value-valid}，关键是处理 ties。把不同的 test statistic values 从大到小排列为
+\[
+t_1>t_2>\cdots>t_K,
+\]
+并令 $a_k=\#\{m:T_m=t_k\}$。如果 $T_{\mathrm{obs}}=t_k$，则
+\[
+p_\frt=\frac{a_1+\cdots+a_k}{M}.
+\]
+因此 $p_\frt$ 只能取这些累积比例。对任意 $u\in[0,1]$，令 $k(u)$ 是满足
+\[
+\frac{a_1+\cdots+a_k}{M}\leq u
+\]
+的最大 $k$；若不存在这样的 $k$，则事件为空。于是
+\[
+\pr_{\HF}(p_\frt\leq u)
+=\frac{a_1+\cdots+a_{k(u)}}{M}
+\leq u.
+\]
+这正是 finite-sample exact 或 conservative validity。
+
+如果 randomization distribution 没有 ties，则 $a_k=1$，$p_\frt$ 在 $\{1/M,2/M,\ldots,1\}$ 上离散均匀，因此仍满足上面的不等式。连续极限下它趋近 Uniform$(0,1)$。
+
+\emph{Remark / 用途：} 这个证明说明 FRT 的有效性来自 design distribution，而不是来自 Normal approximation、large-sample approximation 或 outcome model。只要 $\HF$ sharp，并且 assignment mechanism 已知，任意 test statistic 都能产生 finite-sample valid $p$-value。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Monte Carlo error of $\hat p_\frt$}{unbiasedness 与方差上界}
+给定 observed data，$T(\boldsymbol{Z},\boldsymbol{Y})$ 是固定的 observed value，而 $\boldsymbol{z}^1,\ldots,\boldsymbol{z}^R$ 是从 CRE randomization distribution 独立抽取的 random permutations。定义
+\[
+A_r=\mathbb{I}\{T(\boldsymbol{z}^r,\boldsymbol{Y})\geq T(\boldsymbol{Z},\boldsymbol{Y})\}.
+\]
+以数据为条件时，$A_1,\ldots,A_R$ 是 independent Bernoulli random variables，并且
+\[
+\pr_{\mathrm{mc}}(A_r=1)=p_\frt.
+\]
+由 \cref{eq::mcpvalue}，
+\[
+\hat p_\frt=R^{-1}\sum_{r=1}^R A_r.
+\]
+所以
+\[
+E_{\mathrm{mc}}(\hat p_\frt)
+=R^{-1}\sum_{r=1}^R E_{\mathrm{mc}}(A_r)
+=p_\frt.
+\]
+同理，由 Monte Carlo draws 的独立性，
+\[
+\var_{\mathrm{mc}}(\hat p_\frt)
+=R^{-2}\sum_{r=1}^R \var_{\mathrm{mc}}(A_r)
+=R^{-2}R p_\frt(1-p_\frt)
+=\frac{p_\frt(1-p_\frt)}{R}.
+\]
+因为 $x(1-x)\leq 1/4$ 对所有 $x\in[0,1]$ 成立，所以
+\[
+\var_{\mathrm{mc}}(\hat p_\frt)\leq \frac{1}{4R}.
+\]
+
+\emph{Remark / 用途：} 这个结果把 statistical randomness 和 Monte Carlo randomness 分开了。FRT 的 exact $p_\frt$ 随 original randomization 而随机；但一旦给定数据，$\hat p_\frt$ 的误差只是计算误差。方差上界说明 Monte Carlo error 以 $R^{-1/2}$ 的速度下降，实践中可以通过增加 permutations 控制。
+\end{exercisesolution}
+
+\begin{exercisesolution}{A finite-sample valid Monte Carlo approximation of $p_\frt$}{加一修正为何有效}
+令 exact FRT $p$-value 为
+\[
+p=p_\frt.
+\]
+以 original data 为条件，记
+\[
+X=\sum_{r=1}^R \mathbb{I}\{T(\boldsymbol{z}^r,\boldsymbol{Y})\geq T(\boldsymbol{Z},\boldsymbol{Y})\}.
+\]
+则
+\[
+X\mid p\sim \text{Binomial}(R,p),\qquad
+\tilde p_\frt=\frac{1+X}{1+R}.
+\]
+要证明 $\tilde p_\frt$ valid，需要同时使用 exact $p$ 本身的 validity 和 binomial tail 的 monotonicity。
+
+对任意 $u\in(0,1)$，事件 $\tilde p_\frt\leq u$ 等价于
+\[
+X\leq (R+1)u-1.
+\]
+令 $c=\lfloor (R+1)u-1\rfloor$。若 $c<0$，概率为 $0$。下面考虑 $0\leq c\leq R$。给定 $p$，
+\[
+\pr(\tilde p_\frt\leq u\mid p)=\pr\{\text{Binomial}(R,p)\leq c\}.
+\]
+这个 conditional probability 随 $p$ 单调递减；这正是 \cref{lemma::binomial-order}。
+
+Exact FRT $p$-value 满足 $\pr(p\leq t)\leq t$，所以 $p$ 在 stochastic order 上不小于 Uniform$(0,1)$。由于上面的 conditional probability 是 $p$ 的递减函数，有
+\[
+\pr(\tilde p_\frt\leq u)
+\leq
+\int_0^1 \pr\{\text{Binomial}(R,q)\leq c\}\,dq,
+\]
+其中 $q\sim \text{Uniform}(0,1)$。由 \cref{lemma::uniform}，若 $Q\sim \text{Uniform}(0,1)$ 且 $X\mid Q\sim \text{Binomial}(R,Q)$，则边际上 $X$ 在 $\{0,1,\ldots,R\}$ 上均匀。因此
+\[
+\int_0^1 \pr\{\text{Binomial}(R,q)\leq c\}\,dq
+=\frac{c+1}{R+1}.
+\]
+由 $c=\lfloor (R+1)u-1\rfloor$ 可知
+\[
+\frac{c+1}{R+1}\leq u.
+\]
+于是
+\[
+\pr(\tilde p_\frt\leq u)\leq u.
+\]
+这证明了 $\tilde p_\frt$ 是 finite-sample valid $p$-value。
+
+\emph{Remark / 用途：} 普通 Monte Carlo estimator $\hat p_\frt$ 是 unbiased 的，但 unbiasedness 不等于 valid p-value。加一修正把 observed assignment 放进 Monte Carlo reference set 的逻辑中，避免在有限 $R$ 下产生过小的随机 $p$-value。\citet{phipson2010permutation} 在 permutation tests 中强调了这个实践细节。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Fisher's exact test}{binary outcome 下 $n_{11}$ 的 Hypergeometric distribution}
+在 binary outcome 的 CRE 中，two-by-two table 的四个 cell counts 满足
+\[
+n_{11}+n_{10}=n_1,\qquad n_{01}+n_{00}=n_0,
+\]
+以及
+\[
+n_{11}+n_{01}=m_1,\qquad n_{10}+n_{00}=m_0,
+\]
+其中 $m_1$ 是 observed outcomes 中 $Y=1$ 的总数，$m_0=n-m_1$。
+
+在 $\HF$ 下，所有 units 的 outcomes 固定，且 treatment assignment 只是从 $n$ 个 units 中随机抽取 $n_1$ 个进入 treatment group。因此 $m_1$ 个 $Y=1$ units 中有多少个落入 treatment group，完全决定了 table。这个数正是 $n_{11}$。给定 $n_{11}$，其他 cell counts 都由 margins 决定：
+\[
+n_{10}=n_1-n_{11},\qquad
+n_{01}=m_1-n_{11},\qquad
+n_{00}=n_0-m_1+n_{11}.
+\]
+所以任意 statistic
+\[
+T(n_{11},n_{10},n_{01},n_{00})
+\]
+都是 $n_{11}$ 与固定 margins 的函数。
+
+因为 CRE 是从 $n$ 个 units 中不放回抽取 $n_1$ 个 treated units，且总体中有 $m_1$ 个 success units，故
+\[
+n_{11}\sim \text{Hypergeometric}(N=n,\ K=m_1,\ r=n_1),
+\]
+即
+\[
+\pr(n_{11}=x)
+=
+\frac{\binom{m_1}{x}\binom{n-m_1}{n_1-x}}{\binom{n}{n_1}},
+\]
+其中
+\[
+\max(0,n_1-m_0)\leq x\leq \min(n_1,m_1).
+\]
+这就是 Fisher's exact test 在 fixed margins 下的 Hypergeometric distribution。
+
+\emph{Remark / 用途：} 这个练习把 classical Fisher's exact test 和 CRE 下的 FRT 接起来。Fisher's exact test 不是一个外来的特殊技巧；在 binary outcome、sharp null 和 CRE 下，它就是 FRT 的 cell-count 版本。这个等价性也解释了为什么 fixed margins 在 randomization 语境中自然出现。
+\end{exercisesolution}
+
+\begin{exercisesolution}{More details for lady tasting tea}{Hypergeometric probabilities}
+在 Lady Tasting Tea 实验中，Fisher 有 $4$ 杯 milk first 和 $4$ 杯 tea first。女士从 $8$ 杯中选出 $4$ 杯声称是 milk first。令 $X$ 为她选中的 $4$ 杯中真正 milk first 的数量。在 null hypothesis 下，她的选择等价于从 $8$ 杯中随机选 $4$ 杯。因此
+\[
+X\sim \text{Hypergeometric}(N=8,\ K=4,\ r=4),
+\]
+即
+\[
+\pr(X=k)=\frac{\binom{4}{k}\binom{4}{4-k}}{\binom{8}{4}}
+=\frac{\binom{4}{k}^2}{70},\qquad k=0,1,2,3,4.
+\]
+逐项计算得到
+\[
+\begin{array}{c|ccccc}
+k&0&1&2&3&4\\ \hline
+\pr(X=k)&1/70&16/70&36/70&16/70&1/70
+\end{array}
+\]
+真实实验中 $X=4$，单侧 FRT $p$-value 是
+\[
+\pr(X\geq 4)=1/70.
+\]
+如果使用双侧“同样或更极端”的对称 tail，则通常得到
+\[
+\pr(X=0)+\pr(X=4)=2/70,
+\]
+但本章的叙述采用正向单侧 evidence。
+
+\emph{Remark / 用途：} 这个例子是 FRT 最清楚的教学版本：没有 model、没有 asymptotics，只有 randomization 和可枚举的 assignment space。它也提醒我们，单侧还是双侧取决于事前定义的 test statistic 和 alternative direction。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Covariate-adjusted FRT}{为什么 residual 和 regression coefficient statistics 仍 exact}
+本题的核心不是某一个数值 $p$-value，而是为什么加入 covariates 后 FRT 仍然 finite-sample exact。设 pre-treatment covariates 为 $\boldsymbol{X}$。在 $\HF$ 下，$\boldsymbol{Y}$ 和 $\boldsymbol{X}$ 都是固定的；随机性仍只来自 $\boldsymbol{Z}$。因此任何形如
+\[
+T(\boldsymbol{Z},\boldsymbol{Y},\boldsymbol{X})
+\]
+的 statistic，只要对 observed data 和每个 permuted assignment 都按同一规则计算，其 randomization distribution 都由 CRE assignment mechanism 决定。由第一题的 exactness 证明，相应 $p_\frt$ finite-sample valid。
+
+第一种策略是 residual-based FRT。先把 outcomes 对 covariates 做 linear regression：
+\[
+Y_i=\alpha+\gamma\tran X_i+e_i,
+\]
+得到 residuals $\hat e_i$。在 FRT 中，$\boldsymbol{Y}$ 和 $\boldsymbol{X}$ 固定，所以 residual vector $\hat{\boldsymbol e}$ 也是固定的 pseudo outcome vector。然后对 $\hat e_i$ 计算 difference-in-means、studentized statistic、Wilcoxon statistic、Kolmogorov--Smirnov statistic 等。每一次 permutation 只改变哪些 residuals 被标记为 treated。因此这些 residual statistics 都是 $T(\boldsymbol{Z},\boldsymbol{Y},\boldsymbol{X})$ 的合法例子，FRT $p$-values finite-sample exact。
+
+第二种策略是 regression-coefficient FRT。对每个 assignment vector $\boldsymbol{z}$，运行 regression
+\[
+Y_i=\alpha+\beta z_i+\gamma\tran X_i+\varepsilon_i,
+\]
+并把 treatment coefficient $\hat\beta(\boldsymbol{z})$ 作为 test statistic。这里 model 只是构造 statistic 的工作工具；FRT 的有效性不要求 linear regression model 正确。只要对 observed assignment 和每个 permuted assignment 都重新计算同一个 coefficient，$\hat\beta(\boldsymbol{Z})$ 就有由 randomization 决定的 null distribution。因此基于 $\hat\beta$ 的 FRT $p$-value 也 finite-sample exact。
+
+如果要复现数值，可以沿用 \cref{sec::frt-lalonde-experiment} 的 Monte Carlo 代码，把 statistic 函数换成 residual-based statistics 或 coefficient statistic：
+\begin{lstlisting}
+fit0 <- lm(y ~ x1 + x2 + x3 + x4)
+e <- resid(fit0)
+T.resid <- function(z) mean(e[z == 1]) - mean(e[z == 0])
+
+T.coef <- function(z) coef(lm(y ~ z + x1 + x2 + x3 + x4))["z"]
+\end{lstlisting}
+然后把 observed statistic 与 permuted statistics 比较即可。
+
+\emph{Remark / 用途：} Covariate-adjusted FRT 的重点是区分“model for validity”和“model for power”。Regression 或 residualization 可以让 statistic 对 alternative 更敏感，从而提高 power；但 $p$-value 的 validity 仍来自 randomization，而不是来自 regression model 正确。
+\end{exercisesolution}
+
+\begin{exercisesolution}{FRT with a generalized linear model}{logistic coefficient 作为 test statistic}
+把 outcome 改成 binary indicator
+\[
+D_i=\mathbb{I}(\texttt{re78}_i>0).
+\]
+对 observed assignment，可拟合 logistic regression
+\[
+\text{logit}\{\pr(D_i=1\mid Z_i,X_i)\}
+=\alpha+\beta Z_i+\gamma\tran X_i,
+\]
+并使用 treatment coefficient $\hat\beta$ 或其 signed Wald statistic 作为 test statistic。
+
+Classical logistic regression 的 model-based $p$-value 来自 large-sample approximation。它回答的是：如果 logistic model 正确，且样本足够大，$\hat\beta$ 相对于其 model-based standard error 是否显著。FRT 的 $p$-value 则不同。它把 $\boldsymbol{D}$ 和 $\boldsymbol{X}$ 固定，在 $\HF$ 下随机置换 $\boldsymbol{Z}$，对每个 permutation 重新拟合同一个 logistic regression，并计算
+\[
+p_\frt
+=R^{-1}\sum_{r=1}^R
+\mathbb{I}\{\hat\beta(\boldsymbol{z}^r)\geq \hat\beta(\boldsymbol{Z})\},
+\]
+或使用 finite-sample valid 的加一版本。
+
+本地教材工程没有附带 LaLonde 原始数据文件，因此这里不伪造 numerical $p$-value。可复现的 R 框架如下：
+\begin{lstlisting}
+library(Matching)
+data(lalonde)
+
+d <- as.numeric(lalonde$re78 > 0)
+z <- lalonde$treat
+X <- lalonde[, c("age", "educ", "black", "hisp",
+                 "married", "nodegr", "re74", "re75")]
+
+fit <- glm(d ~ z + ., data = data.frame(d = d, z = z, X = X),
+           family = binomial())
+beta.obs <- coef(fit)["z"]
+p.model <- summary(fit)$coef["z", "Pr(>|z|)"]
+
+R <- 10000
+beta.mc <- numeric(R)
+for (r in 1:R) {
+  zperm <- sample(z)
+  beta.mc[r] <- coef(glm(d ~ zperm + .,
+                         data = data.frame(d = d, zperm = zperm, X = X),
+                         family = binomial()))["zperm"]
+}
+p.frt <- mean(beta.mc >= beta.obs)
+p.frt.valid <- (1 + sum(beta.mc >= beta.obs))/(R + 1)
+\end{lstlisting}
+若 logistic fit 出现 separation 或 non-convergence，应事先固定处理规则，例如使用 penalized logistic regression 或改用 signed score statistic；只要 statistic 规则对 observed 和 permuted assignments 一致，FRT validity 仍成立。
+
+\emph{Remark / 用途：} 这个练习展示了 FRT 与 modern modeling 的兼容性。我们可以用 GLM 生成更有 power 的 statistic，但最终校准仍然由 randomization distribution 完成。这在 small samples、non-Normal outcomes 或 model misspecification 风险较高时尤其有用。
+\end{exercisesolution}
+
+\begin{exercisesolution}{An algebraic detail}{pooled total variation 的分解}
+验证 \cref{eq::frt-algebra-difference-in-means}。令
+\[
+\bar Y=n^{-1}\sum_{i=1}^n Y_i,\qquad
+\hat{\bar Y}(1)=n_1^{-1}\sum_{Z_i=1}Y_i,\qquad
+\hat{\bar Y}(0)=n_0^{-1}\sum_{Z_i=0}Y_i,
+\]
+并记
+\[
+\hat\tau=\hat{\bar Y}(1)-\hat{\bar Y}(0).
+\]
+总平方和可分解为 within-group sum of squares 加 between-group sum of squares：
+\[
+\sum_{i=1}^n (Y_i-\bar Y)^2
+=
+\sum_{Z_i=1}\{Y_i-\hat{\bar Y}(1)\}^2
++
+\sum_{Z_i=0}\{Y_i-\hat{\bar Y}(0)\}^2
++
+n_1\{\hat{\bar Y}(1)-\bar Y\}^2
++
+n_0\{\hat{\bar Y}(0)-\bar Y\}^2.
+\]
+这是因为在每个 group 内，
+\[
+\sum_{Z_i=1}\{Y_i-\hat{\bar Y}(1)\}=0,\qquad
+\sum_{Z_i=0}\{Y_i-\hat{\bar Y}(0)\}=0,
+\]
+所以展开平方时 cross terms 消失。
+
+接下来化简 between-group 部分。由于
+\[
+\bar Y=\frac{n_1\hat{\bar Y}(1)+n_0\hat{\bar Y}(0)}{n},
+\]
+有
+\[
+\hat{\bar Y}(1)-\bar Y
+=\frac{n_0}{n}\{\hat{\bar Y}(1)-\hat{\bar Y}(0)\}
+=\frac{n_0}{n}\hat\tau,
+\]
+以及
+\[
+\hat{\bar Y}(0)-\bar Y
+=-\frac{n_1}{n}\hat\tau.
+\]
+因此
+\[
+n_1\{\hat{\bar Y}(1)-\bar Y\}^2
++
+n_0\{\hat{\bar Y}(0)-\bar Y\}^2
+=
+n_1\frac{n_0^2}{n^2}\hat\tau^2
++
+n_0\frac{n_1^2}{n^2}\hat\tau^2
+=\frac{n_1n_0}{n}\hat\tau^2.
+\]
+又因为
+\[
+(n-1)s^2=\sum_{i=1}^n(Y_i-\bar Y)^2,
+\]
+代回即可得到
+\[
+(n-1)s^2
+=
+\sum_{Z_i=1}\{Y_i-\hat{\bar Y}(1)\}^2
++
+\sum_{Z_i=0}\{Y_i-\hat{\bar Y}(0)\}^2
++
+\frac{n_1n_0}{n}\hat\tau^2,
+\]
+即 \cref{eq::frt-algebra-difference-in-means}。
+
+\emph{Remark / 用途：} 这个恒等式解释了 FRT 的 difference-in-means statistic 与 classical two-sample $t$ statistic 的关系。它也是 ANOVA decomposition 的二组特例：total variation = within variation + between variation。
+\end{exercisesolution}

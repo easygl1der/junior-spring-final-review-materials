@@ -1,0 +1,326 @@
+\chapter{Solutions to Chapter 28: Controlled Direct Effect}
+\label{sol:chapter28}
+
+\begin{exercisesolution}{$\CDE$ and $\NDE$}{cross-world independence 下 CDE 对 NDE 的加权表示}
+本题的要点是：controlled direct effect 固定 mediator 的取值，而 natural direct effect 让 mediator 取它在 control treatment 下自然会取得的值。因此，若要把 $\NDE(x)$ 写成一组 $\CDE(m\mid x)$ 的平均，必须能把 $Y(z,m)$ 与 $M_0$ 在给定 $X=x$ 后分开。这正是题目给出的 cross-world independence 的作用。
+
+固定 $X=x$。由于 $M$ 是离散变量，由全期望公式，
+\[
+E\{Y(z,M_0)\mid X=x\}
+=
+\sum_m E\{Y(z,m)\mid M_0=m,X=x\}\mathbb{P}(M_0=m\mid X=x).
+\]
+题设 cross-world independence 对所有 $z,z'$ 与 $m$ 都成立。取 $z'=0$，得到
+\[
+Y(z,m)\ind M(0)\mid X.
+\]
+因此
+\[
+E\{Y(z,m)\mid M_0=m,X=x\}
+=
+E\{Y(z,m)\mid X=x\}.
+\]
+于是
+\[
+E\{Y(z,M_0)\mid X=x\}
+=
+\sum_m E\{Y(z,m)\mid X=x\}\mathbb{P}(M_0=m\mid X=x).
+\]
+分别令 $z=1$ 与 $z=0$ 并相减，得到
+\begin{align*}
+\NDE(x)
+&=
+E\{Y(1,M_0)-Y(0,M_0)\mid X=x\}\\
+&=
+\sum_m \bigl[
+E\{Y(1,m)\mid X=x\}
+-
+E\{Y(0,m)\mid X=x\}
+\bigr]\mathbb{P}(M_0=m\mid X=x)\\
+&=
+\sum_m \CDE(m\mid x)\mathbb{P}(M_0=m\mid X=x).
+\end{align*}
+这就证明了题中的表示式。
+
+若没有 cross-world independence，上述关系一般不成立。原因是 $\NDE(x)$ 中的权重不是简单地对固定的 response surface $Y(z,m)$ 做边际平均，而是对那些满足 $M_0=m$ 的 units 做条件平均：
+\[
+\NDE(x)
+=
+\sum_m
+E\{Y(1,m)-Y(0,m)\mid M_0=m,X=x\}
+\mathbb{P}(M_0=m\mid X=x).
+\]
+只有当
+\[
+E\{Y(1,m)-Y(0,m)\mid M_0=m,X=x\}
+=
+E\{Y(1,m)-Y(0,m)\mid X=x\}
+\]
+时，它才退化为题中的 $\CDE(m\mid x)$ 加权平均。没有 cross-world independence 时，$M_0$ 可以选择性地标记出具有不同 direct-effect response surface 的 units，因而这个等式没有理由成立。
+
+\paragraph{Remark.}
+这道题把 \cref{chapter::mediation,chapter::cde} 的差别压缩成一个公式：$\NDE$ 是以自然 mediator distribution 加权的 direct-effect contrast；$\CDE$ 是把 mediator 外力固定后的 direct-effect contrast。二者能否相连，关键不在代数，而在 cross-world independence 是否允许我们把 $M_0$ 与 $Y(z,m)$ 解耦。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Observational studies with a multi-valued treatment}{多值 treatment 下 outcome mean 的识别与 doubly robust 公式}
+本题证明 \cref{thm::treatment-multi-valued-Z}。固定一个 treatment level $k$。在 \cref{assume::ignorability-multi-valued-Z} 下，
+\[
+Z\ind \{Y(1),\ldots,Y(K)\}\mid X,
+\]
+特别地，
+\[
+Z\ind Y(k)\mid X.
+\]
+再由 consistency，当 $Z=k$ 时 observed outcome 满足 $Y=Y(k)$。
+
+先证明 outcome regression identification。由全期望公式和 conditional ignorability，
+\[
+\mu_k
+=
+E\{Y(k)\}
+=
+E\bigl[E\{Y(k)\mid X\}\bigr].
+\]
+另一方面，
+\begin{align*}
+E(Y\mid Z=k,X)
+&=
+E\{Y(k)\mid Z=k,X\}\\
+&=
+E\{Y(k)\mid X\}.
+\end{align*}
+因此 $\mu_k(X)=E(Y\mid Z=k,X)$ 正好等于 $E\{Y(k)\mid X\}$，从而
+\[
+\mu_k=E\{\mu_k(X)\}.
+\]
+
+再证明 IPW identification。由于 overlap 保证 $e_k(X)>0$，有
+\begin{align*}
+E\left\{\frac{\mathbb{I}(Z=k)Y}{e_k(X)}\right\}
+&=
+E\left[
+E\left\{\frac{\mathbb{I}(Z=k)Y}{e_k(X)}\mid X\right\}
+\right]\\
+&=
+E\left[
+\frac{1}{e_k(X)}
+E\{\mathbb{I}(Z=k)Y(k)\mid X\}
+\right]\\
+&=
+E\left[
+\frac{1}{e_k(X)}
+E\{\mathbb{I}(Z=k)\mid X\}
+E\{Y(k)\mid X\}
+\right]\\
+&=
+E\{Y(k)\}
+=
+\mu_k.
+\end{align*}
+第三行使用了 $Z\ind Y(k)\mid X$。
+
+最后证明 doubly robust 性质。记
+\[
+m_k(X)=\mu_k(X,\beta),
+\qquad
+g_k(X)=e_k(X,\alpha).
+\]
+题中的 working estimand 为
+\[
+\mu_k^{\textup{dr}}
+=
+E\{m_k(X)\}
++
+E\left[
+\frac{\mathbb{I}(Z=k)\{Y-m_k(X)\}}{g_k(X)}
+\right].
+\]
+若 outcome model 正确，即 $m_k(X)=\mu_k(X)=E\{Y(k)\mid X\}$，则
+\begin{align*}
+E\left[
+\frac{\mathbb{I}(Z=k)\{Y-m_k(X)\}}{g_k(X)}
+\mid X
+\right]
+&=
+\frac{1}{g_k(X)}
+E\{\mathbb{I}(Z=k)(Y(k)-m_k(X))\mid X\}\\
+&=
+\frac{e_k(X)}{g_k(X)}
+\{E(Y(k)\mid X)-m_k(X)\}\\
+&=0.
+\end{align*}
+因此 $\mu_k^{\textup{dr}}=E\{m_k(X)\}=E\{\mu_k(X)\}=\mu_k$。
+
+若 propensity score model 正确，即 $g_k(X)=e_k(X)$，则
+\begin{align*}
+\mu_k^{\textup{dr}}
+&=
+E\{m_k(X)\}
++
+E\left[
+\frac{\mathbb{I}(Z=k)\{Y(k)-m_k(X)\}}{e_k(X)}
+\right]\\
+&=
+E\{m_k(X)\}
++
+E\left[
+E\left\{
+\frac{\mathbb{I}(Z=k)\{Y(k)-m_k(X)\}}{e_k(X)}
+\mid X
+\right\}
+\right]\\
+&=
+E\{m_k(X)\}
++
+E\{E(Y(k)\mid X)-m_k(X)\}\\
+&=
+E\{Y(k)\}
+=
+\mu_k.
+\end{align*}
+所以只要 treatment model 或 outcome model 二者之一正确，doubly robust 公式就等于目标均值。
+
+\paragraph{Remark.}
+\cref{thm::cde-identification} 只是把 joint treatment level 写成 $(Z,M)=(z,m)$。此时 $K=4$，$e_k(X)$ 变成 $e_{zm}(X)=\mathbb{P}(Z=z,M=m\mid X)$，而 $\CDE(m)$ 是两个 joint levels $(1,m)$ 与 $(0,m)$ 的 potential outcome means 之差。
+\end{exercisesolution}
+
+\begin{exercisesolution}{$\CDE$ in the linear outcome model}{线性 outcome model 中 interaction 决定 CDE 是否随 mediator 改变}
+本题直接使用 \cref{assume::si-cde} 与 \cref{thm::cde-identification} 的 outcome-regression 表示。Sequential ignorability 给出
+\[
+E\{Y(z,m)\mid X\}=E(Y\mid Z=z,M=m,X).
+\]
+因此
+\[
+\CDE(m)
+=
+E\{Y(1,m)-Y(0,m)\}
+=
+E\bigl[
+E(Y\mid Z=1,M=m,X)-E(Y\mid Z=0,M=m,X)
+\bigr].
+\]
+
+若
+\[
+E(Y\mid Z,M,X)
+=
+\theta_0+\theta_1 Z+\theta_2 M+\theta_4\tran X,
+\]
+则
+\[
+E(Y\mid Z=1,M=m,X)
+=
+\theta_0+\theta_1+\theta_2 m+\theta_4\tran X,
+\]
+而
+\[
+E(Y\mid Z=0,M=m,X)
+=
+\theta_0+\theta_2 m+\theta_4\tran X.
+\]
+二者相减为 $\theta_1$，与 $X$ 和 $m$ 都无关。于是
+\[
+\CDE(m)=E(\theta_1)=\theta_1.
+\]
+
+若进一步允许 treatment-mediator interaction，
+\[
+E(Y\mid Z,M,X)
+=
+\theta_0+\theta_1 Z+\theta_2 M+\theta_3 ZM+\theta_4\tran X,
+\]
+则
+\[
+E(Y\mid Z=1,M=m,X)
+=
+\theta_0+\theta_1+\theta_2 m+\theta_3 m+\theta_4\tran X,
+\]
+而
+\[
+E(Y\mid Z=0,M=m,X)
+=
+\theta_0+\theta_2 m+\theta_4\tran X.
+\]
+相减得到
+\[
+\theta_1+\theta_3 m.
+\]
+因此
+\[
+\CDE(m)=\theta_1+\theta_3 m.
+\]
+
+\paragraph{Remark.}
+这解释了 \cref{eg::cde-linear} 中的现象。没有 $ZM$ interaction 时，固定 mediator 的水平不会改变 treatment 的 additive contrast；一旦加入 interaction，direct effect 的大小随被固定的 mediator level 改变。
+\end{exercisesolution}
+
+\begin{exercisesolution}{$\CDE$ in the logistic outcome model}{logistic outcome model 中 CDE 是风险差而不是 log-odds coefficient}
+本题与上一题形式相同，但二元 outcome 下 $\CDE(m)$ 仍然定义在 outcome mean scale 上：
+\[
+\CDE(m)=E\{Y(1,m)-Y(0,m)\}.
+\]
+当 $Y$ 是 binary outcome 时，$E\{Y(z,m)\mid X\}=\mathbb{P}\{Y(z,m)=1\mid X\}$。由 \cref{assume::si-cde}，
+\[
+\mathbb{P}\{Y(z,m)=1\mid X\}
+=
+\mathbb{P}(Y=1\mid Z=z,M=m,X).
+\]
+
+先考虑没有 interaction 的 logistic model：
+\[
+\logit\{\mathbb{P}(Y=1\mid Z,M,X)\}
+=
+\theta_0+\theta_1 Z+\theta_2 M+\theta_4\tran X.
+\]
+对两边取 inverse logit，得到
+\[
+\mathbb{P}(Y=1\mid Z=z,M=m,X)
+=
+\expit(\theta_0+\theta_1 z+\theta_2 m+\theta_4\tran X).
+\]
+因此
+\begin{align*}
+\CDE(m)
+&=
+E\bigl[
+\mathbb{P}(Y=1\mid Z=1,M=m,X)
+-
+\mathbb{P}(Y=1\mid Z=0,M=m,X)
+\bigr]\\
+&=
+E\{
+\expit(\theta_0+\theta_1+\theta_2 m+\theta_4\tran X)
+-
+\expit(\theta_0+\theta_2 m+\theta_4\tran X)
+\}.
+\end{align*}
+这就是题中第一式。
+
+再考虑含 interaction 的 logistic model：
+\[
+\logit\{\mathbb{P}(Y=1\mid Z,M,X)\}
+=
+\theta_0+\theta_1 Z+\theta_2 M+\theta_3 ZM+\theta_4\tran X.
+\]
+同理，
+\[
+\mathbb{P}(Y=1\mid Z=z,M=m,X)
+=
+\expit(\theta_0+\theta_1 z+\theta_2 m+\theta_3 zm+\theta_4\tran X).
+\]
+于是
+\begin{align*}
+\CDE(m)
+&=
+E\{
+\expit(\theta_0+\theta_1+\theta_2 m+\theta_3 m+\theta_4\tran X)\\
+&\qquad\qquad
+-
+\expit(\theta_0+\theta_2 m+\theta_4\tran X)
+\}.
+\end{align*}
+这正是题中第二式。
+
+\paragraph{Remark.}
+线性模型里 $\theta_1$ 本身就是 additive mean contrast；logistic 模型里 $\theta_1$ 是 conditional log-odds ratio 的一部分，而 $\CDE(m)$ 是 marginal risk difference。因此即使没有 $ZM$ interaction，$\CDE(m)$ 也通常依赖于 $m$ 和 $X$ 的分布。这个非线性差异是 logistic mediation 或 marginal structural model 中最容易混淆的地方。
+\end{exercisesolution}

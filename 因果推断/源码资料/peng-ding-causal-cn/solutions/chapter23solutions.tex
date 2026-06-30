@@ -1,0 +1,278 @@
+\chapter{Solutions to Chapter 23: An Econometric Perspective of the Instrumental Variable}
+\label{sol:chapter23}
+
+\begin{exercisesolution}{More algebra for TSLS in \cref{sec::sec::iv-over-identify}}{first-stage OLS algebra and the just-identified reduction}
+本题补全 \cref{def::2sls} 背后的两个代数事实。第一个事实说明 first stage 只是把 $D$ 投影到 $Z$ 张成的线性空间上；第二个事实说明在 just-identified case 中，TSLS 并不是一个新的 estimator，而是 \cref{eq::iv-estimator} 的另一种计算方式。
+
+\begin{enumerate}
+\item
+把所有样本堆叠为矩阵。令 $\boldsymbol{Z}$ 为 $n\times q$ 矩阵，第 $i$ 行为 $Z_i\tran$；令 $\boldsymbol{D}$ 为 $n\times p$ 矩阵，第 $i$ 行为 $D_i\tran$。在 \cref{eq::ols-donz} 中，first-stage OLS 把每一列 $D_{\cdot j}$ 对同一个 regressor matrix $\boldsymbol{Z}$ 回归。因此系数矩阵满足 normal equations
+\[
+\boldsymbol{Z}\tran \boldsymbol{Z}\hat{\Gamma}
+=
+\boldsymbol{Z}\tran \boldsymbol{D}.
+\]
+若 $\boldsymbol{Z}\tran \boldsymbol{Z}$ 可逆，则
+\[
+\hat{\Gamma}
+=
+(\boldsymbol{Z}\tran \boldsymbol{Z})^{-1}\boldsymbol{Z}\tran \boldsymbol{D}
+=
+\left(\sumn Z_iZ_i\tran\right)^{-1}\sumn Z_iD_i\tran.
+\]
+于是 fitted value matrix 为
+\[
+\hat{\boldsymbol{D}}
+=\boldsymbol{Z}\hat{\Gamma},
+\]
+也就是对每个 $i$，
+\[
+\hat{D}_i\tran=Z_i\tran\hat{\Gamma},
+\qquad
+\hat{D}_i=\hat{\Gamma}\tran Z_i,
+\]
+这正是 \cref{eq::ols-donz}。
+
+\item
+现在假设 $Z$ 和 $D$ 维度相同，并且
+\[
+A=\sumn Z_iZ_i\tran,\qquad
+B=\sumn Z_iD_i\tran
+\]
+都可逆。由上一问，
+\[
+\hat{\Gamma}=A^{-1}B.
+\]
+把 \cref{eq::ols-donz} 写入 \cref{eq::2sls-definition}。首先，
+\[
+\sumn \hat{D}_i\hat{D}_i\tran
+=
+\hat{\Gamma}\tran\left(\sumn Z_iZ_i\tran\right)\hat{\Gamma}
+=
+B\tran A^{-1}B,
+\]
+因为 $A$ 是对称矩阵。其次，
+\[
+\sumn \hat{D}_iY_i
+=
+\hat{\Gamma}\tran\sumn Z_iY_i
+=
+B\tran A^{-1}\sumn Z_iY_i.
+\]
+因此
+\begin{align*}
+\hat{\beta}_\textsc{tsls}
+&=
+(B\tran A^{-1}B)^{-1}B\tran A^{-1}\sumn Z_iY_i  \\
+&=
+B^{-1}A(B\tran)^{-1}B\tran A^{-1}\sumn Z_iY_i  \\
+&=
+B^{-1}\sumn Z_iY_i.
+\end{align*}
+由于 $B=\sumn Z_iD_i\tran$，上式正是 \cref{eq::iv-estimator} 中的
+\[
+\hat{\beta}_\textsc{iv}
+=
+\left(\sumn Z_iD_i\tran\right)^{-1}\sumn Z_iY_i.
+\]
+\end{enumerate}
+
+\paragraph{Remark.}
+这个化简解释了 ``just identified'' 与 ``over identified'' 的差别。在 just-identified case 中，moment equations 的个数恰好等于未知参数个数，IV estimator 直接解方程即可；TSLS 的两步投影不会改变结果。在 over-identified case 中，方程通常不能同时精确满足，TSLS 通过 first-stage projection 选择了一个具体的 least-squares 解。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Equivalence between TSLS and ILS}{FWL theorem gives the ratio form}
+本题证明 \cref{thm::ils=2sls}。为了突出关键代数，我们把 \cref{eq::strucrual-iv} 中的 covariates 先 residualize 掉。令 $\boldsymbol{W}$ 表示由 intercept 与 $X$ 组成的 regressor matrix，并令
+\[
+M_W=I-\boldsymbol{W}(\boldsymbol{W}\tran\boldsymbol{W})^{-1}\boldsymbol{W}\tran
+\]
+为对 $\boldsymbol{W}$ 的 residual-maker matrix。记
+\[
+\tilde{Y}=M_WY,\qquad
+\tilde{D}=M_WD,\qquad
+\tilde{Z}=M_WZ.
+\]
+由 \cref{appendix::basic-linear-regression} 中的 FWL theorem，回归 $Y$ 对 $(1,D,X)$ 时 $D$ 的 coefficient，等于回归 $\tilde{Y}$ 对 $\tilde{D}$ 时的 coefficient；类似地，回归 $Y$ 或 $D$ 对 $(1,Z,X)$ 时 $Z$ 的 coefficient，等于 residualized regression 中的对应 coefficient。
+
+先看 ILS。Reduced form \cref{eq::reduced-iv} 中，$Y$ 对 $(1,Z,X)$ 的 $Z$ coefficient 为
+\[
+\hat{\Gamma}_1
+=
+\frac{\tilde{Z}\tran\tilde{Y}}{\tilde{Z}\tran\tilde{Z}},
+\]
+而 $D$ 对 $(1,Z,X)$ 的 $Z$ coefficient 为
+\[
+\hat{\gamma}_1
+=
+\frac{\tilde{Z}\tran\tilde{D}}{\tilde{Z}\tran\tilde{Z}}.
+\]
+因此
+\[
+\hat{\beta}_{1,\textsc{ils}}
+=
+\frac{\hat{\Gamma}_1}{\hat{\gamma}_1}
+=
+\frac{\tilde{Z}\tran\tilde{Y}}{\tilde{Z}\tran\tilde{D}},
+\]
+只要 first-stage coefficient $\hat{\gamma}_1\neq 0$。
+
+再看 TSLS。第一阶段把 $D$ 对 $(1,Z,X)$ 回归。由 FWL theorem，控制 $\boldsymbol{W}$ 后，$\tilde{D}$ 对 $\tilde{Z}$ 的 fitted value 为
+\[
+\widehat{\tilde{D}}
+=
+\tilde{Z}\frac{\tilde{Z}\tran\tilde{D}}{\tilde{Z}\tran\tilde{Z}}.
+\]
+第二阶段把 $Y$ 对 $(1,\hat{D},X)$ 回归；再次用 FWL theorem，$\hat{D}$ 的 coefficient 等于把 $\tilde{Y}$ 对 $\widehat{\tilde{D}}$ 回归的 coefficient。于是
+\begin{align*}
+\hat{\beta}_{1,\textsc{tsls}}
+&=
+\frac{\widehat{\tilde{D}}\tran\tilde{Y}}
+{\widehat{\tilde{D}}\tran\widehat{\tilde{D}}}  \\
+&=
+\frac{
+\left\{(\tilde{Z}\tran\tilde{D})/(\tilde{Z}\tran\tilde{Z})\right\}
+\tilde{Z}\tran\tilde{Y}}
+{
+\left\{(\tilde{Z}\tran\tilde{D})/(\tilde{Z}\tran\tilde{Z})\right\}^2
+\tilde{Z}\tran\tilde{Z}
+}  \\
+&=
+\frac{\tilde{Z}\tran\tilde{Y}}{\tilde{Z}\tran\tilde{D}}
+=
+\hat{\beta}_{1,\textsc{ils}}.
+\end{align*}
+这证明了 \cref{thm::ils=2sls}。
+
+\paragraph{Remark.}
+这个证明也揭示了 weak instrument 的来源。ILS ratio 的分母是 $\tilde{Z}\tran\tilde{D}$，也就是控制 covariates 后 instrument 与 endogenous treatment 的 sample association。当这个量接近零时，ratio 对微小扰动非常敏感；这正是 \cref{thm::ils=2sls} 之后正文讨论 weak IV 的代数根源。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Control function in the linear instrumental variable model}{control-function residuals reproduce TSLS}
+本题证明 \cref{def::cf} 中的 control function estimator 等于 \cref{def::2sls} 中的 TSLS estimator。关键观察是 first-stage decomposition
+\[
+\boldsymbol{D}=\hat{\boldsymbol{D}}+\check{\boldsymbol{D}}
+\]
+把 $D$ 分成两个正交部分：由 instruments $Z$ 解释的部分 $\hat{D}$，以及 first-stage residual $\check{D}$。
+
+仍令 $\boldsymbol{Z}$、$\boldsymbol{D}$、$\hat{\boldsymbol{D}}$ 与 $\check{\boldsymbol{D}}$ 分别表示样本矩阵。OLS first stage 给出
+\[
+\hat{\boldsymbol{D}}\tran\check{\boldsymbol{D}}=0,
+\]
+这就是矩阵形式的 \cref{eq::ols-orthogonal}。Control function 的第二步把 $Y$ 对 $(D,\check{D})$ 回归。由于
+\[
+\boldsymbol{D}
+=
+\hat{\boldsymbol{D}}+\check{\boldsymbol{D}},
+\]
+regressor matrix $(\boldsymbol{D},\check{\boldsymbol{D}})$ 与 $(\hat{\boldsymbol{D}},\check{\boldsymbol{D}})$ 只相差一个非退化线性变换。具体地，
+\[
+(\boldsymbol{D},\check{\boldsymbol{D}})
+=
+(\hat{\boldsymbol{D}},\check{\boldsymbol{D}})
+\begin{pmatrix}
+I_p & 0\\
+I_p & I_p
+\end{pmatrix},
+\]
+其中 $p$ 是 $D_i$ 的维度。由 \cref{hw::ols-transform-regressors}，若把 $Y$ 对 $(\hat{D},\check{D})$ 回归得到 coefficients $(a,b)$，则把 $Y$ 对 $(D,\check{D})$ 回归得到的 $D$ coefficient 正好是同一个 $a$。因此只需识别 $a$。
+
+因为 $\hat{\boldsymbol{D}}\tran\check{\boldsymbol{D}}=0$，由 \cref{hw::ols-orthogonal}，在回归 $Y$ 对 $(\hat{D},\check{D})$ 时，$\hat{D}$ 的 coefficient 等于单独回归 $Y$ 对 $\hat{D}$ 时的 coefficient，即
+\[
+a
+=
+\left(\hat{\boldsymbol{D}}\tran\hat{\boldsymbol{D}}\right)^{-1}
+\hat{\boldsymbol{D}}\tran Y
+=
+\left(\sumn \hat{D}_i\hat{D}_i\tran\right)^{-1}
+\sumn \hat{D}_iY_i.
+\]
+这正是 \cref{eq::2sls-definition} 中的 $\hat{\beta}_\textsc{tsls}$。于是
+\[
+\hat{\beta}_\textsc{cf}=\hat{\beta}_\textsc{tsls}.
+\]
+
+\paragraph{Remark.}
+Control function 的名字很有启发性：第二阶段显式控制 $\check{D}$，即 treatment 中不能由 instruments 解释的部分。在线性模型中，这与直接使用 instrument-predicted treatment $\hat{D}$ 完全等价；在非线性模型中，这种等价一般不再自动成立，因此 control function methods 需要额外建模假设。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Data analysis: \citet{efron1991compliance}}{a reproducible IV and principal-stratification analysis template}
+本题是开放式数据分析题，且正文明确说明没有 gold-standard solution。当前项目树中没有找到 \texttt{EF.csv}，所以这里不给出编造的数值结果，而是给出一套可复现的分析框架。若本地放入 \texttt{EF.csv}，下面的代码可直接生成需要报告的估计量与诊断。
+
+数据的基本结构如下。令 $Z_i$ 为 randomized assignment，$D_i$ 为实际服用的名义 dose 比例，令
+\[
+Y_i=C_{5i}-0.25C_{3i}-0.75C_{4i}
+\]
+为 \citet{efron1991compliance} 使用的 cholesterol change outcome。由于 $Z$ 来自 randomized experiment，它是 dose received $D$ 的 natural instrument；但 adverse side effects 可能使 $D$ 与潜在 cholesterol trajectory 相关，因此直接把 $Y$ 对 $D$ 回归不应解释为 causal effect。
+
+一个自然的主分析是线性 IV/TSLS：
+\[
+Y_i=\alpha+\beta D_i+\varepsilon_i,
+\qquad
+E(Z_i\varepsilon_i)=0.
+\]
+这里 $\beta$ 的解释是：在 linear structural model 下，nominal dose proportion 增加一个单位对 cholesterol change 的 effect。由于 $D$ 是连续 dose 而不是 binary treatment，这个 estimand 比 \cref{chapter::iv-experiment} 中二元 noncompliance 的 CACE 更模型化。作为稳健性分析，可以加入 baseline cholesterol covariates，例如 $C_3$ 与 $C_4$，并比较是否改变结论。
+
+下面给出 R 代码框架。它假设 \texttt{EF.csv} 的五列依次为 assignment、dose、$C_3$、$C_4$、$C_5$；若实际文件有列名，只需替换相应名称。
+
+\begin{lstlisting}
+library(AER)
+library(sandwich)
+library(lmtest)
+
+ef = read.csv("EF.csv", header = FALSE)
+names(ef) = c("Z", "D", "C3", "C4", "C5")
+
+ef$Y = ef$C5 - 0.25 * ef$C3 - 0.75 * ef$C4
+
+## Basic summaries.
+with(ef, tapply(D, Z, mean))
+with(ef, tapply(Y, Z, mean))
+
+## Intention-to-treat effect of assignment on the outcome.
+itt_y = lm(Y ~ Z, data = ef)
+coeftest(itt_y, vcov = vcovHC(itt_y, type = "HC1"))
+
+## First stage: effect of assignment on dose received.
+first = lm(D ~ Z, data = ef)
+coeftest(first, vcov = vcovHC(first, type = "HC1"))
+
+## Wald estimator for the no-covariate analysis.
+wald = coef(itt_y)["Z"] / coef(first)["Z"]
+wald
+
+## TSLS without baseline covariates.
+iv0 = ivreg(Y ~ D | Z, data = ef)
+coeftest(iv0, vcov = vcovHC(iv0, type = "HC1"))
+summary(iv0, diagnostics = TRUE)
+
+## TSLS with baseline cholesterol covariates.
+iv1 = ivreg(Y ~ D + C3 + C4 | Z + C3 + C4, data = ef)
+coeftest(iv1, vcov = vcovHC(iv1, type = "HC1"))
+summary(iv1, diagnostics = TRUE)
+
+## Naive OLS, reported only as a contrast rather than a causal estimate.
+ols = lm(Y ~ D + C3 + C4, data = ef)
+coeftest(ols, vcov = vcovHC(ols, type = "HC1"))
+\end{lstlisting}
+
+最终报告至少应包括以下内容。
+\begin{enumerate}
+\item
+Assignment balance 与 outcome/dose summaries：分别报告 $Z=1$ 与 $Z=0$ 组的 $D$ 与 $Y$ 均值。
+\item
+First-stage strength：报告 $D$ 对 $Z$ 的 coefficient、robust standard error 与 first-stage $F$ statistic。若 first stage 很弱，则应把 TSLS 结果解释为 weak-instrument sensitive。
+\item
+Reduced-form effect：报告 $Y$ 对 $Z$ 的 coefficient。这是 assignment 的 intention-to-treat effect，最少依赖 dose 模型。
+\item
+Wald/TSLS estimate：无 covariate 情形中，binary $Z$ 下的 Wald estimator 等于 reduced-form coefficient 除以 first-stage coefficient；这与 \cref{eg::scalar-iv} 中的 scalar IV 公式一致。加入 $C_3,C_4$ 后，用 TSLS 报告 adjusted estimate。
+\item
+Naive OLS comparison：把 $Y$ 对 $D$ 的 OLS coefficient 作为对比，但明确它可能受到 compliance behavior confounding 的影响。
+\end{enumerate}
+
+如果希望更贴近 potential outcomes language，可以把 dose $D$ 离散化为高 compliance 与低 compliance。此时可在 binary treatment 框架中估计 Wald-type LATE，但阈值选择会影响 estimand。合理做法是预先给出若干阈值，例如 $D>0$、$D\geq 0.5$、$D\geq 0.8$，并把每个阈值下的 first stage、Wald estimate 与 confidence interval 作为 sensitivity analysis 报告。阈值不应根据 outcome 显著性事后选择。
+
+另一个方向是 principal stratification analysis。由于 \citet{jin2008principal} 后来正是用 \cref{chapter::principal-stratification} 的思想重新分析这些数据，读者可以把 compliance behavior 视为 post-assignment intermediate behavior，并把不同 compliance strata 的 cholesterol changes 分开建模。这样做的优点是更贴近 noncompliance 的科学问题；缺点是需要更强的模型假设，因为连续 dose 会带来比二元 principal strata 更复杂的 latent structure。
+
+\paragraph{Remark.}
+这个数据题的重点不是追求唯一数值答案，而是区分三层问题：assignment 对 outcome 的 effect 是 randomized experiment 直接支持的；dose 对 outcome 的 IV effect 需要 relevance 与 exclusion restriction；principal-stratification interpretation 还需要关于 compliance types 的额外结构。把这三层分清楚，比只报告一个 TSLS coefficient 更重要。
+\end{exercisesolution}

@@ -1,0 +1,375 @@
+
+\chapter{The Doubly Robust or the Augmented Inverse Propensity Score Weighting Estimator for the Average Causal Effect}\label{chapter::doubly-robust}
+ \chaptermark{Doubly Robust Estimator}
+
+在 ignorability $Z\ind \{ Y(1), Y(0) \} \mid X$ 和 overlap $0< e(X) < 1$ 下，Chapter \ref{chapter::pscore-key} 已经给出了平均因果效应 $\tau = E\{ Y(1) - Y(0)  \}$ 的两个识别公式。首先，outcome regression（结局回归）公式为
+\begin{eqnarray}
+\tau  =  E\{ \mu_1(X) \} - E\{ \mu_0(X) \} \label{eq::iden-outreg}
+\end{eqnarray}
+其中
+\begin{eqnarray*}
+\mu_1(X)  &=& E\{  Y(1) \mid X \} = E(Y\mid Z=1, X),\\ 
+\mu_0(X) &=& E\{  Y(0) \mid X \} = E(Y\mid Z=0, X)
+\end{eqnarray*}
+分别是在 treatment 和 control 下，给定协变量时结局的两个条件均值函数。其次，IPW 公式为
+\begin{eqnarray}
+\tau = E\left\{  \frac{ZY}{e(X)}   \right\} - E\left\{  \frac{(1-Z)Y}{1-e(X)}   \right\} \label{eq::iden-ipw}
+\end{eqnarray}
+其中
+$$
+e(X) = \pr(Z=1\mid X)
+$$
+是 Chapter \ref{chapter::pscore-key} 中引入的 propensity score（倾向得分）。
+
+
+outcome regression estimator（结局回归估计量）需要为给定 treatment 和协变量时的结局拟合模型。如果 outcome model（结局模型）设定正确，它就是一致的。IPW estimator 需要为给定协变量时的 treatment 拟合模型。如果 propensity score model（倾向得分模型）设定正确，它就是一致的。
+
+
+从数学上说，我们可以用许多方式组合 \eqref{eq::iden-outreg} 和 \eqref{eq::iden-ipw}，从而得到平均因果效应的不同识别公式。下面我将讨论一种具有吸引人的理论性质的特定组合。这个组合给出一个估计量：只要 propensity score model 或 outcome model 其中之一设定正确，它就是一致的。它称为 {\it doubly robust}（双重稳健）估计量，由 James Robins 推广发展 \citep{scharfstein1999adjusting, bang2005doubly}。
+
+
+
+\section{The doubly robust estimator}
+
+\subsection{Population version}
+
+
+我们为结局的条件均值 $\mu_1(X, \beta_1)$ 和 $\mu_0(X, \beta_0)$ 设定一个模型，它们分别由参数 $\beta_1$ 和 $\beta_0$ 索引。例如，如果在 working model（工作模型）下条件均值是线性或 logistic 的，那么这些参数就是回归系数。如果 outcome model 设定正确，那么 $\mu_1(X, \beta_1) = \mu_1(X)$ 且 $   \mu_0(X, \beta_0) = \mu_0(X)$。
+我们为 propensity score $e(X, \alpha)$ 设定一个 working model，由参数 $\alpha$ 索引。例如，如果 working model 是 logistic 的，那么 $\alpha$ 就是回归系数。如果 propensity score model 设定正确，那么 $e(X,\alpha) = e(X)$。实践中，这两个模型都可能设定错误。由于存在设定错误的可能性，我们有时称它们为 {\it working models}。
+
+定义
+\begin{eqnarray}
+\tilde{\mu}_1^\textup{dr} &=& E\left[   \frac{Z\{ Y-\mu_1(X,\beta_1) \}}{  e(X,\alpha) }   + \mu_1(X, \beta_1)  \right] , \label{eq::dr-aug-out1}   \\
+\tilde{\mu}_0^\textup{dr} &=& E\left[   \frac{(1-Z)\{ Y-\mu_0(X,\beta_0) \}}{  1-e(X,\alpha) }   + \mu_0(X, \beta_0)  \right]  , \label{eq::dr-aug-out0} 
+\end{eqnarray}
+它们也可以写成
+\begin{eqnarray}
+\tilde{\mu}_1^\textup{dr} &=& E\left[   \frac{Z Y}{  e(X,\alpha) }   - \frac{  Z -  e(X,\alpha)  }{ e(X,\alpha) } \mu_1(X, \beta_1)  \right]  ,\label{eq::dr-aug-ipw1} \\
+\tilde{\mu}_0^\textup{dr} &=& E\left[   \frac{(1-Z) Y}{  1-e(X,\alpha) }    - \frac{ e(X,\alpha)-Z  }{1- e(X,\alpha)} \mu_0(X, \beta_0)  \right]    .\label{eq::dr-aug-ipw0} 
+\end{eqnarray}
+ 
+公式 \eqref{eq::dr-aug-out1} 和 \eqref{eq::dr-aug-out0} 用 residual（残差）的 inverse propensity score weighting（逆倾向得分加权）项来增广 outcome regression estimator。公式 \eqref{eq::dr-aug-ipw1} 和 \eqref{eq::dr-aug-ipw0} 则用 imputed outcomes（填补结局）来增广 IPW estimator。因此，doubly robust estimator 也称为 {\it augmented inverse propensity score weighting} (AIPW) estimator。
+
+
+
+这种增广在如下意义上强化了理论性质。
+ 
+ 
+
+
+\begin{theorem}
+\label{thm::doublyrobust}
+假设 ignorability $Z \ind  \{  Y(1), Y(0) \} \mid X$ 和 overlap $0 < e(X) < 1$ 成立。
+\begin{enumerate}
+\item
+如果 $e(X,\alpha) = e(X)$ 或 $\mu_1(X, \beta_1) = \mu_1(X)$ 至少有一个成立，那么 $\tilde{\mu}_1^\textup{dr} = E\{  Y(1) \}$。
+\item 
+如果 $e(X,\alpha) = e(X)$ 或 $\mu_0(X, \beta_0) = \mu_0(X)$ 至少有一个成立，那么 $\tilde{\mu}_0^\textup{dr} = E\{  Y(0) \}$。
+\item 
+如果 $e(X,\alpha) = e(X)$ 成立，或者 $\{\mu_1(X, \beta_1) = \mu_1(X),   \mu_0(X, \beta_0) = \mu_0(X)\}$ 成立，那么 $\tilde{\mu}_1^\textup{dr} - \tilde{\mu}_0^\textup{dr} = \tau$。
+\end{enumerate}
+\end{theorem}
+
+
+由 Theorem \ref{thm::doublyrobust}，只要 propensity score model 或 outcome model 其中之一设定正确，$\tilde{\mu}_1^\textup{dr} - \tilde{\mu}_0^\textup{dr} $ 就等于 $\tau$。这就是它称为 doubly robust estimator 的原因。
+
+
+\begin{myproof}{Theorem}{\ref{thm::doublyrobust}}
+我只证明关于 $\mu_1 = E\{  Y(1) \}$ 的结果。关于 $\mu_0 = E\{  Y(0) \}$ 的结果证明类似。
+
+
+我们有如下分解：
+\begin{eqnarray*}
+&&\tilde{\mu}_1^\textup{dr} - E\{  Y(1) \}     \\
+&=& E\left[   \frac{Z\{ Y(1)-\mu_1(X,\beta_1) \}}{  e(X,\alpha) }   - \{ Y(1) -  \mu_1(X, \beta_1) \} \right]  
+\qquad (\text{by definition})\\
+&=&    E\left[   \frac{Z - e(X,\alpha) }{  e(X,\alpha) }   \{ Y(1) -  \mu_1(X, \beta_1) \} \right]  
+\qquad (\text{combining terms})\\
+&=&  E\left(  E\left[   \frac{Z - e(X,\alpha) }{  e(X,\alpha) }   \{ Y(1) -  \mu_1(X, \beta_1) \} \mid X \right] \right) 
+\qquad (\text{tower property})\\
+&=& E\left[  E\left\{   \frac{Z - e(X,\alpha) }{  e(X,\alpha) } \mid X \right\} \times E\left\{  Y(1) -  \mu_1(X, \beta_1)  \mid X \right\} \right] 
+\qquad (\text{ignorability})\\
+&=& E\left[   \frac{e(X) - e(X,\alpha) }{  e(X,\alpha) }  \times  \left\{  \mu_1(X) -  \mu_1(X, \beta_1)   \right\} \right]  . 
+\end{eqnarray*}
+因此，只要 $e(X,\alpha) = e(X)$ 或 $\mu_1(X, \beta_1) = \mu_1(X)$ 至少有一个成立，就有 $\tilde{\mu}_1^\textup{dr} - E\{  Y(1) \}  = 0$。
+\end{myproof}
+
+
+
+ 
+
+\subsection{Sample version}
+
+
+基于 $\tilde{\mu}_1^\textup{dr} $ 和 $\tilde{\mu}_0^\textup{dr} $ 的总体版本，我们可以得到它们的样本对应量，从而构造 $\tau$ 的 doubly robust estimator。
+
+
+\begin{definition}
+[doubly robust estimator for the average causal effect]\label{def::dr:ace}
+基于数据 $(X_i, Z_i, Y_i)_{i=1}^n$，我们可以通过以下步骤得到 $\tau$ 的 doubly robust estimator：\footnote{在我不想强调 working models 中的参数时，前面用 $\hat e(X_i)$ 表示 $e(X_i, \hat{\alpha})$，用 $ \hat \mu_z(X_i) $ 表示 $ \mu_z(X_i, \hat{\beta}_1) $。}
+\begin{enumerate}
+[(1)]
+\item
+得到 propensity scores 的拟合值：$e(X_i, \hat{\alpha})$；
+\item
+得到 outcome means 的拟合值：$ \mu_1(X_i, \hat{\beta}_1) $ 和 $ \mu_0(X_i, \hat{\beta}_0) $；
+\item
+构造 doubly robust estimator：$\hat{\tau}^\textup{dr} = \hat{\mu}_1^\textup{dr}  - \hat{\mu}_0^\textup{dr}$，其中
+$$
+ \hat{\mu}_1^\textup{dr}  = \frac{1}{n} \sumn \left[ \frac{Z_i\{ Y_i-\mu_1(X_i,\hat{\beta}_1) \}}{  e(X_i, \hat{\alpha}) }   + \mu_1(X_i, \hat{\beta}_1) \right]
+$$
+且
+$$
+ \hat{\mu}_0^\textup{dr}  = \frac{1}{n} \sumn \left[  \frac{(1-Z_i)\{ Y_i-\mu_0(X_i, \hat{\beta}_0) \}}{  1-e(X_i,\hat{\alpha}) }   + \mu_0(X_i, \hat{\beta}_0)       \right] . 
+$$
+\end{enumerate}
+\end{definition}
+
+由 Definition \ref{def::dr:ace}，我们也可以把 doubly robust estimator 写成
+$$
+\hat{\tau}^\textup{dr} =\hat{\tau}^\textup{reg}  + 
+\frac{1}{n} \sumn  \frac{Z_i\{ Y_i-\mu_1(X_i,\hat{\beta}_1) \}}{  e(X_i, \hat{\alpha}) } 
+-  \frac{1}{n} \sumn   \frac{(1-Z_i)\{ Y_i-\mu_0(X_i, \hat{\beta}_0) \}}{  1-e(X_i,\hat{\alpha}) }  . 
+$$ 
+类似于 \eqref{eq::dr-aug-ipw1} 和 \eqref{eq::dr-aug-ipw0}，也可以将其重写为
+$$
+\hat{\tau}^\textup{dr} = \hat{\tau}^\textup{ipw}  
+  - \frac{1}{n} \sumn    \frac{  Z_i -  e(X_i, \hat\alpha)  }{ e(X_i, \hat\alpha) } \mu_1(X_i, \hat\beta_1)
+  + \frac{1}{n} \sumn    \frac{ e(X_i, \hat\alpha)-Z_i  }{1- e(X_i,\hat \alpha)} \mu_0(X_i, \hat\beta_0) .
+$$ 
+
+ 
+\citet{funk2011doubly} 建议通过从 $(Z_i, X_i, Y_i)_{i=1}^n$ 中重抽样的 nonparametric bootstrap（非参数 bootstrap）来近似 $\hat{\tau}^\textup{dr}$ 的方差。
+ 
+
+\section{More intuition and theory for the doubly robust estimator}
+
+虽然本章开头说，基于 outcome regression 和 IPW 的基本识别公式立刻可以给出无穷多个其他识别公式，但 \eqref{eq::dr-aug-out1} 和 \eqref{eq::dr-aug-out0} 中 doubly robust estimators 的具体形式并不是显然能想到的。\eqref{eq::dr-aug-out1} 和 \eqref{eq::dr-aug-out0} 最初的动机相当理论化，依赖于高级数理统计中所谓的 {\it semiparametric efficiency theory}（半参数效率理论）\citep{bickel1993efficient}。这超出了本书的层次。下面我会给出两个直观角度来构造 \eqref{eq::dr-aug-out1} 和 \eqref{eq::dr-aug-out0}。由于 $E\{ Y(0) \}$ 的估计由对称性可类似处理，下面 Sections \ref{sec::improving-ipw} 和 \ref{sec::improving-outreg} 都聚焦于 $E\{ Y(1) \}$ 的估计。
+
+
+
+\subsection{Reducing the variance of the IPW estimator}\label{sec::improving-ipw}
+
+
+基于
+$$
+\mu_1 = E\left\{   \frac{ZY}{e(X)}   \right\}
+$$
+的 $\mu_1$ 的 IPW estimator 完全忽略了 $Y$ 的 outcome model。它的优点是在不假设任何 outcome model 的情况下仍然一致。不过，如果协变量对结局有预测力，那么即使这个 working outcome model 是错的，基于 working outcome model 得到的 residual 通常也比结局本身具有更小的方差。给定一个可能设定错误的 outcome model $\mu_1(X, \beta_1)$，有如下平凡分解：
+$$
+\mu_1  = E\{ Y(1) \} = E\{ Y(1)  -\mu_1(X, \beta_1) \} + E\{\mu_1(X, \beta_1)\}.
+$$
+如果把 $Y(1)  -\mu_1(X, \beta_1)$ 看成 treatment 下的 ``pseudo potential outcome''（伪潜在结局），并对上式第一项应用 IPW 公式，那么上式可以改写为
+\begin{eqnarray}
+\mu_1  &=& E\left\{ \frac{Z \{Y  -\mu_1(X, \beta_1) \}}{e(X)} \right\} + E\{\mu_1(X, \beta_1)\}  \label{eq::explain-ipw-efficiency-basic}  \\
+&=& E\left\{ \frac{Z \{Y  -\mu_1(X, \beta_1) \}}{e(X)}  +  \mu_1(X, \beta_1) \right\} ,\label{eq::explain-ipw-efficiency}
+\end{eqnarray}
+只要 propensity score model 正确，这个公式就成立，而不需要假设 outcome model 正确。用 working model 提高效率是 survey sampling（抽样调查）中的老想法。\citet{little2004robust} 和 \citet{lumley2011connections} 指出了它与 doubly robust estimator 的联系。
+
+
+
+\subsection{Reducing the bias of the outcome regression estimator}\label{sec::improving-outreg}
+
+
+Section \ref{sec::improving-ipw} 的讨论从 IPW estimator 出发，并基于 working outcome model 改进它的效率。另一个角度是，我们也可以从基于
+$$
+\tilde{\mu}_1 = E\{\mu_1(X, \beta_1)\} 
+$$
+的 outcome regression estimator 出发。由于 outcome model 可能是错的，它未必等于 $\mu_1$。这个估计量的 bias（偏差）是 $ E\{\mu_1(X, \beta_1)  -  Y(1)\}   $；如果 propensity score model 正确，它可以由 IPW estimator
+$$
+B = 
+E\left\{ \frac{Z \{\mu_1(X, \beta_1) - Y\}}{e(X)} \right\} 
+$$
+来估计。因此，一个 de-biased（去偏）估计量是
+$
+\tilde{\mu}_1 - B  ,
+$
+它与 \eqref{eq::explain-ipw-efficiency} 完全相同。
+
+
+\section{Examples}
+\label{sec::dr-examples}
+
+
+\subsection{Summary of some canonical estimators for $\tau$}
+
+
+下面的 \ri{R} 代码实现了 $\tau$ 的 outcome regression、HT、Hajek 和 doubly robust estimators。这些估计量可以方便地基于 \ri{glm} 函数的 fitted values（拟合值）来实现。propensity score model 的默认选择是 logistic model，outcome model 的默认选择是带有 \ri{out.family = gaussian} 的 linear model\footnote{\ri{glm} 函数比 \ri{lm} 函数更一般。当 \ri{out.family = gaussian} 时，\ri{glm} 与 \ri{lm} 相同。}。对于二元结局，我们也可以指定 \ri{out.family = binomial} 来拟合 logistic model。
+
+\begin{lstlisting}
+OS_est = function(z, y, x, out.family = gaussian, 
+                  truncps = c(0, 1))
+{
+     ## fitted propensity score
+     pscore   = glm(z ~ x, family = binomial)$fitted.values
+     pscore   = pmax(truncps[1], pmin(truncps[2], pscore))
+     
+     ## fitted potential outcomes
+     outcome1 = glm(y ~ x, weights = z, 
+                    family = out.family)$fitted.values
+     outcome0 = glm(y ~ x, weights = (1 - z), 
+                    family = out.family)$fitted.values
+     
+     ## outcome regression estimator
+     ace.reg  = mean(outcome1 - outcome0) 
+     ## IPW estimators
+     y.treat     = mean(z*y/pscore)
+     y.control   = mean((1 - z)*y/(1 - pscore))
+     one.treat   = mean(z/pscore)
+     one.control = mean((1 - z)/(1 - pscore))
+     ace.ipw0    = y.treat - y.control
+     ace.ipw     = y.treat/one.treat - y.control/one.control
+     ## doubly robust estimator
+     res1      = y - outcome1
+     res0      = y - outcome0
+     r.treat   = mean(z*res1/pscore)
+     r.control = mean((1 - z)*res0/(1 - pscore))
+     ace.dr    = ace.reg + r.treat - r.control
+
+     return(c(ace.reg, ace.ipw0, ace.ipw, ace.dr))     
+}
+\end{lstlisting}
+
+
+计算上述估计量方差的解析公式很繁琐。bootstrap 可以基于从 $\{ Z_i, X_i, Y_i \}_{i=1}^n$ 中重抽样，给出方差的方便近似。基于上面的函数 \ri{OS_est}，下面的函数会返回点估计量以及 bootstrap standard errors。
+
+
+\begin{lstlisting}
+OS_ATE = function(z, y, x, n.boot = 2*10^2,
+                     out.family = gaussian, truncps = c(0, 1))
+{
+     point.est  = OS_est(z, y, x, out.family, truncps)
+     
+     ## nonparametric bootstrap
+     n          = length(z)
+     x          = as.matrix(x)
+     boot.est   = replicate(n.boot, {
+       id.boot = sample(1:n, n, replace = TRUE)
+       OS_est(z[id.boot], y[id.boot], x[id.boot, ], 
+              out.family, truncps)
+     })
+
+     boot.se    = apply(boot.est, 1, sd)
+     
+     res        = rbind(point.est, boot.se)
+     rownames(res) = c("est", "se")
+     colnames(res) = c("reg", "HT", "Hajek", "DR")
+     
+     return(res)
+}
+\end{lstlisting}
+
+
+
+
+\subsection{Applications}
+\label{sec::ATE-application}
+
+
+
+
+回到 Example \ref{eg::chan-bmi-ATE}，我们得到如下估计量和 bootstrap standard errors：
+\begin{lstlisting}
+       reg     HT  Hajek     DR
+est -0.017 -1.516 -0.156 -0.019
+se   0.230  0.492  0.246  0.233
+\end{lstlisting}
+两个 weighting estimators 明显大于另外两个估计量。将估计的 propensity score 截断在 $[0.1, 0.9]$，我们得到如下估计量和 bootstrap standard errors：
+\begin{lstlisting}
+       reg     HT  Hajek     DR
+est -0.017 -0.713 -0.054 -0.043
+se   0.223  0.422  0.235  0.231
+\end{lstlisting}
+Hajek estimator 变得更接近 outcome regression 和 doubly robust estimators，而 Horvitz--Thompson estimator 仍然是一个 outlier（离群值）。
+
+
+
+\section{Some further discussion}
+
+
+
+回顾 Theorem \ref{thm::doublyrobust} 的证明，double robustness（双重稳健性）性质的关键是如下乘积结构：
+$$
+\tilde{\mu}_1^\textup{dr} - E\{  Y(1) \} 
+= E\left[   \frac{e(X) - e(X,\alpha) }{  e(X,\alpha) }  \times  \left\{  \mu_1(X) -  \mu_1(X, \beta_1)   \right\} \right] ,
+$$
+它保证了只要 $e(X) = e(X,\alpha) $ 或 $ \mu_1(X) =  \mu_1(X, \beta_1) $ 至少有一个成立，估计误差就是零。当 propensity score model 和 outcome model 都设定错误时，这种精巧结构也可能让 doubly robust estimator 变得 doubly fragile（双重脆弱）。两个误差相乘可能产生大得多的误差。
+simulation studies（模拟研究）证实了这一点。
+
+
+\citet{kang2007demystifying} 基于 simulation studies 批评了 doubly robust estimator。他们发现，doubly robust estimator 的有限样本表现甚至可能比简单的 outcome regression 和 IPW estimators 更不稳定。
+尽管有 \citet{kang2007demystifying} 的批评，自 \citet{scharfstein1999adjusting} 的奠基性工作以来，doubly robust estimator 已经成为 causal inference（因果推断）中的标准策略。最近，它在理论统计和计量经济学文献中以一个更花哨的名称 ``double machine learning''（双重机器学习）复兴了 \citep{chernozhukov2018double}。基本思想是用 machine learning tools（机器学习工具）替代 propensity score 和 outcome 的 working models；与传统参数模型相比，这些工具可以看作更灵活的模型。
+
+
+
+
+
+\section{Homework problems}
+
+
+
+\homeworksolutionref{12}
+ \paragraph{A sanity check}\label{hw::discreteX-obs}
+考虑协变量为离散变量 $X \in \{1, \ldots, K\}$ 且感兴趣参数为 $\tau$ 的情形。在不施加任何模型假设时，估计的 propensity score $\hat{e}(X)$ 等于 $\hat{e}_{[k]} = \hat{\pr}(Z=1\mid X=k) $，即接受 treatment 的个体比例；估计的 outcome means 则是在层 $X=k\ (k=1, \ldots, K)$ 内，treatment 下结局的样本均值 $\hat{\bar{Y}}_{[k]}(1)  = \hat{E}(Y\mid Z=1, X=k) $ 和 $\hat{\bar{Y}}_{[k]}(0)  = \hat{E}(Y\mid Z=0, X=k) $。证明 stratified estimator、outcome regression estimator、HT estimator、Hajek estimator 和 doubly robust estimator 在数值上完全相同。
+ 
+
+
+\paragraph{An alternative form of the doubly robust estimator for $\tau$}\label{hw::alternative-dr2-robins}
+
+受 \eqref{eq::explain-ipw-efficiency-basic} 启发，$\mu_1 = E\{ Y(1) \} $ 的 doubly robust estimator 还有如下另一种形式：
+$$
+\tilde{\mu}_1^\text{dr2} = 
+\frac{ E\left[   \frac{Z\{ Y-\mu_1(X,\beta_1) \}}{  e(X,\alpha) } \right] }{E\left[   \frac{Z }{  e(X,\alpha) } \right]} 
+ + E\{ \mu_1(X, \beta_1)  \} .
+$$
+证明：如果 $e(X,\alpha)  = e(X)$ 或 $\mu_1(X, \beta_1) =  \mu_1(X)$ 至少有一个成立，那么 $\tilde{\mu}_1^\text{dr2} = \mu_1$。给出估计 $\mu_0$ 的类似公式。基于这些公式，给出 $\tau$ 的 doubly robust estimator 的样本对应量。
+
+Remark:
+这种形式的 doubly robust estimator 出现在 \citet{robins2007comment} 中。
+
+
+
+\paragraph{An upper bound of the bias of the doubly robust estimator}\label{hw::upperbound-dr}
+
+
+考虑 $E\{  Y(1) \} $ 的 doubly robust estimator 的总体版本 $\tilde{\mu}_1^\textup{dr} $。
+证明
+$$
+ |   \tilde{\mu}_1^\textup{dr} - E\{  Y(1) \}  |  \leq
+\sqrt{
+E\left[   \frac{ \{  e(X) - e(X,\alpha)\}^2  }{  e(X,\alpha)^2 }  \right] \times 
+E\left[  \left\{  \mu_1(X) -  \mu_1(X, \beta_1)   \right\}^2 \right] .
+}
+$$
+求出 $E\{  Y(0) \} $ 的 $\tilde{\mu}_0^\textup{dr} $ 的 bias 的类似上界。
+
+
+Remark: 证明中可以用到 Section \ref{sec::cauchy-schwarz-inequality}。
+
+
+\paragraph{Data analysis of Example \ref{eg::job-training-obs}}
+
+
+使用目前为止讨论过的方法分析数据集 \ri{cps1re74.csv}。
+
+ 
+ 
+\paragraph{Analyzing a dataset from the Karolinska Institute}\label{hw::Karolinska-dr}
+ 
+ \citet{rubin2008objective} 使用数据集 \texttt{karolinska.txt} 来说明 observational studies（观察性研究）中 causal inference 的思想。
+ 该数据集包含 158 名 1988 到 1995 年间在 Central and Northern Sweden 被诊断出的 cardia cancer patients（贲门癌患者）；其中 79 名在 large volume hospitals（大容量医院）诊断，这里定义为该时期治疗过十名以上贲门癌患者的医院，另外 79 名在其余 small volume hospitals（小容量医院）诊断。treatment \texttt{z} 是患者是否在 large volume hospital 被诊断的指标。outcome \texttt{y} 是患者在诊断后是否存活超过 1 年。covariates \texttt{x} 包含年龄、患者是否来自 rural area（农村地区）以及患者是否为男性的信息。
+ 
+\begin{lstlisting}
+karolinska = read.table("karolinska.txt", header = TRUE)
+z = karolinska$hvdiag
+y = 1 - (karolinska$year.survival == 1)
+x = as.matrix(karolinska[, c(3, 4, 5)])
+\end{lstlisting}
+
+
+使用目前为止讨论过的方法分析这个数据集。
+
+
+
+  
+ 

@@ -1,0 +1,395 @@
+
+\chapter{Overlap in Observational Studies: Difficulties and Opportunities}
+  \label{chapter::overlap}
+
+
+ 
+\section{Implications of overlap}
+
+在本书 \cref{part::observational-studies} 中，observational studies 的因果推断依赖两个关键假设：ignorability
+$$
+Z\ind \{ Y(1), Y(0)  \} \mid X
+$$
+以及 overlap
+ $$
+ 0 <  e(X) <  1 .
+ $$ 
+ \citet{d2017overlap} 指出，这两个假设之间存在张力：通常来说，更多协变量会让 ignorability 假设更可信（这里暂且不考虑 \cref{section::m-bias} 讨论过的 M-bias），但更多协变量也会让 overlap 假设更不可信，因为给定更多协变量后，treatment 会变得更容易预测。
+
+如果某些单位满足 $e(X) = 0$ 或 $e(X) = 1$，那么在思考其反事实 potential outcomes 时就会遇到哲学上的困难 \citep{king2006dangers}。具体地说，如果一个单位必然接受 treatment，那么设想它在 control 下的 potential outcome 可能就没有意义；如果一个单位必然接受 control，那么设想它在 treatment 下的 potential outcome 也可能没有意义。
+即使真实的 propensity score 并不精确等于 $0$ 或 $1$，在有限样本中估计出来的 propensity score 也可能非常接近 $0$ 或 $1$，从而使基于 IPW 的估计量在数值上不稳定。
+我已经在 \cref{chapter::pscore-key} 中讨论过这个问题。
+
+
+许多统计分析事实上需要一个严格版本的 overlap：
+
+\begin{assumption}
+[strict overlap]
+\label{assume::strong-overlap}
+对某个 $\eta \in (0,1/2)$，有 $\eta \leq e(X) \leq 1-\eta$。
+\end{assumption}
+
+
+然而，\citet[][Corollary 1]{d2017overlap} 说明，当协变量数目很大时，\cref{assume::strong-overlap} 有很强的含义。为简单起见，我只陈述他们的一个结果。令 $X_k\ (k=1,\ldots, p)$ 为协变量 $X = (X_1, \ldots, X_p)$ 的第 $k$ 个分量，并令
+$$
+e= \pr(Z=1)
+$$ 
+为 treated units 的比例。
+
+
+\begin{theorem}\label{thm::overlap-implications}
+\cref{assume::strong-overlap} 蕴含 $\eta \leq e \leq 1-\eta$，并且
+\begin{eqnarray} 
+&&p^{-1} \sum_{k=1}^p \big | E(X_k\mid Z=1) - E(X_k\mid Z=0)  \Big |   \nonumber  \\
+& \leq &  
+p^{-1/2} C^{1/2}  \left\{    e\lambda_1^{1/2} + (1-e)  \lambda_0^{1/2}  \right\} , \label{eq::mean-balance-overlap}
+\end{eqnarray}
+其中
+$$
+C  = \frac{  (e-\eta)(1-e-\eta)   }{  e^2(1-e)^2 \eta (1-\eta)      }
+$$
+是只依赖 $(e, \eta)$ 的正常数，而 $\lambda_1$ 和 $\lambda_0$ 分别是协方差矩阵 $ \cov(X\mid Z=1)$ 和 $\cov(X\mid Z=0) $ 的最大特征值。
+\end{theorem}
+
+\cref{thm::overlap-implications} 中最大特征值的阶是什么？\citet{d2017overlap} 说明，除非 $X$ 的分量高度相关，否则它通常小于 $O(p)$。如果 $X$ 的分量高度相关，那么在纳入其他分量后，某些分量就是冗余的。如果 $X$ 的分量并非高度相关，那么右端会收敛到零。因此，协变量均值的平均差异接近零；也就是说，在协变量所有维度上平均起来，treatment 组和 control 组的均值几乎平衡。从数学上说，\cref{eq::mean-balance-overlap} 左端收敛到零，排除了 $X$ 的所有维度在 treatment 组与 control 组之间都具有不消失均值差异的可能性。
+在具有许多协变量的 observational studies 中，这是一个很强的要求。
+
+
+
+\subsection{Trimming in the presence of limited overlap}\label{sec::trimming-overlap}
+
+当 \cref{assume::strong-overlap} 不成立时，常见做法是根据估计的 propensity scores 对单位做 trimming \citep{crump2009dealing, yang2018asymptotic}。Trimming 会删去 overlap 很少的区域中的单位，因此会改变总体和 estimand。\cref{assume::strong-overlap} 中 overlap 的限制性含义表明，在高维情形下必须更频繁地使用 trimming，而且为了达到理想的 overlap，可能需要删去相当大比例的单位。
+
+
+\subsection{Outcome modeling in the presence of limited overlap}\label{sec::outcome-modeling-overlap}
+
+
+\citet{d2017overlap} 中这些略显负面的结果也凸显了在 limited overlap 下只关注 propensity score 的局限。从某种意义上说，这挑战了 \citet{rubin2008objective} 的观点，即 ``for objective causal inference, design trumps analysis.'' \citet{rubin2008objective} 强调 observational studies 中 ``design'' 阶段的作用。这个 ``design'' 阶段聚焦于 propensity score，但在协变量很多时，propensity score 可能无法满足 overlap 条件。
+
+
+
+在高维协变量下，outcome modeling 变得更加重要。特别地，如果 outcome means 只依赖原始协变量的某个函数，即
+$$
+E\{  Y(z) \mid X \} = f_z( r(X)   ),\quad (z=0,1)
+$$
+那么只需控制 $r(X)$，也就是原始协变量的一个低维摘要。更多细节见 \cref{hw::outcome-modeling-overlap}。由于降维，关于 $r(X)$ 的 strict overlap 条件可以比关于 $X$ 的 strict overlap 条件弱得多。这在概念上很直接，但相应的理论和方法仍然缺失。
+
+
+
+\section{Causal inference with no overlap: regression discontinuity}
+\label{sec::rdd}
+
+我们从单变量 $X$ 的简单情形开始。
+一种极端的 treatment assignment mechanism 是确定性的：
+ $$
+ Z = I(X \geq x_0),
+$$
+其中 $x_0$ 是一个预先给定的阈值。
+这个 assignment 有一个有趣后果：ignorability 假设自动成立：
+$$
+Z\ind \{  Y(1), Y(0) \} \mid X
+$$
+因为 $Z$ 是 $X$ 的确定性函数，而常数与任何随机变量独立。然而，overlap 假设按定义被违反：
+$$
+e(X) = \pr(Z=1\mid X) = 1(X \geq x_0)
+=\begin{cases}
+1 & \text{ if } X \geq x_0, \\
+0& \text{ if }  X < x_0.
+\end{cases}
+$$
+因此，我们在 \cref{part::challenges-os} 中讨论的分析策略在这里不再适用。我们必须转换视角。
+
+
+上面的讨论看起来有些人为，因为 treatment assignment 是确定性的。有意思的是，这种设计在实践中有许多应用，称为 {\it regression discontinuity}。下面我先回顾几个经典例子，然后给出这类研究的数学表述。
+
+
+\subsection{Examples and graphical diagnostics}
+\label{sec::rdd-examples}
+
+
+\begin{example}
+\citet{thistlethwaite1960regression} 首先提出了 {\it regression-discontinuity analysis} 的思想。他们的动机例子是研究学生获得 Certificate of Merit 对其后续职业计划的影响，其中 Certificate of Merit 由 Scholarship Qualifying Test 分数是否超过某个阈值决定。他们最初的分析主要是图形化的。\cref{fig::thistlethwaite1960regression} 展示了其中一幅图。
+\end{example}
+
+\begin{figure}
+\centering
+\includegraphics[width = \textwidth]{figures/rdd_graph_1960_modified.pdf}
+\caption{\citet{thistlethwaite1960regression} 中的一幅图；对原文中不清楚的文字做了轻微修改}\label{fig::thistlethwaite1960regression}
+\end{figure}
+
+ 
+
+
+\begin{example}
+\citet{bor2014regression} 使用 regression discontinuity 研究 HIV 患者何时开始接受 antiretroviral 治疗对其死亡率的影响，其中 treatment 由患者的 CD4 计数是否低于 200 cells/$\mu$L 决定（注意，CD4 cells 是抵抗感染的白细胞）。
+\end{example}
+
+
+
+
+\begin{example}
+\citet{carpenter2009effect} 研究 alcohol consumption 对 mortality 的影响，其思路是利用 minimum legal drinking age 作为 alcohol consumption 的 discontinuity。他们从 National Center for Health Statistics 得到死亡率数据，其中包括死者的出生日期和死亡日期。他们计算了每 100,000 person-years 死亡人数的年龄曲线，outcomes 由以下九个变量度量：
+\begin{tabular}{cc}
+\hline 
+\texttt{all} & 所有死亡，等于 \texttt{internal} 与 \texttt{external} 之和\\
+\texttt{internal} & 由内部原因导致的死亡\\
+\texttt{external} & 由外部原因导致的死亡，等于其余几项之和\\
+\texttt{homicide} & homicide 死亡\\
+\texttt{suicide} & suicide 死亡\\
+\texttt{mva} & motor vehicle accidents\\
+\texttt{alcohol} & 提及 alcohol 的死亡\\
+\texttt{drugs} & 提及 drug use 的死亡\\
+\texttt{externalother} & 由其他外部原因导致的死亡\\
+\hline 
+\end{tabular}
+
+
+\cref{fig::mlda-9outcomes} 基于 \citet{angrist2014mastering} 使用的数据，画出了九个度量下每 100,000 person-years 的死亡人数。从 21 岁处的 jumps 看，21 岁时 mortality 似乎明显上升，而且主要来自 motor vehicle accidents。正式分析留作 \cref{hw::MLDA}。
+\end{example}
+ 
+
+\begin{figure}
+\centering
+\includegraphics[width = \textwidth]{figures/mlda_9outcomes.pdf}
+\caption{\citet{carpenter2009effect} 的 minimum legal drinking age 例子}\label{fig::mlda-9outcomes}
+\end{figure}
+
+
+ 
+
+ 
+
+
+
+\subsection{A mathematical formulation of regression discontinuity}
+
+
+决定 treatment 的变量 $X$ 的技术名称是 {\it running variable}。
+直观地说，regression discontinuity 可以识别 cutoff point $x_0$ 处的 {\it local average causal effect}：
+$$
+\tau(x_0) = E\{ Y(1) - Y(0)  \mid X=x_0 \}. 
+$$
+特别地，对于 treatment 下的 potential outcome，我们有
+\begin{eqnarray}
+E\{ Y(1) \mid X=x_0 \} &=& \lim_{\varepsilon \rightarrow 0+ } E\{ Y(1) \mid X=x_0+\varepsilon \} \label{eq::srd-continuity} \\
+&=& \lim_{\varepsilon \rightarrow 0+} E\{ Y(1) \mid Z=1, X=x_0+\varepsilon \}  \label{eq::srd-z} \\
+&=&  \lim_{\varepsilon \rightarrow 0+} E( Y \mid Z=1, X=x_0+\varepsilon ),
+\end{eqnarray} 
+其中，如果 $ E\{ Y(1) \mid X=x\}$ 在 $x_0$ 处右连续，则 \cref{eq::srd-continuity} 成立；而 \cref{eq::srd-z} 来自 $Z$ 的定义。类似地，对于 control 下的 potential outcome，如果 $ E\{ Y(0) \mid X=x\}$ 在 $x_0$ 处左连续，则有
+$$
+E\{ Y(0) \mid X=x_0 \} =  \lim_{\varepsilon \rightarrow 0+} E( Y \mid Z=0, X=x_0-\varepsilon )
+$$
+因此，$x_0$ 处的 local average causal effect 可以由两个极限之差识别。下面总结关键识别结果。
+
+
+\begin{theorem}
+\label{thm::identification-rdd}
+假设 treatment 由 $Z = I(X \geq x_0)$ 决定，其中 $x_0$ 是一个预先给定的阈值。
+假设 $ E\{ Y(1) \mid X=x\}$ 在 $x_0$ 处右连续，且 $ E\{ Y(0) \mid X=x\}$ 在 $x_0$ 处左连续。那么 $X=x_0$ 处的 local average treatment effect 可由下式识别：
+$$
+\tau(x_0) = \lim_{\varepsilon \rightarrow 0+} E( Y \mid Z=1, X=x_0+\varepsilon ) - \lim_{\varepsilon \rightarrow 0+} E( Y \mid Z=0, X=x_0-\varepsilon ).
+$$
+\end{theorem}
+
+由于上式右端只涉及可观测量，参数 $\tau(x_0)$ 被非参数识别。不过，这个识别公式的形式与我们此前推导的公式完全不同。特别地，它涉及两个条件期望函数的极限。
+
+
+
+\subsection{Regressions near the boundary}\label{sec::rdd-numerical}
+
+如果运气好，graphical diagnostics 有时可以清楚显示 cutoff point 处的 causal effect。然而，许多 outcomes 都很嘈杂，因此在有限样本中 graphical diagnostics 并不足够。\cref{fig::4examples-rdd} 给出四个模拟例子：两个例子在 cutoff point 处有明显 jumps，另外两个没有明显 jumps，尽管其底层 data-generating processes 都具有 discontinuities。
+
+\begin{figure}
+\centering
+\includegraphics[width = \textwidth]{figures/rdd_graph.pdf}
+\caption{regression discontinuity 的例子。黑点是观测到的 outcomes，灰点是未观测到的 counterfactual outcomes。
+第一列中，data-generating processes 在 cutoff points 处产生可见 jumps；第二列中，jumps 不那么明显。第一行中，data generating processes 具有常数 $\tau(x)$；第二行中，$\tau(x)$ 随 $x$ 变化。
+}\label{fig::4examples-rdd}
+\end{figure}
+
+
+
+假设 $E( Y \mid Z=1, X=x ) = \gamma_1 + \beta_1 x$ 和 $E( Y \mid Z=0, X=x ) = \gamma_0 + \beta_0 x $ 都关于 $x$ 线性。我们可以分别基于 treated 和 control 数据运行 OLS，得到拟合直线 $\hat\gamma_1 + \hat\beta_1 x$ 和 $\hat\gamma_0 + \hat\beta_0 x$。于是可以将 $X = x_0$ 处的 average causal effect 估计为
+$$
+\hat\tau(x_0) = (\hat\gamma_1 -\hat\gamma_0 ) + (\hat\beta_1 -\hat\beta_0) x_0 .
+$$
+数值上，$\hat\tau(x_0) $ 等于如下 OLS 中 $Z_i$ 的系数：
+\begin{eqnarray}
+Y_i \sim \{ 1, Z_i, X_i - x_0, Z_i (X_i - x_0)  \} , \label{eq::ols-rdd-1}
+\end{eqnarray}
+它也等于如下 OLS 中 $Z_i$ 的系数：
+\begin{eqnarray}
+Y_i \sim \{ 1, Z_i,  R_i, L_i \},\label{eq::ols-rdd-2}
+\end{eqnarray}
+其中
+$$
+R_i = \max(X_i - x_0, 0) ,\qquad L_i= \min (X_i - x_0, 0)
+$$ 
+分别表示 $X_i - x_0$ 的右侧部分和左侧部分。代数细节留作 \cref{hw::rdd-ols-fits}。
+
+
+不过，这一方法可能对 linear model assumption 的违反很敏感。理论建议只使用 cutoff point 附近的 local observations 来运行回归\footnote{在非参数统计中，这称为 {\it local linear regression}，属于更广泛的 {\it local polynomial regression} \citep{fan2018local}。}。但是，选择 ``local points'' 的规则相当复杂。幸运的是，\ri{R} 中 \ri{rdrobust} 包的 \ri{rdrobust} 函数实现了多种 ``local points'' 选择。由于选择 ``local points'' 是 regression discontinuity 的关键，报告基于多种 ``local points'' 选择得到的估计和置信区间似乎更合理。这可以看作 regression discontinuity 的 sensitivity analysis。
+
+
+\subsection{An example}
+\label{section::lee-RDD-example}
+
+\citet{lee2008randomized} 给出了一个著名例子：用 regression discontinuity 研究 U.S. House 中的 incumbency advantage。
+他写道，``incumbents 按定义就是那些在上一次选举中成功的政客。如果让他们成功的因素在时间上具有一定持续性，那么当他们竞选连任时，也应当预期他们会更成功一些。'' 因此，这是一个本质上困难的因果推断问题。Regression discontinuity 是研究这个问题的一种巧妙 study design。
+
+
+
+running variable 是以上一次选举得票为基础、以 $0$ 为中心化后的 lagged vote；outcome 是当前选举得票；单位是 congressional districts。treatment 是某 district 当前 incumbent party 的二元指标，由 lagged vote 决定。下面的 \ri{R} 代码生成展示原始数据的 \cref{fig::lee2008}。
+
+\begin{lstlisting}
+house = read.csv("house.csv")[, -1]
+plot(y ~ x, data = house, pch = 19, cex = 0.1)
+abline(v = 0, col = "grey")
+\end{lstlisting}
+
+\begin{figure}
+\centering
+\includegraphics[width = \textwidth]{figures/lee2008rdd.pdf}
+\caption{\citet{lee2008randomized} 的原始数据}\label{fig::lee2008}
+\end{figure}
+
+ 
+\ri{rdrobust} 函数给出三组点估计和置信区间。它们都表明存在正的 incumbency advantage。
+
+\begin{lstlisting}
+> library(rdrobust)
+> RDDest = rdrobust(house$y, house$x)
+Warning message:
+In rdrobust(house$y, house$x) :
+  Mass points detected in the running variable.
+> cbind(RDDest$coef, RDDest$ci)
+                    Coeff   CI Lower   CI Upper
+Conventional   0.06372533 0.04224798 0.08520269
+Bias-Corrected 0.05937028 0.03789292 0.08084763
+Robust         0.05937028 0.03481238 0.08392818
+\end{lstlisting}
+ 
+ 
+ 
+也可以用下面的 \ri{R} 代码，在由 $|X| < h$ 定义的不同 local points 选择下，基于 OLS 得到点估计和置信区间。
+\begin{lstlisting}
+house$z = (house$x >= 0)
+hh = seq(0.05, 1, 0.01)
+local.lm = sapply(hh, function(h){
+  Greg = lm(y ~ z + x + z*x, data = house,
+            subset = (abs(x)<=h))
+  cbind(coef(Greg)[2], confint(Greg, 'zTRUE'))
+})
+plot(local.lm[1, ] ~ hh, type = "p",
+     pch = 19, cex = 0.3,
+     ylim = range(local.lm),
+     xlab = "h",
+     ylab = "point and interval estimates",
+     main = "subset linear regression: |X|<h")
+lines(local.lm[2, ] ~ hh, type = "p",
+      pch = 19, cex = 0.1) 
+lines(local.lm[3, ] ~ hh, type = "p",
+      pch = 19, cex = 0.1)
+\end{lstlisting}
+\cref{fig::rdd-lee} 展示了点估计和置信区间随 $h$ 的变化。虽然点估计和置信区间对 $h$ 的选择敏感，但定性结论与上面相同。
+ 
+\begin{figure}[h]
+\centering
+\includegraphics[width = \textwidth]{figures/rdd_lee.pdf}
+\caption{基于 local linear regressions 的估计和置信区间}\label{fig::rdd-lee}
+\end{figure} 
+ 
+ 
+ 
+\subsection{Problems of regression discontinuity}\label{sec::problems-RD}
+
+
+regression discontinuity analysis 可能出什么问题？技术挑战在于指定 cutoff point 附近的邻域。我们已经在上面讨论过这个问题。
+
+此外，\cref{thm::identification-rdd} 在 continuity condition 下成立。这个条件在实践中可能被违反。例如，如果死亡率本身在 21 岁处发生 jump，那么我们可能无法将 \cref{fig::mlda-9outcomes} 中的 jumps 归因于 legal drinking age 导致的饮酒行为变化。然而，经验上很难检查 continuity condition 是否被违反。
+ 
+ 
+\citet{mccrary2008manipulation} 提出了一个间接检验，用于检查 regression discontinuity 的有效性。他建议检查 running variable 在 cutoff point 处的密度。running variable 的密度在 cutoff point 处发生 discontinuity，可能表明某些单位能够完全操纵自己的 treatment status。\ri{R} 包 \ri{rdd} 中的 \ri{DCdensity} 函数实现了这个检验。这里略去细节。
+
+
+ 
+ 
+\section{Homework Problems}
+
+ 
+
+\homeworksolutionref{20}
+\paragraph{A theorem for the role of outcome modeling in the presence of limited overlap}\label{hw::outcome-modeling-overlap}
+
+本题扩展 \cref{sec::outcome-modeling-overlap} 中的讨论。下面陈述一个形式化定理。
+
+\begin{theorem}
+\label{thm::outcome-overlap}
+假设
+$$
+Z\ind Y(z) \mid X, \quad (z=0,1)
+$$
+并且
+$$
+E\{  Y(z) \mid X \} = f_z( r(X)   ),\quad (z=0,1)
+$$
+对某个函数 $r(X)$ 成立。
+average causal effect $\tau = E\{ Y(1) - Y(0)  \}$ 可由下式识别：
+$$
+\tau =E\{   E(Y\mid Z=1, r(X)) - E(Y\mid Z=0, r(X)) \} 
+$$
+或
+$$
+\tau = E\left\{   \frac{ZY}{  e(r(X)) }  \right\}  - E\left\{   \frac{(1-Z)Y}{ 1 -  e(r(X)) }  \right\}
+$$
+其中 $e(r(X)) = \pr\{ Z=1\mid r(X) \}$。
+\end{theorem}
+
+证明 \cref{thm::outcome-overlap}。
+
+Remark: 当 $r(X) = X$ 时，\cref{thm::outcome-overlap} 退化为 average causal effect 的标准 IPW 公式。当 $r(X)$ 的维度低于 $X$ 时，如果关于 $e(X)$ 的 overlap 条件失效，而关于 $e(r(X)) $ 的 overlap 条件仍可能成立，则 \cref{thm::outcome-overlap} 有更广的适用性。
+
+
+
+
+ \paragraph{Linear potential outcome models}\label{hw::rdd-ols-fits}
+ 
+ 
+ 本题给出 \cref{sec::rdd-numerical} 中数值等价性的更多细节。
+ 
+ 证明 $\hat\tau(x_0) $ 等于 OLS 拟合 \cref{eq::ols-rdd-1} 和 \cref{eq::ols-rdd-1} 中 $Z_i$ 的系数。
+ 
+% Assume that 
+% $$
+% Y_i(1) = \gamma_1 + \beta_1 X_i + \varepsilon_i(1),\quad
+%  Y_i(0) = \gamma_0 + \beta_0 X_i + \varepsilon_i(0)
+% $$
+%with $ E\{\varepsilon_i(1) \mid X_i \} =  E\{\varepsilon_i(0) \mid X_i \} = 0$. First, express 
+%$$
+%\tau(x_0) = E\{ Y_i(1) - Y_i(0)\mid X_i = x_0 \} 
+%$$ 
+%in terms of the parameters in the above model, and then show that $\tau(x_0)$ can be unbiased estimated by the coefficient of $Z_i$ in the OLS fits of \cref{eq::ols-rdd-1} or \cref{eq::ols-rdd-2}.  
+
+
+Remark: 一个有帮助的起点是画出以 $X_i$ 为横轴时 $Z_i(X_i - x_0)$、$L_i$ 和 $R_i$ 的图。结论由 OLS regressions 的重参数化得到。
+
+
+
+\paragraph{Re-analysis of the data on the minimum legal drinking age}\label{hw::MLDA}
+
+
+\cref{fig::mlda-9outcomes} 展示了 cutoff point 处的 jumps。
+分析 \citet{carpenter2009effect} 的数据 \ri{mlda.csv}。
+
+\paragraph{Re-analysis of \citet{lee2008randomized}'s data}\label{hw::lee2008-robust}
+
+\cref{fig::rdd-lee} 画出了假设 homoskedasticity 时基于 standard errors 的置信区间。请生成一幅图，其中的置信区间基于 OLS 中的 EHW standard errors。
+
+
+
+
+\paragraph{Recommended reading}
+
+\citet{d2017overlap} 讨论了高维协变量下 overlap 的含义。
+
+\citet{thistlethwaite1960regression} 关于 regression discontinuity 的原始论文后来作为 \citet{thistlewaiteregression2016obs} 重印，并附有许多有启发性的评论。巧合的是，\citet{thistlethwaite1960regression} 和 \citet{Rubin:1974} 都发表在 {\it Journal of Educational Psychology}。

@@ -1,0 +1,285 @@
+
+\chapter{Rosenbaum-Style $p$-Values for Matched Observational Studies with Unmeasured Confounding}
+\chaptermark{Sensitivity Analysis in Matching}\label{sec::rosenbaum-sensitivity-analysis}
+
+
+\citet{rosenbaum1987sensitivity} 引入了一种用于 matched observational studies 的 sensitivity analysis 技术。尽管这一方法也适用于一般的 matched studies \citep{rosenbaum2002design}，其理论在 one-to-one matching 中最为简洁。
+不同于\cref{chapter::evalue,chapter::sensitivity-ACE}，Rosenbaum-type sensitivity analysis 最适合用于 matched observational studies 中检验无个体 treatment effect 的 sharp null hypothesis。
+
+
+\section{A model for sensitivity analysis with matched data}
+
+
+考虑一个 matched observational study，其中 $(i,j)$ 表示第 $i$ 个 pair 中的第 $j$ 个 unit $(i=1,\ldots, n; j=1,2)$。
+在 exact matching 的 pair 中，unit $(i,1)$ 与 unit $(i,2)$ 具有相同的 covariates $X_i$。
+假设 IID sampling，并将\cref{def::pscore} 推广为如下 propensity score：
+$$
+e_{ij} = \pr\{  Z_{ij} = 1\mid X_i, Y_{ij}(1), Y_{ij}(0) \} .
+$$
+令 $\mathbb{S}_i = \{Y_{i1}(1), Y_{i1}(0), Y_{i2}(1), Y_{i2}(0)\}$ 表示 pair $i$ 内全部 potential outcomes 的集合。
+在事件 $Z_{i1} + Z_{i2} = 1$ 上条件化，有
+\begin{eqnarray*}
+\pi_{i1} &=& \pr\{ Z_{i1} = 1 \mid X_i, \mathbb{S}_i, Z_{i1} + Z_{i2} = 1 \} \\
+&=& \frac{ \pr\{ Z_{i1} = 1, Z_{i2} = 0  \mid X_i, \mathbb{S}_i \} }
+{ \pr\{ Z_{i1} + Z_{i2} = 1 \mid X_i, \mathbb{S}_i \} } \\
+&=& \frac{ \pr\{ Z_{i1} = 1, Z_{i2} = 0  \mid X_i, \mathbb{S}_i \} }{ 
+\pr\{ Z_{i1} = 1, Z_{i2} = 0 \mid X_i, \mathbb{S}_i \} + \pr\{ Z_{i1} = 0, Z_{i2} = 1 \mid X_i, \mathbb{S}_i \}
+}\\
+%{ \left[ \splitfrac{ \pr\{ Z_{i1} = 1, Z_{i2} = 0 \mid X_i, \mathbb{S}_i \} }
+%{+\pr\{ Z_{i1} = 0, Z_{i2} = 1 \mid X_i, \mathbb{S}_i \} } \right] } \\
+&=& \frac{  e_{i1} (1-e_{i2}) }{ e_{i1} (1-e_{i2}) + (1-e_{i1}) e_{i2}} 
+\end{eqnarray*}
+定义 $o_{ij} = e_{ij} / (1 - e_{ij})$ 为 unit $(i,j)$ 接受 treatment 的 odds，则有
+$$
+\pi_{i1}  = \frac{o_{i1}}{  o_{i1} + o_{i2} } . 
+$$
+在 ignorability 下，$e_{ij}$ 只是 $X_i$ 的函数，因此 $e_{i1} = e_{i2}$ 且 $\pi_{i1} = 1/2$。于是，在 covariates 与 potential outcomes 条件下的 treatment assignment mechanism，等价于一个 treatment 和 control 概率相等的 MPE。这正是我们在\cref{sec::ideal-matching-mpe} 中讨论过的 matched observational studies 分析策略。
+
+
+一般地，$e_{ij}$ 也可能是 unobserved potential outcomes 的函数，并且可以在 $0$ 到 $1$ 之间变化。
+\citet{rosenbaum1987sensitivity} 的 sensitivity analysis model 对 odds ratio $o_{i1}/o_{i2}$ 施加界。
+
+\begin{assumption}[Rosenbaum's sensitivity analysis model]\label{assume::rosenbaum-sensitivity}
+odds ratios 满足如下界：
+$$
+o_{i1}/o_{i2} \leq \Gamma,\quad
+o_{i2}/o_{i1} \leq \Gamma, \quad (i=1, \ldots, n)
+$$
+其中 $\Gamma \geq 1$ 是预先给定的常数。等价地，
+$$ 
+\frac{1}{1+\Gamma } \leq 
+\pi_{i1} \leq \frac{\Gamma}{1+\Gamma} \quad (i=1, \ldots, n)
+$$
+其中 $\Gamma \geq 1$ 是预先给定的常数。
+\end{assumption}
+
+
+在\cref{assume::rosenbaum-sensitivity} 下，我们得到一个 biased MPE，其中 treatment 和 control 的概率在不同 pairs 之间不相等且会变化。当 $\Gamma = 1$ 时，有 $\pi_{i1} = 1/2$，因此回到标准 MPE。所以，$\Gamma > 1$ 衡量的是 matching 中 omitted variables 造成的、相对于 ideal MPE 的偏离程度。
+ 
+ 
+ 
+ \section{Worst-case $p$-values under Rosenbaum's sensitivity analysis model}
+
+
+考虑检验如下 sharp null hypothesis：
+$$
+\HF: Y_{ij}(1) = Y_{ij}(0) \text{ for } i = 1,\ldots, n \text{ and } j=1,2
+$$
+检验基于如下 within-pair differences：
+$
+\hat{\tau}_i = (2Z_{i1} - 1) (Y_{i1} - Y_{i2}) \  (i=1,\ldots, n). 
+$
+在 $\HF$ 下，$|\hat{\tau}_i|$ 是固定的；但若 $\hat{\tau}_i \neq 0$，则 $S_i = \mathbb{I}(\hat{\tau}_i > 0)$ 是随机的。考虑如下 test statistics 类：
+$$
+T = \sumn S_i q_i,
+$$
+其中 $q_i\geq 0$ 是 $ (|\hat{\tau}_1|, \ldots, |\hat{\tau}_n|)$ 的函数。特殊情形包括 sign statistic、pair $t$ statistic（至多差一个常数平移）以及 Wilcoxon signed-rank statistic：
+$$
+T = \sumn S_i,\quad T = \sumn S_i |\hat{\tau}_i|,\quad T = \sumn S_i R_i,
+$$
+其中 $(R_1,\ldots, R_n)$ 是 $ (|\hat{\tau}_1|, \ldots, |\hat{\tau}_n|)$ 的 ranks。
+
+在一般 $\Gamma$ 下，\cref{assume::rosenbaum-sensitivity} 中 test statistic $T$ 的 null distribution 是什么？这个问题可能相当复杂，因为\cref{assume::rosenbaum-sensitivity} 并没有完全指定各个 $\pi_{i1}$ 的精确取值。幸运的是，我们并不需要知道 $T$ 的精确分布；真正需要的是在\cref{assume::rosenbaum-sensitivity} 下使 $p$-value 最大的 worst-case distribution。这个 worst-case distribution 对应于
+$$
+S_i \iidsim  \text{Bernoulli}\left(  \frac{ \Gamma}{ 1+\Gamma} \right).
+$$
+$T$ 的相应分布具有均值
+$$
+E_\Gamma( T ) = \frac{\Gamma}{1+\Gamma} \sumn q_i, 
+$$
+以及方差
+$$
+\var_\Gamma( T ) = \frac{\Gamma}{(1+\Gamma)^2} \sumn q_i^2,
+$$
+并有如下 Normal approximation：
+$$
+\frac{T -\frac{\Gamma}{1+\Gamma} \sumn q_i }{ \sqrt{ \frac{\Gamma}{(1+\Gamma)^2} \sumn q_i^2  }} \rightarrow  \N01 
+$$
+依分布收敛。
+在实践中，我们可以报告一串随 $\Gamma$ 变化的 $p$-values。
+
+
+\section{Examples}
+
+\subsection{Revisiting the LaLonde data}\label{sec::rosenbaum-gamma-examples}
+
+ 
+
+我们在 matched LaLonde data 中进行 Rosenbaum-style sensitivity analysis。
+使用 \ri{Matching} package 可以构造 matched dataset。
+\begin{lstlisting}
+library("Matching")
+library("sensitivitymv")
+library("sensitivitymw")
+dat <- read.table("cps1re74.csv",header=T)
+dat$u74 <- as.numeric(dat$re74==0)
+dat$u75 <- as.numeric(dat$re75==0)
+y = dat$re78
+z = dat$treat
+x = as.matrix(dat[, c("age", "educ", "black",
+                      "hispan", "married", "nodegree",
+                      "re74", "re75", "u74", "u75")])
+matchest = Match(Y = y, Tr = z, X = x)
+ytreated = y[matchest$index.treated]
+ycontrol = y[matchest$index.control]
+datamatched = cbind(ytreated, ycontrol)
+\end{lstlisting}
+
+我们考虑使用 test statistic $T = \sumn S_i | \hat{\tau}_i |$。在 $\Gamma = 1$ 的 ideal MPE 下，可以模拟 $T$ 的分布并得到 $p$-value $0.002$，如\cref{fg::lalonde_gamma} 的第一幅子图所示。当 $\Gamma = 1.1$ 略大时，$T$ 的 worst-case distribution 向右移动，$p$-value 增加到 $0.011$。如果进一步将 $\Gamma$ 增加到 $1.3$，则 $T$ 的 worst-case distribution 继续右移，$p$-value 超过 $0.05$。\cref{fg::p-gamma-lalonde} 展示了 $\hat{\tau}_i$ 的 histogram 以及作为 $\Gamma$ 函数的 $p$-value；$\Gamma = 1.233$ 衡量的是在 $0.05$ 水平下仍能拒绝 null hypothesis 的最大 confounding 程度。
+
+也可以使用 \ri{sensitivitymw} package 中的 \ri{senmw} function，得到一串关于 $\Gamma$ 的 $p$-values。
+\begin{lstlisting}
+Gamma  = seq(1, 1.4, 0.001)
+Pvalue = Gamma
+for(i in 1:length(Gamma))
+{
+  Pvalue[i] = senmw(datamatched, gamma = Gamma[i], 
+                    method = "t")$pval
+}
+\end{lstlisting}
+\cref{fg::p-gamma-lalonde} 给出了 $p$-value 随 $\Gamma$ 变化的图。
+
+ 
+ 
+ 
+ 
+
+
+
+\begin{figure}
+\centering
+\includegraphics[width =  \textwidth]{figures/lalonde_hist_gamma.pdf}
+\caption{基于 matched LaLonde data，$S_i$ IID Bernoulli$(\Gamma/(1+\Gamma))$ 时 $T = \sumn S_i | \hat{\tau}_i |$ 的 worst-case distributions。}\label{fg::lalonde_gamma}
+\end{figure} 
+ 
+ 
+ 
+ \begin{figure}
+\centering
+\includegraphics[width = \textwidth]{figures/lalonde_p_gamma.pdf}
+\caption{基于 matched LaLonde data，作为 $\Gamma$ 函数的 $p$-value。}\label{fg::p-gamma-lalonde}
+\end{figure}
+
+
+
+ 
+ 
+\subsection{Two examples from Rosenbaum's packages} 
+
+ 
+
+ \texttt{erpcp} dataset 来自 \ri{R} package \texttt{sensitivitymw}。它包含 $n=39$ 个 matched pairs，每个 pair 由一名 welder 和一名 control 构成，matching 基于 observed covariates age 和 smoking。outcome 是 DNA elution rate。\cref{fg::another2sensitivity}(a) 展示了 outcomes 的 within-pair differences 的 histogram，以及基于 pair $t$-statistic 得到的、随 $\Gamma$ 变化的 $p$-value。下面的 \ri{R} 代码生成\cref{fig::erpcp}。
+ 
+ 
+\begin{lstlisting}
+par(mfrow = c(1, 2), mai = c(0.8, 0.8, 0.3, 0.3))
+data(erpcp)
+hist(erpcp[, 1] - erpcp[, 2], main = "erpcp",
+     xlab = expression(hat(tau)[i]),
+     freq = FALSE)
+
+Gamma  = seq(1, 5, 0.005)
+Pvalue = Gamma
+for(i in 1:length(Gamma))
+{
+  Pvalue[i] = senmw(erpcp, gamma = Gamma[i], method = "t")$pval
+}
+gammastar = Gamma[which(Pvalue >= 0.05)[1]]
+gammastar
+
+plot(Pvalue ~ Gamma, type = "l", 
+     xlab = expression(Gamma), 
+     ylab = "p-value")
+abline(h = 0.05, lty = 2)
+abline(v = gammastar, lty = 2)
+\end{lstlisting}
+
+
+ \texttt{lead250} dataset 来自 \ri{R} package \texttt{sensitivitymw}。它包含 $n=250$ 个 matched pairs，每个 pair 由一名 daily smoker 和一名 nonsmoker control 构成，matching 基于 NHANES 中的 observed covariates gender、age、race、education level 和 household income。outcome 是 blood lead level，单位为 $\mu g/l$。\cref{fg::another2sensitivity}(b) 展示了 outcomes 的 within-pair differences 的 histogram，以及基于 pair $t$-statistic 得到的、随 $\Gamma$ 变化的 $p$-value。下面的 \ri{R} 代码生成\cref{fig::ead250}。
+ 
+ \begin{lstlisting}
+par(mfrow = c(1, 2), mai = c(0.8, 0.8, 0.3, 0.3))
+data(lead250)
+hist(lead250[, 1] - lead250[, 2],
+     main = "lead250",
+     xlab = expression(hat(tau)[i]),
+     freq = FALSE)
+
+Gamma  = seq(1, 2.5, 0.001)
+Pvalue = Gamma
+for(i in 1:length(Gamma))
+{
+  Pvalue[i] = senmw(lead250, gamma = Gamma[i], method = "t")$pval
+}
+gammastar = Gamma[which(Pvalue >= 0.05)[1]]
+gammastar
+
+plot(Pvalue ~ Gamma, type = "l", 
+     xlab = expression(Gamma), ylab = "p-value")
+abline(h = 0.05, lty = 2)
+abline(v = gammastar, lty = 2)
+\end{lstlisting}
+
+
+\begin{figure}
+\centering 
+\begin{subfigure}[b]{\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{figures/erpcp_p_gamma.pdf}
+                \caption{erpcp 数据}
+                \label{fig::erpcp}
+        \end{subfigure}%
+        
+        
+        
+        
+        
+        
+\begin{subfigure}[b]{\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{figures/lead250_p_gamma.pdf}
+                \caption{lead250 数据}
+                \label{fig::ead250}
+        \end{subfigure}%        
+\caption{两个例子：$\hat{\tau}_i$ 的 histogram，以及作为 $\Gamma$ 函数的 $p$-value。}\label{fg::another2sensitivity}
+\end{figure}
+
+
+ 
+  
+
+\section{Homework Problems}
+
+
+\homeworksolutionref{19}
+\paragraph{A model for \cref{assume::rosenbaum-sensitivity}}\label{hw::rosenbaum-equivalent}
+
+\cref{assume::rosenbaum-sensitivity} 有如下等价形式。
+
+
+\begin{assumption}
+\label{assume::rosenbaum-equivalent}
+propensity score 满足如下模型：
+$$
+\log \frac{  \pi_{ij} }{  1-\pi_{ij}  } = g(X_i) + \gamma U_{ij} ,\quad (i=1,\ldots, n; j=1,2)
+$$
+其中 $g(\cdot)$ 是未知函数，$U_{ij} \in [0, 1]$ 是 unit $(i,j)$ 的一个 bounded unobserved covariate。
+\end{assumption}
+
+
+证明：如果\cref{assume::rosenbaum-equivalent} 成立，则\cref{assume::rosenbaum-sensitivity} 必以 $\Gamma = e^\gamma$ 成立。
+
+
+Remark: \citet[][page 108]{rosenbaum2002design} 还说明，如果\cref{assume::rosenbaum-sensitivity} 成立，则对某些 $U_{ij}$，\cref{assume::rosenbaum-equivalent} 必然成立。\cref{assume::rosenbaum-equivalent} 也许更容易解释，因为 $\gamma$ 衡量的是 $U$ 对 treatment 的 conditional odds ratio 的对数；logistic regression 中 coefficients 的解释见\cref{sec::logistic-regression}。
+
+
+
+\paragraph{Application of Rosenbaum's approach}
+使用基于 matching 的 Rosenbaum's approach 重新分析\cref{eg::chan-bmi-ATE}。
+
+
+
+\paragraph{Recommended reading}
+
+
+\citet{rosenbaum2015two} 为他用于 matched observational studies sensitivity analysis 的两个 \ri{R} packages 提供了一篇 tutorial。

@@ -1,0 +1,267 @@
+\chapter{Solutions to Chapter 20: Overlap in Observational Studies}
+\label{sol:chapter20}
+
+\begin{exercisesolution}{A theorem for the role of outcome modeling in the presence of limited overlap}{由低维 outcome model 诱导的 identification}
+本题证明 \cref{thm::outcome-overlap}。这一定理的核心信息是：如果 conditional outcome means 只通过低维摘要 $r(X)$ 依赖 $X$，那么识别 average causal effect 时不必要求完整协变量 $X$ 上有良好 overlap；真正需要的是 $r(X)$ 上的 positivity。
+
+令
+\[
+R=r(X),\qquad e(R)=\mathbb{P}(Z=1\mid R).
+\]
+下面隐含假设 $0<e(R)<1$ 在 $R$ 的支持上成立，并且相关期望有限。首先证明 outcome-regression 形式。由 consistency，
+\[
+Y=ZY(1)+(1-Z)Y(0).
+\]
+对 treated group，有
+\begin{align*}
+\mathbb{E}(Y\mid Z=1,R)
+&=\mathbb{E}\{Y(1)\mid Z=1,R\} \\
+&=\mathbb{E}\bigl[\mathbb{E}\{Y(1)\mid Z=1,X\}\mid Z=1,R\bigr] \\
+&=\mathbb{E}\bigl[\mathbb{E}\{Y(1)\mid X\}\mid Z=1,R\bigr] \\
+&=\mathbb{E}\{f_1(r(X))\mid Z=1,R\} \\
+&=f_1(R).
+\end{align*}
+第三个等号使用题设中的 ignorability $Z\ind Y(1)\mid X$，第四个等号使用题设中的 outcome-model restriction。完全类似地，
+\[
+\mathbb{E}(Y\mid Z=0,R)=f_0(R).
+\]
+因此
+\begin{align*}
+\tau
+&=\mathbb{E}\{Y(1)-Y(0)\} \\
+&=\mathbb{E}\bigl[\mathbb{E}\{Y(1)\mid X\}-\mathbb{E}\{Y(0)\mid X\}\bigr] \\
+&=\mathbb{E}\{f_1(R)-f_0(R)\} \\
+&=\mathbb{E}\{\mathbb{E}(Y\mid Z=1,R)-\mathbb{E}(Y\mid Z=0,R)\}.
+\end{align*}
+这就是 \cref{thm::outcome-overlap} 的第一个 identification formula。
+
+再证明 IPW 形式。条件化在 $R$ 上，由上一步已经得到的关系，
+\begin{align*}
+\mathbb{E}\left\{\frac{ZY}{e(R)}\mid R\right\}
+&=\frac{1}{e(R)}\mathbb{E}(ZY\mid R) \\
+&=\frac{1}{e(R)}\mathbb{P}(Z=1\mid R)\mathbb{E}(Y\mid Z=1,R) \\
+&=f_1(R).
+\end{align*}
+同理，
+\[
+\mathbb{E}\left\{\frac{(1-Z)Y}{1-e(R)}\mid R\right\}
+=f_0(R).
+\]
+对 $R$ 再取期望并相减，得到
+\[
+\tau
+=\mathbb{E}\left\{\frac{ZY}{e(r(X))}\right\}
+-\mathbb{E}\left\{\frac{(1-Z)Y}{1-e(r(X))}\right\}.
+\]
+这就是 \cref{thm::outcome-overlap} 的第二个 identification formula。
+
+\paragraph{Remark.}
+\cref{sec::outcome-modeling-overlap} 的重点不只是给出一个新公式，而是提醒我们：overlap 的难度取决于需要调整的对象。如果 outcome means 只依赖 $r(X)$，那么强行在完整 $X$ 上追求 positivity 可能是在解决一个比因果问题本身更难的问题。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Linear potential outcome models}{RDD 中两种 OLS 写法的重参数化}
+本题补全 \cref{sec::rdd-numerical} 中的代数细节。核心是一个 reparameterization：\cref{eq::ols-rdd-1} 和 \cref{eq::ols-rdd-2} 张成同一个 fitted-value space，而 $Z_i$ 的系数都表示 cutoff point $x_0$ 处左右两条拟合直线的垂直距离。
+
+先看分组 OLS。分别在 treated 和 control 数据中拟合
+\[
+\mathbb{E}(Y\mid Z=1,X=x)=\gamma_1+\beta_1x,\qquad
+\mathbb{E}(Y\mid Z=0,X=x)=\gamma_0+\beta_0x.
+\]
+若用样本 OLS 得到 $\hat\gamma_1,\hat\beta_1,\hat\gamma_0,\hat\beta_0$，则 cutoff point 处两条拟合线的差为
+\[
+\hat\tau(x_0)
+=(\hat\gamma_1-\hat\gamma_0)+(\hat\beta_1-\hat\beta_0)x_0.
+\]
+现在把横轴中心化为
+\[
+T_i=X_i-x_0.
+\]
+\cref{eq::ols-rdd-1} 的回归模型可写为
+\[
+Y_i=a+bZ_i+cT_i+dZ_iT_i+\varepsilon_i.
+\]
+当 $Z_i=0$ 时，拟合均值为
+\[
+a+cT_i.
+\]
+当 $Z_i=1$ 时，拟合均值为
+\[
+(a+b)+(c+d)T_i.
+\]
+因此这个 pooled regression 等价于分别在 cutoff 左右拟合两条直线，只是参数被写成
+\[
+\alpha_0=a,\qquad \delta_0=c,\qquad
+\alpha_1=a+b,\qquad \delta_1=c+d,
+\]
+其中 $\alpha_z$ 是以 $T=0$ 为原点时第 $z$ 组的截距，$\delta_z$ 是第 $z$ 组的斜率。因为 treated 和 control 两侧的 residual sum of squares 完全分离，pooled regression 的 OLS 解与两边分别拟合的 OLS 解相同。于是
+\[
+\hat b=\hat\alpha_1-\hat\alpha_0
+=\{\hat\gamma_1+\hat\beta_1x_0\}
+-\{\hat\gamma_0+\hat\beta_0x_0\}
+=\hat\tau(x_0).
+\]
+这证明了 $\hat\tau(x_0)$ 等于 \cref{eq::ols-rdd-1} 中 $Z_i$ 的系数。
+
+再看 \cref{eq::ols-rdd-2}。令
+\[
+R_i=\max(T_i,0),\qquad L_i=\min(T_i,0).
+\]
+考虑模型
+\[
+Y_i=a^\ast+b^\ast Z_i+c^\ast R_i+d^\ast L_i+\varepsilon_i.
+\]
+若 $T_i<0$，则 $Z_i=0$、$R_i=0$、$L_i=T_i$，拟合均值为
+\[
+a^\ast+d^\ast T_i.
+\]
+若 $T_i\geq 0$，则 $Z_i=1$、$R_i=T_i$、$L_i=0$，拟合均值为
+\[
+(a^\ast+b^\ast)+c^\ast T_i.
+\]
+这同样是 cutoff 左右两条独立直线。因此 \cref{eq::ols-rdd-2} 的 $Z_i$ 系数满足
+\[
+\hat b^\ast
+=\hat\alpha_1-\hat\alpha_0
+=\hat\tau(x_0).
+\]
+更直接地说，两个设计矩阵之间只是线性重写：
+\[
+T_i=R_i+L_i,\qquad Z_iT_i=R_i
+\]
+在 sharp RDD 中成立。于是
+\[
+\operatorname{span}\{1,Z_i,T_i,Z_iT_i\}
+=\operatorname{span}\{1,Z_i,R_i,L_i\},
+\]
+并且二者都把 $Z_i$ 的系数解释为 $T=0$ 处右侧截距减去左侧截距。
+
+\paragraph{Remark.}
+RDD 的 OLS 写法容易让人误以为 treatment coefficient 是一个全局平均差异。实际上，在含有 running variable 与 interaction 的模型中，$Z_i$ 的系数是 cutoff point 处的局部 jump；中心化 $X_i-x_0$ 正是为了让这个解释直接落在 $T_i=0$ 上。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Re-analysis of the data on the minimum legal drinking age}{\ri{mlda.csv} 的 RDD 分析框架}
+本题要求重新分析 \citet{carpenter2009effect} 的 minimum legal drinking age 数据。当前项目目录中没有找到 \ri{mlda.csv}，因此这里不报告数值结果。下面给出完整可复现代码；把 \ri{mlda.csv} 放在运行目录后，代码会为九个 outcomes 生成 graphical diagnostics、\ri{rdrobust} 估计，以及若干固定 bandwidth 下的 local-linear EHW confidence intervals。
+
+\begin{lstlisting}
+library(rdrobust)
+library(sandwich)
+
+mlda <- read.csv("mlda.csv")
+
+## Angrist and Pischke 的 MLDA 数据通常使用 agecell 作为 running variable。
+## 若数据中的列名不同，只需在这里改成对应列名。
+xname <- "agecell"
+cutoff <- 21
+outcomes <- c("all", "internal", "external", "homicide",
+              "suicide", "mva", "alcohol", "drugs",
+              "externalother")
+
+mlda$running <- mlda[[xname]] - cutoff
+mlda$z <- as.numeric(mlda$running >= 0)
+
+par(mfrow = c(3, 3), mar = c(3, 3, 2, 1))
+for (yname in outcomes) {
+  plot(mlda$running, mlda[[yname]],
+       pch = 19, cex = 0.45,
+       xlab = "age minus 21",
+       ylab = yname,
+       main = yname)
+  abline(v = 0, col = "grey")
+
+  left <- mlda$running < 0
+  right <- mlda$running >= 0
+  lines(lowess(mlda$running[left], mlda[[yname]][left]),
+        col = "blue", lwd = 2)
+  lines(lowess(mlda$running[right], mlda[[yname]][right]),
+        col = "red", lwd = 2)
+}
+
+rd_table <- lapply(outcomes, function(yname) {
+  fit <- rdrobust(y = mlda[[yname]], x = mlda$running, c = 0)
+  data.frame(
+    outcome = yname,
+    conventional = fit$coef["Conventional", 1],
+    conventional_low = fit$ci["Conventional", 1],
+    conventional_high = fit$ci["Conventional", 2],
+    robust = fit$coef["Robust", 1],
+    robust_low = fit$ci["Robust", 1],
+    robust_high = fit$ci["Robust", 2]
+  )
+})
+rd_table <- do.call(rbind, rd_table)
+print(rd_table, row.names = FALSE)
+
+ehw_local <- function(yname, h) {
+  dat <- subset(mlda, abs(running) <= h)
+  fit <- lm(dat[[yname]] ~ z + running + z:running, data = dat)
+  se <- sqrt(diag(vcovHC(fit, type = "HC1")))
+  est <- coef(fit)["z"]
+  data.frame(outcome = yname,
+             h = h,
+             estimate = est,
+             low = est - 1.96 * se["z"],
+             high = est + 1.96 * se["z"])
+}
+
+bandwidths <- c(0.25, 0.5, 1, 1.5, 2)
+ehw_table <- do.call(rbind, lapply(outcomes, function(yname) {
+  do.call(rbind, lapply(bandwidths, function(h) ehw_local(yname, h)))
+}))
+print(ehw_table, row.names = FALSE)
+\end{lstlisting}
+
+分析结果时建议按三个层次报告。第一，先用九宫格图复现 \cref{fig::mlda-9outcomes} 的 visual evidence，尤其检查 \ri{mva}、\ri{external} 和 \ri{alcohol} 是否在 cutoff point 附近出现明显 jump。第二，报告 \ri{rdrobust} 的 conventional、bias-corrected 和 robust intervals，因为 bandwidth selection 是 RDD 的关键不确定性来源。第三，用固定 bandwidth 的 local-linear EHW intervals 做 sensitivity analysis，检查定性结论是否依赖某个特殊 bandwidth。
+
+\paragraph{Remark.}
+MLDA 例子的困难在于解释，而不只是估计。即使 mortality 在 21 岁处出现 jump，也还需要把这个 jump 与 legal drinking age 连接起来；这正是 \cref{thm::identification-rdd} 中 continuity condition 的实证含义。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Re-analysis of \citet{lee2008randomized}'s data}{local linear RDD 的 EHW 置信区间}
+本题要求把 \cref{fig::rdd-lee} 中基于 homoskedastic standard errors 的置信区间替换为 OLS 的 EHW standard errors。当前项目目录中没有找到 \ri{house.csv}，因此这里不报告数值结果。下面的代码与 \cref{section::lee-RDD-example} 的 local-linear analysis 平行，只把 standard errors 改为 heteroskedasticity-robust EHW standard errors。
+
+\begin{lstlisting}
+library(sandwich)
+
+house <- read.csv("house.csv")[, -1]
+house$z <- as.numeric(house$x >= 0)
+
+hh <- seq(0.05, 1, 0.01)
+
+local_ehw <- sapply(hh, function(h) {
+  dat <- subset(house, abs(x) <= h)
+  fit <- lm(y ~ z + x + z:x, data = dat)
+  vc <- vcovHC(fit, type = "HC1")
+  se <- sqrt(diag(vc))["z"]
+  est <- coef(fit)["z"]
+  c(est = est,
+    low = est - 1.96 * se,
+    high = est + 1.96 * se,
+    n = nrow(dat))
+})
+
+plot(local_ehw["est", ] ~ hh,
+     type = "p",
+     pch = 19,
+     cex = 0.35,
+     ylim = range(local_ehw[c("low", "high"), ], na.rm = TRUE),
+     xlab = "h",
+     ylab = "point and EHW interval estimates",
+     main = "subset linear regression: |X|<h")
+points(local_ehw["low", ] ~ hh, pch = 19, cex = 0.15)
+points(local_ehw["high", ] ~ hh, pch = 19, cex = 0.15)
+abline(h = 0, col = "grey")
+
+out <- data.frame(h = hh,
+                  estimate = local_ehw["est", ],
+                  low = local_ehw["low", ],
+                  high = local_ehw["high", ],
+                  n = local_ehw["n", ])
+print(head(out))
+print(tail(out))
+\end{lstlisting}
+
+这里的 coefficient \ri{z} 仍然是 cutoff point 处的 incumbency advantage estimate，这一点由 \cref{eq::ols-rdd-1} 和上一题的重参数化证明保证。与原图相比，EHW intervals 不再依赖 homoskedasticity，因此更适合 election data 这类方差可能随 running variable 或 district characteristics 改变的数据。若 EHW intervals 在大多数 bandwidth 下仍位于零以上，则正的 incumbency advantage 结论对 heteroskedasticity correction 较稳健；若一些 bandwidth 下 interval 穿过零，则应把结论表述为对 bandwidth 与 variance estimator 都敏感。
+
+\paragraph{Remark.}
+这道题的实证目的不是证明某一个 bandwidth 最正确，而是把 RDD 中最重要的两个敏感点分开：local window 的选择影响 bias--variance tradeoff，EHW standard errors 则影响 uncertainty quantification。两者都应进入最终报告。
+\end{exercisesolution}

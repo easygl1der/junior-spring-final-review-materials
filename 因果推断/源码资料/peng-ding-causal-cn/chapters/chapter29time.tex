@@ -1,0 +1,995 @@
+ 
+\chapter{Time-Varying Treatment and Confounding}
+ \label{chapter::timevarying}
+ 
+
+在 biomedical sciences 和 social sciences 中，带有 time-varying treatments 的研究十分常见。James Robins 在 biostatistics 中大力推动了这类研究。
+一个经典例子是 HIV 患者可能在一段时间内间断服用 azidothymidine 这种 antiretroviral medication \citep{robins2000marginal, hernan2000marginal}。类似问题也出现在其他领域。在 education 中，学生可能会随着时间接受不同类型的教学 \citep{hong2008causal}。在 political science 中，候选人会根据 time-varying polls 和对手行动不断重新调整竞选策略 \citep{blackwell2013framework}。
+
+
+带有 time-varying treatments 的 causal inference 并不是单一时间点 treatment 的简单推广。主要困难是 time-varying confounding。即使假设所有 time-varying confounders 都已经被观测到，如何调整这些 confounders 仍然有统计上的困难。一方面，为了调整 confounding，我们需要在这些 confounders 上分层；另一方面，在 post-treatment variables 上分层又会引入偏差。正因为这两个目标彼此冲突，带有 time-varying treatments 和 confounding 的 causal inference 需要更精细的统计方法。这就是本章的主题。
+
+ 
+
+
+为了减轻记号负担，本章先用两个时间点 treatment 的设定来呈现最重要的思想。推广到多个时间点 treatment 在概念上是直接的，但在有限样本中会出现技术复杂性。我会说明这些复杂性，并把一般结论留到 \cref{problem::g-formula-multiple-time}--\cref{problem::snm-multiple-time}。
+
+
+
+\section{Basic setup and sequential ignorability}
+
+
+先从两个时间点的 treatments 开始。两个时间点下变量的时间顺序如下；注意这不是 causal diagram：
+$$
+X_0 \rightarrow Z_1 \rightarrow X_1 \rightarrow Z_2 \rightarrow Y 
+$$
+其中
+\begin{itemize}
+\item
+$X_0$ 表示 baseline pre-treatment covariates；
+\item
+$Z_1$ 表示时间点 1 的 treatment；
+\item
+$X_1$ 表示时间点 1 和 2 的 treatments 之间的 time-varying covariates；
+\item
+$Z_2$ 表示时间点 2 的 treatment；
+\item
+$Y$ 表示 outcome。
+\end{itemize}
+
+
+对于 binary treatments $(Z_1, Z_2 )$，每个 unit 有四个 potential outcomes：
+$$
+Y(z_1, z_2)  \text{ for } z_1, z_2  = 0, 1.
+$$ 
+观测到的 outcome 等于
+$$
+Y = Y(Z_1,Z_2) = \sum_{z_1=0,1} \sum_{z_2=0,1}  1(Z_1=z_1) 1(Z_2=z_2) Y(z_1, z_2).
+$$
+本章聚焦于带有 sequential ignorability 的标准设定，也就是说，在给定已观测历史后，treatments 是 sequentially randomized 的。
+
+\begin{assumption}
+[sequential ignorability]
+\label{assume::sr-time-varying} 
+(1)
+给定 $X_0$ 后，$Z_1$ 是 randomized 的：
+$$
+Z_1 \ind Y(z_1, z_2) \mid X_0 \text{ for } z_1, z_2  = 0, 1.
+$$
+
+(2)
+给定 $( Z_1, X_1, X_0)$ 后，$Z_2$ 是 randomized 的：
+$$
+Z_2\ind Y(z_1, z_2) \mid (Z_1, X_1, X_0) \text{ for } z_1, z_2  = 0, 1.
+$$
+\end{assumption}
+ 
+ 
+ \cref{fig::si-simple} 是与 \cref{assume::sr-time-varying} 对应的一个简单 causal diagram，其中不含任何 unmeasured confounding。
+ 
+\begin{figure}
+\bigskip 
+$$
+ \xymatrix{
+ Z_1 \ar[r]  \ar@/^1.3pc/[rr]  \ar@/^2.0pc/[rrr] & X_1  \ar@/^1pc/[rr]\ar[r]  & Z_2  \ar[r] & Y
+ }
+ $$
+ \caption{\cref{assume::sr-time-varying} 成立，并且 $X_1$ 与 $Y$ 之间没有 unmeasured confounding $U$。该 causal diagram 条件化于 pre-treatment covariates $X_0$。}\label{fig::si-simple}
+\end{figure}
+
+
+
+  \cref{fig::si-complex} 是与 \cref{assume::sr-time-varying} 对应的一个更复杂的 causal diagram。Sequential ignorability 只排除了 treatment $( Z_1, Z_2) $ 与 outcome $Y$ 之间的 confounding，但允许 time-varying covariate $X_1$ 与 outcome $Y$ 之间存在 unmeasured confounding。
+  即使在 sequential ignorability 下，$U$ 的可能存在仍会带来许多微妙问题。
+
+\begin{figure}
+\bigskip 
+$$
+ \xymatrix{
+ Z_1 \ar[r] \ar@/^1.3pc/[rr] \ar@/^2.0pc/[rrr] & X_1  \ar@/^1pc/[rr]\ar[r]  & Z_2  \ar[r] & Y \\
+                                             &                                             &U\ar[lu]\ar[ru]
+ }
+ $$
+ \caption{\cref{assume::sr-time-varying} 成立，但 $X_1$ 与 $Y$ 之间存在 unmeasured confounding。该 causal diagram 条件化于 pre-treatment covariates $X_0$。}\label{fig::si-complex}
+\end{figure}
+
+
+
+\section{g-formula and outcome modeling}
+\label{section:si-outcome-regression}
+
+
+
+回顾单一时间点 treatment 下基于 outcome 的 identification formula：
+$$
+E\{  Y(z) \}  = E\{  E(Y\mid Z=z, X) \} .
+$$
+当 $X$ 是 discrete 时，它化为
+$$
+E\{  Y(z) \}  = \sum_x E(Y\mid Z=z, X=x) \pr(X=x) ;
+$$
+当 $X$ 是 continuous 时，它化为
+$$
+E\{  Y(z) \}  =  \int E(Y\mid Z=z, X=x) f (x) \text{d} x.
+$$
+下面的结果把这个公式推广到两个时间点 treatments 的设定。
+ 
+ 
+ 
+ \begin{theorem}
+\label{thm::sr-outcome}
+在 \cref{assume::sr-time-varying} 下，
+\begin{equation}\label{eq::identification-si-recursive}
+E\{ Y(z_1, z_2) \} 
+=  E\Big [   E\{    E(Y\mid  z_2, z_1, X_1, X_0)  \mid z_1, X_0 \}  \Big ].
+\end{equation}
+\end{theorem}
+
+
+在 \cref{thm::sr-outcome} 中，我把 `$Z_2=z_2$'' 简写为 ``$z_2$''。为了避免本章公式过于复杂，我会用小写字母表示相应随机变量取到对应值这一事件。
+当 $X_0$ 和 $X_1$ 是 discrete 时，\cref{eq::identification-si-recursive} 中的 identification formula 化为
+\begin{equation}\label{eq::identification-si-g-formula-1}
+E\{ Y(z_1, z_2) \}  = \sum_{x_0} \sum_{x_1} E( Y \mid  z_2, z_1, x_1,  x_0) \pr(x_1\mid    z_1, x_0) \pr(x_0);
+\end{equation}
+当 $X_0$ 和 $X_1$ 是 continuous 时，\cref{eq::identification-si-recursive} 中的 identification formula 化为
+\begin{equation}\label{eq::identification-si-g-formula-2}
+E\{ Y(z_1, z_2) \}  =  \int \int E( Y \mid  z_2,  z_1, x_1,  x_0) f(x_1\mid    z_1, x_0) f(x_0) \text{d}x_1 \text{d}x_0.
+\end{equation}
+把 \cref{eq::identification-si-g-formula-1} 与基于 total probability law 的公式相比，可以得到更多直觉：
+\begin{eqnarray}
+E(Y)  &=& \sum_{x_0} \sum_{z_1} \sum_{x_1} \sum_{z_2} E( Y \mid  z_2, z_1, x_1,  x_0)  \nonumber   \\
+&& \qquad   \pr(z_2 \mid  z_1, x_1,  x_0)
+\pr(x_1\mid    z_1, x_0)  \pr(z_1\mid x_0)  \pr(x_0). \label{eq::identification-law-total-prob}
+\end{eqnarray}
+在 \cref{eq::identification-law-total-prob} 中去掉 $Z_2$ 和 $Z_1$ 的概率项，就得到 \cref{eq::identification-si-g-formula-2}。这很直观，因为 potential outcome $Y(z_1, z_2)$ 的含义正是把 $Z_1$ 和 $Z_2$ 分别固定在 $z_1$ 和 $z_2$。
+
+
+Robins 把 \cref{eq::identification-si-g-formula-1} 和 \cref{eq::identification-si-g-formula-2} 称为 g-formulas。
+下面证明 \cref{thm::sr-outcome}。
+ 
+
+\begin{myproof}{Theorem}{\cref{thm::sr-outcome}}
+由 tower property，
+$$
+E\{ Y(z_1, z_2) \}  = E \Big[  E\{ Y(z_1, z_2) \mid X_0 \}  \Big ],
+$$
+因此只需关注 $E\{ Y(z_1, z_2) \mid X_0 \}$。
+由 \cref{assume::sr-time-varying}(1) 和 tower property，
+\begin{eqnarray*}
+E\{ Y(z_1, z_2) \mid X_0 \} &=& E\{ Y(z_1, z_2) \mid  z_1, X_0 \} \\
+&=& E\Big [ E\{ Y(z_1, z_2) \mid   z_1, X_1, X_0 \} \mid   z_1, X_0  \Big].
+\end{eqnarray*}
+由 \cref{assume::sr-time-varying}(2)，
+\begin{eqnarray*}
+E\{ Y(z_1, z_2) \mid X_0 \}  
+&=& E\Big [ E\{ Y(z_1, z_2) \mid z_2,   z_1,X_1, X_0 \} \mid  z_1, X_0  \Big] \\
+&=& E\Big [ E\{ Y \mid z_2, z_1, X_1, X_0 \} \mid   z_1, X_0  \Big] .
+\end{eqnarray*}
+\cref{eq::identification-si-recursive} 随之成立。
+\end{myproof}
+
+
+
+\subsection{Plug-in estimation based on outcome modeling}
+\label{section::si-plug-in-outcome}
+
+g-formulas \cref{eq::identification-si-g-formula-1} 和 \cref{eq::identification-si-g-formula-2} 表明，为了估计 potential outcomes 的均值，我们需要建模 $E(Y\mid z_2,z_1, x_1, x_0)$、$\pr(x_1\mid z_1,x_0)$ 和 $\pr(x_0)$。拟合这些模型以后，就可以把它们 plug in 到 g-formulas 中。
+
+在某些特殊 functional forms 下，这个任务可以简化。下面的 \cref{example::linear-si} 给出 outcome 的 linear model 下的结果。
+
+\begin{example}\label{example::linear-si}
+假设 outcome model 是 linear 的：
+$$
+E(Y\mid z_2,z_1,x_1, x_0) = \beta_0+ \beta_1 z_2 + \beta_2 z_1   + \beta_3  x_1  +\beta_4 x_0.
+$$
+可以验证
+\begin{eqnarray*}
+E\{ Y(z_1, z_2) \}  &=& \sum_{x_0} \sum_{x_1} (\beta_0+ \beta_1 z_2 + \beta_2 z_1 + \beta_3 x_1  +\beta_4 x_0) \pr(x_1\mid   z_1, x_0) \pr(x_0)  \\
+&=& \beta_0 + \beta_1 z_2 + \beta_2  z_1  +  \beta_3 \sum_{x_0} E(X_1\mid z_1, x_0) \pr(x_0)  +\beta_4 E(X_0) .
+\end{eqnarray*}
+定义
+\begin{equation}\label{eq::si-x1-identification}
+E\{ X_1(z_1)\} = \sum_{x_0} E(X_1\mid z_1, x_0) \pr(x_0) 
+\end{equation}
+则公式可简化为
+$$
+E\{ Y(z_1, z_2) \}  = \beta_0 + \beta_1 z_2 + \beta_2 z_1  + \beta_3 E\{ X_1(z_1)\}   +\beta_4 E(X_0) .
+$$
+在 \cref{eq::si-x1-identification} 中，我引入了时间点 1 的 treatment $Z_1=z_1$ 下 $X_1$ 的 potential outcome。这样做是合理的，因为 \cref{eq::si-x1-identification} 右端正是 $z_1  = 0, 1$ 时，在 ignorability $X_1(z_1)\ind Z_1 \mid X_0$ 下 $E\{ X_1(z_1)\} $ 的 identification formula。严格说来，我们并不真的需要 potential outcome $X_1(z_1)$ 和这个 ignorability；但这个记号方便，并且与前面的讨论一致。
+ 
+ 
+定义 $\tau_{Z_1\rightarrow X_1} = E\{ X_1(1)  - X_1(0)\}$。可以验证
+\begin{eqnarray*}
+E\{ Y(1,0)  - Y(0,0)\} &=& \beta_2 +  \beta_3 \tau_{Z_1\rightarrow X_1},\\
+E\{ Y(0,1)  - Y(0,0)\} &=& \beta_1,\\
+E\{ Y(1,1)  - Y(0,0)\} &=& \beta_1 +  \beta_2 + \beta_3 \tau_{Z_1\rightarrow X_1}.
+\end{eqnarray*}
+因此，可以先用标准方法估计 regression coefficients $\beta$s 以及 $Z_1$ 对 $X_1$ 的 average causal effect，再根据上面的公式估计 $(Z_1,Z_2)$ 对 $Y$ 的 effect。
+
+
+如果进一步假设 $X_1$ 的 linear model 为
+$$
+E(X_1\mid Z_1, X_0) = \gamma_0 + \gamma_1 z_1 + \gamma_2 x_0,
+$$
+则 $\tau_{Z_1\rightarrow X_1} = \gamma_1$，并且
+\begin{eqnarray} 
+E\{ Y(1,0)  - Y(0,0)\} &=& \beta_2 +  \beta_3 \gamma_1,  \label{eq::gformula-linear1}\\
+E\{ Y(0,1)  - Y(0,0)\} &=& \beta_1, \label{eq::gformula-linear2}\\
+E\{ Y(1,1)  - Y(0,0)\} &=& \beta_1 +  \beta_2 + \beta_3 \gamma_1. \label{eq::gformula-linear3} 
+\end{eqnarray}
+\cref{eq::gformula-linear1}--\cref{eq::gformula-linear3} 中的公式可以从 \cref{fig::si-simple-coefficients} 得到直观解释；图中在箭头上标出了 regression coefficients。在 \cref{eq::gformula-linear1} 中，$Z_1$ 的 effect 等于路径 $Z_1\rightarrow Y$ 与 $Z_1\rightarrow X_1\rightarrow Y$ 上系数之和；在 \cref{eq::gformula-linear2} 中，$Z_2$ 的 effect 等于路径 $Z_2\rightarrow Y$ 上的系数；在 \cref{eq::gformula-linear3} 中，$(Z_1,Z_2)$ 的 total effect 等于路径 $Z_1\rightarrow Y$、$Z_1\rightarrow X_1\rightarrow Y$ 和 $Z_2\rightarrow Y$ 上系数之和。
+\end{example}
+
+
+\begin{figure}[t]
+\bigskip 
+$$
+ \xymatrix{
+ Z_1 \ar[r]^{\gamma_1}   \ar@/^1.3pc/[rr]  \ar@/^2.0pc/[rrr]^{\beta_2} & X_1  \ar@/^1pc/[rr]^{\beta_3}  \ar[r] & Z_2  \ar[r]^{\beta_1} & Y
+ }
+ $$
+ \caption{一个 linear causal diagram，箭头上标出了 coefficients，并且条件化于 pre-treatment covariates $X_0$。}\label{fig::si-simple-coefficients}
+\end{figure}
+ 
+ 
+ 
+
+
+然而，\citet{robinswasserman1997estimation} 指出了基于 outcome modeling 的 plug-in estimation 有一个令人意外的缺陷。他们说明，在这种策略下如果 model misspecification 出现，即使 data-generating process 中 $(Z_1,Z_2)$ 对 $Y$ 的真实 causal effect 为零，数据分析者也可能错误地拒绝零 causal effect 的 null hypothesis。他们把这个现象称为 {\it g-null paradox}。也许更令人意外的是，他们说明 g-null paradox 甚至可能出现在 \cref{example::linear-si} 的简单 linear outcome model 中。\citet{mcgrath2021revisiting} 重新讨论了这个 paradox。更多细节见 \cref{problem::g-null-paradox}。
+
+ 
+
+\subsection{Recursive estimation based on outcome modeling}
+\label{section::recursive}
+
+\cref{section::si-plug-in-outcome} 中的 plug-in estimation 需要建模 time-varying confounder $X_1$，并会导致不愉快的 g-null paradox。因此它不是理想方法。
+
+回顾单一时间点 treatment 下基于 $E\{  Y(z)  \} = E\{  E(Y\mid Z=z, X) \}$ 的 outcome regression estimator。我们先用满足 $Z=z$ 的数据子集拟合 $Y$ 关于 $X$ 的模型，并为所有 units 得到 fitted values $\hat{Y}_i(z)$。随后得到 estimator：
+$$
+\hat E\{  Y(z)  \}  = n^{-1} \sumn \hat{Y}_i(z).
+$$
+
+类似地，\cref{eq::identification-si-recursive} 中的 recursive expectation formula 启发了一个更简单的估计方法。从内层 conditional expectation 开始，记为
+$$
+\tilde Y_2(z_1, z_2) = E(Y\mid Z_2 = z_2,Z_1 = z_1, X_1,  X_0).
+$$ 
+可以用满足 $(Z_2 = z_2, Z_1 = z_1)$ 的数据子集拟合 $Y$ 关于 $(X_1,X_0)$ 的模型，并为所有 units 得到 fitted values $\hat{Y}_{2i}(z_1, z_2) $。接着处理外层 conditional expectation，记为
+$$
+\tilde{Y}_1(z_1, z_2)  =  E\{  \tilde{Y}_2(z_1, z_2)  \mid Z_1=z_1, X_0 \}. 
+$$
+可以用满足 $Z_1=z_1$ 的数据子集拟合 $\hat{Y}_2(z_1, z_2) $ 关于 $X_0$ 的模型，并为所有 units 得到 fitted values $\hat{Y}_{1i}(z_1, z_2) $。于是 $E\{ Y(z_1, z_2) \} $ 的最终 estimator 为
+$$
+\hat E\{ Y(z_1, z_2) \}  = n^{-1} \sumn \hat{Y}_{1i}(z_1, z_2) .
+$$
+
+上述 recursive estimation 不需要拟合 $X_1$ 的模型，因此避免了 g-null paradox。一个特殊情形见 \cref{problem::recursive-null}。不过，基于 recursive regression 的 estimator 不易实现，因为它需要建模一些并不对应 causal diagram 自然结构的变量，例如 $\tilde{Y}_2(z_1, z_2)$。
+
+
+
+
+\section{Inverse propensity score weighting}\label{section::si-ipw}
+
+
+回顾单一时间点 treatment 下的 IPW identification formula：
+$$
+E\{  Y(z) \} = E  \left\{   \frac{ 1(Z=z) Y  }{  \pr(Z=z\mid X) }  \right\}.
+$$
+下面的结果把它推广到两个时间点 treatment 的设定。定义
+$$
+e(z_1, X_0) = \pr(Z_1=z_1\mid X_0) 
+$$
+and
+$$
+e(z_2, Z_1, X_1, X_0) =  \pr(Z_2 = z_2 \mid Z_1, X_1,  X_0)
+$$
+分别为时间点 1 和 2 的 propensity scores。
+
+\begin{theorem}
+\label{thm::sr-ipw}
+在 \cref{assume::sr-time-varying} 下，
+\begin{equation}
+E\{ Y(z_1, z_2) \} 
+= E\left\{    \frac{  1(Z_1=z_1) 1(Z_2=z_2) Y  }{   e(z_1, X_0)  e(z_2,Z_1, X_1,  X_0)     }   \right\} .
+\label{eq::si-ipw}
+\end{equation}
+\end{theorem}
+
+
+\cref{thm::sr-ipw} 揭示了此前省略的 overlap assumption：
+$$
+0< e(z_1, X_0)   <1,\quad
+0< e(z_2, Z_1, X_1,  X_0)   < 1
+$$
+对所有 $z_1$ 和 $z_2$ 成立。如果某些 propensity scores 为 0 或 1，那么 \cref{eq::si-ipw} 中的 identification formula 会发散到无穷。
+
+
+
+\begin{myproof}{Theorem}{\cref{thm::sr-ipw}}
+条件化于 $(Z_1, X_1, X_0)$，并使用 \cref{assume::sr-time-varying}(2)，可以把 \cref{eq::si-ipw} 右端化简为
+\begin{eqnarray} 
+&&E\left\{    \frac{  1(Z_1=z_1) 1(Z_2=z_2) Y(z_1,z_2)  }{    \pr(Z_1=z_1\mid X_0)  \pr(Z_2 = z_2 \mid Z_1, X_1, X_0)    }   \right\} \nonumber  \\
+&=& E\left\{    \frac{  1(Z_1=z_1) \pr(Z_2=z_2\mid Z_1, X_1, X_0) E(Y(z_1,z_2) \mid Z_1, X_1, X_0)  }{    \pr(Z_1=z_1\mid X_0)  \pr(Z_2 = z_2 \mid Z_1, X_1, X_0)    }   \right\}  \nonumber    \\
+&=& E\left\{    \frac{  1(Z_1=z_1)    }{    \pr(Z_1=z_1\mid X_0)     }  E(Y(z_1,z_2) \mid Z_1, X_1, X_0)  \right\}   \nonumber   \\
+&=& E\left\{    \frac{  1(Z_1=z_1)    }{    \pr(Z_1=z_1\mid X_0)     }  Y(z_1,z_2)  \right\}, \label{eq::ipw-condition1}
+\end{eqnarray}
+其中 \cref{eq::ipw-condition1} 来自 tower property。
+
+
+条件化于 $X_0$，并使用 \cref{assume::sr-time-varying}(1)，可以把 \cref{eq::ipw-condition1} 右端化简为
+\begin{eqnarray*} 
+&& E\left\{    \frac{  \pr(Z_1=z_1\mid X_0)    }{    \pr(Z_1=z_1\mid X_0)     }  E(Y(z_1,z_2) \mid X_0)  \right\}\\
+&=& E\left\{    E(Y(z_1,z_2) \mid X_0)  \right\}\\
+&=&  E\{Y(z_1,z_2)\},
+\end{eqnarray*}
+其中最后一行同样来自 tower property。
+\end{myproof}
+
+
+  
+ 
+  
+ 
+ 基于 IPW 的 estimator 简单得多，因为它只需要建模两个 binary treatment indicators。首先，可以拟合 $Z_1$ 关于 $X_0$ 的模型，得到所有 units 的 fitted values $\hat{e}_{1}(z_1, X_{0i})$；再拟合 $Z_2$ 关于 $(Z_1, X_1, X_0)$ 的模型，得到 fitted values $\hat{e}_{2}(z_2, Z_{1i}, X_{1i}, X_{0i})$。于是得到下面的 IPW estimator：
+$$
+\hat{E}^\textup{ht}\{ Y(z_1, z_2) \}  = n^{-1} \sumn 
+  \frac{  1(Z_{1i}=z_1) 1(Z_{2i}=z_2) Y_i  }{   \hat{e}_{1}(z_1, X_{0i}) \hat{e}_{2} (z_2, Z_{1i}, X_{1i}, X_{0i})   }  .
+$$
+类似于 \cref{chapter::pscore-key} 的讨论，HT estimator 对 outcome 的 location shift 并不 invariant，而且在有限样本中容易不稳定。一个修正的 Hajek-type estimator 是 $\hat{E}^\textup{haj}\{ Y(z_1, z_2) \}  = \hat{E}^\textup{ht}\{ Y(z_1, z_2) \}   / \hat 1^\textup{ht}(z_1,z_2)$，其中
+$$
+\hat 1^\textup{ht}(z_1,z_2)  = n^{-1}  \sumn 
+  \frac{  1(Z_{1i}=z_1) 1(Z_{2i}=z_2)  }{   \hat{e}_{1} (z_1, X_{0i})\hat{e}_{2} (z_2, Z_{1i}, X_{1i}, X_{0i})   }  .
+$$
+%$$
+%\hat{E}^\textup{haj}\{ Y(z_1, z_2) \}  = \sumn 
+%  \frac{  1(Z_{1i}=z_1) 1(Z_{2i}=z_2) Y_i  }{   \hat{e}_{1} (z_1, X_{0i})\hat{e}_{2}  (z_2, Z_{1i}, X_{1i}, X_{0i})  }  
+%  \Big /
+%  \sumn 
+%  \frac{  1(Z_{1i}=z_1) 1(Z_{2i}=z_2)  }{   \hat{e}_{1} (z_1, X_{0i})\hat{e}_{2} (z_2, Z_{1i}, X_{1i}, X_{0i})   }  .
+%$$
+
+
+ 
+ 
+  
+ 
+ 
+ 
+ 
+
+\section{Multiple time points}
+
+
+在多个时间点下，直接推广 \cref{section:si-outcome-regression} 和 \cref{section::si-ipw} 的 estimation strategies 并不容易。即使 treatment 是 binary 且只有 $K$ 个时间点，treatment combinations 的数量也会随 $K$ 指数增长（例如 $2^5 = 32$，$2^{10} = 1024$）。因此，\cref{section:si-outcome-regression} 和 \cref{section::si-ipw} 中的 outcome regression 与 IPW estimators 在有限样本中并不可行，因为它们要求每一种 treatment levels 组合都有足够的数据。
+
+
+\subsection{Marginal structural model}
+
+一种有力方法基于 marginal structural model (MSM) \citep{robins2000marginal, hernan2000marginal}。
+为了简化记号，我只介绍 $K=2$ 时的 MSM，尽管它的主要用途是在一般情形中。
+
+\begin{definition}
+[MSM]
+\label{def::si-msm}
+$Y(z_1, z_2)$ 的 marginal mean 满足
+$$
+E\{  Y(z_1, z_2) \} = f(z_1,z_2; \beta). 
+$$
+\end{definition}
+
+
+\cref{def::si-msm} 的一个主要例子是 $E\{  Y(z_1, z_2) \} = \beta_0 + \beta_1 z_1 + \beta_2 z_2$。把 baseline covariates 纳入模型也很直接。下面的 \cref{def::si-msm-with-x0} 推广了 \cref{def::si-msm}。
+
+ \begin{definition}
+[MSM with baseline covariates]
+\label{def::si-msm-with-x0}
+条件化于 $X_0$ 后，$Y(z_1, z_2)$ 的 mean 满足
+$$
+E\{  Y(z_1, z_2) \mid X_0 \} = f(z_1,z_2, X_0; \beta). 
+$$
+\end{definition}
+
+\cref{def::si-msm-with-x0} 的一个主要例子是
+\begin{equation}\label{eq::linear-msm}
+E\{  Y(z_1, z_2)  \mid X_0\} = \beta_0 + \beta_1 z_1 + \beta_2 z_2 + \beta_3\tran X_0 .
+\end{equation}
+如果观测到所有 potential outcomes，就可以从下面的 minimization problem 中求解 $\beta$：
+\begin{equation}
+\label{eq::beta-ols-msm}
+\beta = \arg\min_b \sum_{z_2}\sum_{z_1}  E \{  Y(z_1, z_2) -  f(z_1,z_2, X_0; b)   \}^2 .
+\end{equation}
+为简单起见，我聚焦于 least squares formulation。这个讨论也可以推广到一般模型；logistic model 的一个例子见 \cref{hw::logistic-msm}。
+
+
+
+在 sequential ignorability 下，可以从下面只涉及 observables 的 minimization problem 中求解 $\beta$。
+
+
+\begin{theorem}
+[IPW under MSM]
+\label{thm::si-msm-ipw}
+在 \cref{assume::sr-time-varying} 和 \cref{def::si-msm-with-x0} 下，\cref{eq::beta-ols-msm} 中的 $\beta$ 等于
+$$
+\beta = \arg\min_b \sum_{z_2}\sum_{z_1}  E\left[   \frac{  1(Z_1=z_1) 1(Z_2=z_2)   }{   e(z_1, X_0) e(z_2, Z_1, X_1, X_0)     }      
+\{ Y -  f(z_1,z_2, X_0; b)  \}^2 \right] .
+$$
+\end{theorem}
+
+\cref{thm::si-msm-ipw} 的证明与 \cref{thm::sr-ipw} 的证明类似。我把它留到 \cref{problem::ipw-msm}。
+
+
+ \cref{thm::si-msm-ipw} 给出了一个基于 weighted regressions 的简单 estimation strategy。例如，在 \cref{eq::linear-msm} 下，可以用 weights $\hat{e}_{1}^{-1}(Z_{1i}, X_{0i})  \hat{e}_{2i}^{-1}(Z_{2i}, Z_{i1}, X_{1i}, X_{0i})$，拟合 $Y_i$ 关于 $(1,Z_{1i}, Z_{2i}, X_{0i})$ 的 WLS。
+
+ 
+
+
+
+\subsection{Structural nested model}
+
+
+
+IPW 的一个关键问题是：一旦 overlap assumption 被违反，它就不再适用。为了解决这个困难，Robins 提出了 structural nested model。这里同样为了简化表述，我只回顾两个时间点的版本。
+
+\begin{definition}
+[structural nested model]
+\label{def::snm}
+时间点 1 的 conditional effect 为
+$$
+E\{  Y(z_1,0) - Y(0,0) \mid  Z_1=z_1,  X_0 \} = g_1( z_1, X_0; \beta)   
+$$
+对所有 $z_1$ 成立；
+时间点 2 的 conditional effect 为
+$$
+E\{  Y(z_1,z_2) - Y(z_1,0) \mid Z_2=z_2,Z_2=z_1,  X_1,  X_0 \} = g_2(z_2, z_1,  X_1,  X_0; \beta) 
+$$
+对所有 $ z_1, z_2$ 成立。
+\end{definition}
+
+
+%Under sequential ignorability, \cref{def::snm} simplifies to  $E\{  Y(z_1,0) - Y(0,0) \mid   X_0 \} = g_1( z_1, X_0; \beta) $ and $E\{  Y(z_1,z_2) - Y(z_1,0) \mid   X_1,  X_0 \} = g_2(z_2, z_1,  X_1,  X_0; \beta)$, which implies 
+%\begin{eqnarray*}
+%E\{  Y(z_1,z_2) - Y(0,0)  \}  &=&  E\{  Y(z_1,z_2) - Y(z_1,0) \} +E\{  Y(z_1,0) - Y(0,0)\}\\
+%&=& E\{g_2(z_2, z_1,  X_1,  X_0; \beta) \} +  E\{ g_1( z_1, X_0; \beta)\}.
+%\end{eqnarray*}
+%Therefore, if we can estimate the parameter $\beta$ by $\hat\beta$ based on the strategy discussed below, we can estimate the causal effect based on the empirical average
+%$$
+%\hat E\{  Y(z_1,z_2) - Y(0,0)  \}  =  n^{-1} \sumn  g_2(z_2, z_1,  X_{1i,}  X_{0i}; \hat \beta)  +  n^{-1} \sumn  g_1( z_1, X_{0i}; \hat \beta).
+%$$
+
+
+在 \cref{def::snm} 中，有两个 logical restrictions：
+$$
+g_1( 0, X_0; \beta)  = 0
+$$
+并且
+$$
+g_2(0, z_1,  X_1,  X_0; \beta) =0   \text{ for all } z_1.
+$$ 
+ \cref{def::snm} 的两个主要选择如下。
+
+\begin{example}
+\label{example::snm-leading1}
+假设
+$$
+    \begin{cases}
+g_1( z_1, X_0; \beta)  =  \beta_1 z_1, \\
+g_2(z_2, z_1,  X_1,  X_0; \beta) =  (\beta_2 + \beta_3 z_1  ) z_2 .
+    \end{cases}    
+  $$
+\end{example}
+
+\begin{example}
+\label{example::snm-leading2}
+假设
+$$
+    \begin{cases}
+g_1( z_1, X_0; \beta) = (\beta_1 + \beta_2\tran X_0) z_1, \\
+g_2(z_2, z_1,  X_1,  X_0; \beta) = (\beta_3 + \beta_4 z_1  + \beta_5\tran X_1 ) z_2.
+    \end{cases}    
+    $$
+\end{example}
+ 
+
+
+比较 \cref{def::si-msm-with-x0} 和 \cref{def::snm}。Structural nested model 允许同时调整 baseline covariates 和 time-varying covariates，而 marginal structural model 只允许调整 baseline covariates。\cref{def::snm} 下的 estimation 更复杂。一种策略是基于 estimating equations 来估计参数。
+
+为了讨论 estimation，先引入两个重要 building blocks。定义
+$$
+U_2(\beta) = Y- g_2(Z_2, Z_1, X_1, X_0;\beta) 
+$$
+并且
+$$
+U_1(\beta) = Y- g_2(Z_2, Z_1, X_1, X_0;\beta)  - g_1( Z_1, X_0;\beta) .
+$$
+它们不能直接由数据计算，因为它们依赖于参数 $\beta$ 的真实值。在真实值处，它们有如下性质。
+
+
+\begin{lemma}
+\label{lemma::snm-1}
+在 \cref{assume::sr-time-varying} 和 \cref{def::snm} 下，有
+\begin{eqnarray*}
+E\{  U_2(\beta)  \mid Z_2, Z_1, X_1, X_0 \}  &=&  E\{  U_2(\beta)  \mid  Z_1, X_1, X_0 \}  \\
+&=&  E\{   Y(Z_1,0) \mid  Z_1, X_1, X_0 \}
+\end{eqnarray*}
+ 并且
+ \begin{eqnarray*}
+E\{  U_1(\beta)  \mid  Z_1, X_0 \}  &=&  E\{  U_1(\beta)  \mid  X_0 \}  \\
+&=&  E\{   Y(0,0) \mid   X_0 \}.
+\end{eqnarray*}
+\end{lemma}
+
+
+\cref{lemma::snm-1} 涉及一个微妙记号 $ Y(Z_1,0) $，因为 $Z_1$ 是随机的。它应理解为 $  Y(Z_1,0) = Z_1 Y(1,0) +(1-Z_1) Y(0,0)$。
+根据定义和 \cref{lemma::snm-1}，$U_1(\beta)$ 扮演 receiving any treatment 之前的 control potential outcome，$U_2(\beta)  $ 扮演时间点 1 接受 treatment 之后的 control potential outcome。
+
+
+\begin{myproof}{Lemma}{\cref{lemma::snm-1}}
+{\bf Part 1}. 
+有
+\begin{eqnarray*}
+&&E\{  U_2(\beta)  \mid Z_2=1, Z_1, X_1, X_0 \}  \\
+&=&    E\{  Y(Z_1,1)- g_2(1, Z_1, X_1, X_0;\beta)   \mid Z_2=1, Z_1, X_1, X_0 \}  \\
+&=& E\{  Y(Z_1,0)   \mid Z_2=1, Z_1, X_1, X_0 \} 
+\end{eqnarray*}
+并且
+\begin{eqnarray*}
+&&E\{  U_2(\beta)  \mid Z_2=0, Z_1, X_1, X_0 \} \\
+ &=&    E\{  Y(Z_1,0)- g_2(0, Z_1, X_1, X_0;\beta)   \mid Z_2=0, Z_1, X_1, X_0 \}   \\
+&=& E\{  Y(Z_1,0)   \mid Z_2=0, Z_1, X_1, X_0 \}
+\end{eqnarray*}
+因此
+\begin{eqnarray*}
+E\{  U_2(\beta)  \mid Z_2, Z_1, X_1, X_0 \}  &=&  E\{  Y(Z_1,0)   \mid Z_2, Z_1, X_1, X_0 \} \\
+&=& E\{  Y(Z_1,0)   \mid   Z_1, X_1, X_0 \}
+\end{eqnarray*}
+其中最后一个等式来自 sequential ignorability。由于最后一项不依赖于 $Z_2$，因此也有
+$$
+E\{  U_2(\beta)  \mid Z_2, Z_1, X_1, X_0 \}  = E\{  U_2(\beta)  \mid  Z_1, X_1, X_0 \} . 
+$$
+
+{\bf Part 2}. 
+利用上面的结果，有
+ \begin{eqnarray*}
+&&E\{  U_1(\beta)  \mid  Z_1, X_0 \}  \\
+&=&  E\{  U_2(\beta)  - g_1( Z_1, X_0;\beta)  \mid  Z_1, X_0 \} \qquad (\text{\cref{def::snm}}) \\
+&=& E\left[    E\{  U_2(\beta)  - g_1( Z_1, X_0;\beta)  \mid X_1,  Z_1, X_0 \}   \mid  Z_1, X_0 \right]  \qquad (\text{tower property})  \\
+&=&  E\left[    E\{ Y(Z_1,0) - g_1( Z_1, X_0;\beta)  \mid X_1,  Z_1, X_0 \}   \mid  Z_1, X_0 \right]   \qquad (\text{part 1}) \\
+&=&  E\{ Y(Z_1,0) - g_1( Z_1, X_0;\beta)  \mid  Z_1, X_0 \} \qquad (\text{tower property})  \\
+&=& E\{ Y(0,0)  \mid  Z_1, X_0 \} \qquad (\text{\cref{def::snm}}) \\
+&=&  E\{ Y(0,0)  \mid  X_0 \}  \qquad (\text{sequential ignorability}).
+\end{eqnarray*}
+由于最后一项不依赖于 $Z_1$，因此也有
+$$
+E\{  U_1(\beta)  \mid  Z_1, X_0 \}   = E\{  U_1(\beta)  \mid   X_0 \}.   
+$$
+\end{myproof}
+
+
+有了 \cref{lemma::snm-1}，就可以证明下面的 \cref{thm::estimating-equation-snm}。
+
+\begin{theorem}
+\label{thm::estimating-equation-snm}
+在 \cref{assume::sr-time-varying} 和 \cref{def::snm} 下，
+$$
+E\Big[  h_2(Z_1, X_1, X_0)  \{ Z_2 - e(1, Z_1, X_1, X_0)  \}  U_2(\beta)   \Big] = 0
+$$
+并且
+$$
+E\Big[    h_1(X_0)  \{  Z_1 - e(1, X_0) \}  U_1(\beta) \Big] = 0 . 
+$$
+对任意函数 $h_1$ 和 $h_2$ 成立，只要相应 moments 存在。
+\end{theorem}
+
+ 
+
+\begin{myproof}{Theorem}{\cref{thm::estimating-equation-snm}}
+条件化于 $(Z_2, Z_1, X_1, X_0)$ 并使用 tower property 和 \cref{lemma::snm-1}，可得
+\begin{eqnarray*}
+%&&E\left[  h_2(Z_1, X_1, X_0)  \{ Z_2 - e(1, Z_1, X_1, X_0)  \}   \{Y- g_2(Z_2, Z_1, X_1, X_0;\beta) \}   \right]  \\
+&& E\left[  h_2(Z_1, X_1, X_0)  \{  Z_2 - e(1, Z_1, X_1, X_0)  \}   E\{U_2(\beta) \mid  Z_2, Z_1, X_1, X_0\}   \right] \\
+&=& E\left[  h_2(Z_1, X_1, X_0)  \{  Z_2 - e(1, Z_1, X_1, X_0)  \}   E\{U_2(\beta) \mid  Z_1, X_1, X_0\}   \right] .
+\end{eqnarray*}
+再条件化于 $( Z_1, X_1, X_0)$ 并使用 tower property，可知最后一项等于 0，因为 $E\{  Z_2 - e(1, Z_1, X_1, X_0) \mid  Z_1, X_1, X_0\} = 0. $
+ 
+类似地，条件化于 $(Z_1, X_0)$ 并使用 tower property 和 \cref{lemma::snm-1}，可得
+ \begin{eqnarray*}
+%&& E\left[    h_1(X_0)   \{  Z_1 - e(1, X_0) \}  \{Y- g_2(Z_2, Z_1, X_1, X_0;\beta)  - g_1( Z_1, X_0;\beta) \}  \right]  \\
+&& E\left[    h_1(X_0)   \{  Z_1 - e(1, X_0) \}  E \{U_1(  \beta) \mid Z_1, X_0\}  \right]  \\
+&=& E\left[    h_1(X_0)   \{  Z_1 - e(1, X_0) \} E \{U_1(  \beta) \mid X_0\}  \right] .
+ \end{eqnarray*}
+再条件化于 $X_0$ 并使用 tower property，可知最后一项等于 0，因为 $E\{  Z_1 - e(1, X_0) \mid X_0 \} = 0.$
+\end{myproof}
+
+
+
+为了使用 \cref{thm::estimating-equation-snm}，必须指定 $h_1$ 和 $h_2$，以保证有足够多 equations 来求解 $\beta$。下面的 \cref{example::g-estimation-snm} 重新讨论 \cref{example::snm-leading1}。
+
+
+\begin{example}
+\label{example::g-estimation-snm}
+在 \cref{example::snm-leading1} 下，可以选择 $h_1 = 1$ 和 $h_2 = (1,Z_1)$，得到
+ \begin{eqnarray*}
+ E\left[    \{ Z_2 - e(1, Z_1, X_1, X_0)  \}  \{Y-  (\beta_2 + \beta_3 Z_1  ) Z_2\}   \right] &=& 0,
+\\
+ E\left[   Z_1 \{ Z_2 - e(1, Z_1, X_1, X_0)  \}  \{Y-  (\beta_2 + \beta_3 Z_1  ) Z_2\}   \right] &=& 0,
+ \\
+ E\left[    \{  Z_1 - e(1, X_0) \}  \{Y- (\beta_2 + \beta_3 Z_1  ) Z_2 - \beta_1  Z_1 \}  \right] &=& 0 . 
+ \end{eqnarray*}
+ 然后可以从上述 linear equations 中解出 $\beta$'s；见 \cref{problem::snm-estimation-example}。一个自然问题是：$(h_1, h_2)$ 的其他选择是否会产生更 efficient 的 estimators。答案是肯定的。例如，可以选择多个 $(h_1, h_2)$，并使用 generalized method of moment \citep{hansen1982large}。技术细节超出本书范围。
+\end{example}
+
+ 
+\citet{naimi2017introduction} 和 \citet{vansteelandt2014structural} 提供了 structural nested models 的教程。
+ 
+  
+  
+\section{Homework problems}
+
+\homeworksolutionref{29}
+\paragraph{g-null paradox}\label{problem::g-null-paradox}
+
+
+考虑 \cref{fig::si-g-null-paradox} 中的简单 causal diagram；其中没有 pre-treatment covariates $X_0$，也没有从 $(Z_1, Z_2)$ 指向 $Y$ 的箭头。因此 $(Z_1,Z_2)$ 对 $Y$ 的 effect 为零。
+
+\begin{figure}
+\bigskip 
+$$
+ \xymatrix{
+ Z_1 \ar[r]   & X_1   \ar[r]  & Z_2  & Y \\
+                                             &                                             &U\ar[lu]\ar[ru]
+ }
+ $$
+ \caption{$X_1$ 与 $Y$ 之间存在 unmeasured confounding。该 causal diagram 忽略了 pre-treatment covariates $X_0$。}\label{fig::si-g-null-paradox}
+\end{figure}
+
+
+重新考察 \cref{example::linear-si}。证明：如果
+$$
+\beta_1  = \beta_2 = 0  \text{ and }   \beta_3 = 0
+$$
+或者
+$$
+\beta_1 = \beta_2 = 0 \text{ and } E\{ X_1(z_1)\}  \text{ does not depend on } z_1.
+$$
+成立，那么 expectation $E\{ Y(z_1, z_2) \} $ 不依赖于 $(z_1, z_2)$。
+
+
+Remark:
+然而，第一个条件中的 $\beta_3 = 0$ 排除了 $Y$ 对 $X_1$ 的依赖，这与 $X_1$ 和 $Y$ 之间存在 unmeasured confounder $U$ 相矛盾；$E\{ X_1(z_1)\} $ 对 $z_1$ 的不依赖排除了 $X_1$ 对 $Z_1$ 的依赖，这又与从 $Z_1$ 指向 $X_1$ 的箭头相矛盾。也就是说，如果 $X_1$ 与 $Y$ 之间存在 unmeasured confounder $U$，并且存在从 $Z_1$ 指向 $X_1$ 的箭头，那么 \cref{example::linear-si} 中 $E\{ Y(z_1, z_2) \} $ 的公式必然依赖于 $(z_1, z_2)$；这又与不存在从 $(Z_1, Z_2)$ 指向 $Y$ 的箭头相矛盾。
+
+
+\paragraph{Recursive estimation under the null model}\label{problem::recursive-null}
+
+
+在 \cref{problem::g-null-paradox} 的 causal diagram 下，考虑 \cref{section::recursive} 中的 recursive estimation method。
+证明：基于 linear models 时，该 estimator 收敛到 0。
+
+
+
+\paragraph{IPW under MSM}\label{problem::ipw-msm}
+
+
+证明 \cref{thm::si-msm-ipw}。
+
+
+\paragraph{A nonlinear example of \cref{def::si-msm-with-x0}}\label{hw::logistic-msm}
+
+
+\cref{def::si-msm-with-x0} 的另一个主要例子是
+\begin{equation}\label{eq::logistic-msm}
+\text{logit} \left[ \pr\{  Y(z_1, z_2)  =1  \mid X_0\}  \right] = \beta_0 + \beta_1 z_1 + \beta_2 z_2 + \beta_3\tran X_0 .
+\end{equation}
+如果观测到所有 potential outcomes，就可以通过最小化 negative log-likelihood function 的 expectation 来求解 $\beta$（更简单的版本见 \cref{sec::mle-logistic}）：
+\begin{equation}
+\label{eq::beta-logistic}
+\beta = \arg\min_b   \sum_{z_2}\sum_{z_1}  E\left\{   \log (1 + e^{\ell })
+- Y(z_1, z_2)  \ell  \right\}
+\end{equation}
+其中 $\ell = \beta_0 + \beta_1 z_1 + \beta_2 z_2 + \beta_3\tran X_0.$
+在 sequential ignorability 下，可以从下面只涉及 observables 的 minimization problem 中求解 $\beta$。
+
+
+\begin{theorem}
+[IPW under MSM]
+\label{thm::si-msm-ipw-logistic}
+在 \cref{assume::sr-time-varying} 和 \cref{def::si-msm-with-x0} 下，\cref{eq::beta-logistic} 中的 $\beta$ 等于
+$$
+\beta = \arg\min_b \sum_{z_2}\sum_{z_1}  E\left[   \frac{  1(Z_1=z_1) 1(Z_2=z_2)   }{   e(z_1, X_0) e(z_2, Z_1, X_1, X_0)     }      
+\left\{   \log (1 + e^{\ell })
+- Y(z_1, z_2)  \ell  \right\} \right] .
+$$
+\end{theorem}
+
+证明 \cref{thm::si-msm-ipw-logistic}。
+
+Remark:
+\cref{thm::si-msm-ipw-logistic} 给出了一个基于 weighted regressions 的简单 estimation strategy。例如，在 \cref{eq::logistic-msm} 下，可以用 weights $\hat{e}_{1}^{-1}(Z_{1i}, X_{0i})  \hat{e}_{2i}^{-1}(Z_{2i}, Z_{i1}, X_{1i}, X_{0i})$，拟合 $Y_i$ 关于 $(1,Z_{1i}, Z_{2i}, X_{0i})$ 的 weighted logistic regression。
+
+ 
+
+
+
+
+\paragraph{Structural nested model with a single time point}\label{problem::snm-single-time}
+
+ 
+
+回顾 observational studies 的标准设定：IID data 来自 $\{ X,Z, Y(1), Y(0)\}$。定义 propensity score 为 $e(X) = \pr(Z=1\mid X)$。假设
+$$
+Z\ind Y(0)\mid X
+$$
+并考虑下面的 structural nested model。
+
+
+\begin{definition}
+[structural nested model with a single time point]
+\label{definition::snm-single}
+individual effect 的 conditional mean 为
+$$
+E\{  Y(z) - Y(0)\mid Z=z, X \} = g(z,X;\beta).
+$$
+\end{definition}
+
+在 \cref{definition::snm-single} 中，一个 logical restriction 是 $g(0,X;\beta) = 0$。证明下面的结果。
+
+
+\begin{enumerate}
+\item
+有
+$$
+E\{  Y - g(Z,X;\beta) \mid X, Z\} = E\{  Y - g(Z,X;\beta) \mid X\}  = E\{  Y(0) \mid X\}. 
+$$
+
+
+\item
+有
+\begin{eqnarray}\label{eq::Estimating-equation-snm-1}
+E\Big [  h(X)  \{ Z-e(X) \}   \{  Y - g(Z,X;\beta) \}  \Big ] = 0
+\end{eqnarray}
+对任意函数 $h$ 成立，只要相应 moment 存在。
+\end{enumerate}
+
+ 
+
+
+Remark:  \cref{eq::Estimating-equation-snm-1} 是 parameter estimation 的基础。
+考虑 \cref{definition::snm-single} 的一个特殊情形，其中 $g(z,X;\beta) = \beta z$。选择 $h(X) = 1$，得到
+$$
+E\{   (Z-e(X))   (Y-  \beta Z) \}  = 0.
+$$
+解出 $\beta$，得到
+$$
+\beta = \frac{   E\{ (Z-e(X)) Y \}   }{   E\{ (Z-e(X))  Z\}   }.
+$$
+因此，$\beta$ 等于以 $Z-e(X)$ 作为 $Z$ 的 IV 时，$Y$ 关于 $Z$ 的 TSLS 中 $Z$ 的 coefficient。经过一些基本计算，还可以证明
+$$
+\beta = \frac{   \cov\{ Z-e(X), Y\}   }{ \cov\{ Z-e(X) \}  }.
+$$
+因此，$\beta$ 等于 $Y$ 关于 $Z-e(X)$ 的 OLS 中 $Z-e(X)$ 的 coefficient；这在 \cref{sec::regress-on-pscore} 中已经出现过。
+
+再考虑 \cref{definition::snm-single} 的另一个特殊情形，其中 $g(z,X;\beta) = (\beta_0 + \beta_1\tran X) z$。选择 $h(X) = (1,X)$，得到
+$$
+E\left\{   \begin{pmatrix}
+Z-e(X)\\
+(Z-e(X)) X
+\end{pmatrix}  
+(Y-  \beta_0 Z - \beta_1\tran XZ) \right\}  = 0.
+$$
+也就是说，$(\beta_0,\beta_1)$ 等于以 $(Z-e(X),  (Z-e(X)) X )$ 作为 $(Z, XZ)$ 的 IV 时，$Y$ 关于 $(Z, XZ)$ 的 TSLS 中的 coefficients。
+
+
+
+\paragraph{Estimation under \cref{example::g-estimation-snm}}\label{problem::snm-estimation-example}
+ 
+
+可以通过求解 \cref{example::g-estimation-snm} 中 estimating equations 的 empirical version 来估计 $\beta$'s。先估计两个 propensity scores，并得到时间点 1 的 centered treatment：
+$$
+\check{Z}_{1i} = Z_{1i} - \hat{e}(1,X_{0i})
+$$
+以及时间点 2 的 centered treatment：
+ $$
+ \check{Z}_{2i} = Z_{2i}  - \hat{e}(1, Z_{1i}, X_{1i}, X_{0i})
+ $$
+ 
+
+
+证明：可以用 $( \check{Z}_{2i} ,  Z_{1i}\check{Z}_{2i} )$ 作为 $(Z_{2i}, Z_{1i} Z_{2i} )$ 的 IV，运行 $Y_i$ 关于 $(Z_{2i}, Z_{1i} Z_{2i} )$ 的 TSLS 来估计 $\beta_2$ 和 $\beta_3$；随后用 $\check{Z}_{1i} $ 作为 $Z_{1i}$ 的 IV，运行 $Y_i - (\hat{\beta}_2+\hat{\beta}_3 Z_{1i}) Z_{2i}$ 关于 $Z_{1i}$ 的 TSLS 来估计 $\beta_1$。
+ 
+ 
+ 
+ 
+\paragraph{g-formula with a treatment at multiple time points}\label{problem::g-formula-multiple-time}
+
+
+
+把上面的讨论推广到 $K$ 个时间点的设定。变量的时间顺序如下；注意这不是 causal diagram：
+$$
+X_0 \rightarrow Z_1 \rightarrow X_1 \rightarrow Z_2 \rightarrow \cdots  \rightarrow  X_{K-1}  \rightarrow Z_K .
+$$
+引入记号 $\overline{Z}_k = (Z_1, \ldots, Z_k)$ 和 $\overline{X}_k = (X_0, X_1, \ldots, X_k)$，并用小写 $\overline{z}_k $ 和 $\overline{x}_k$ 表示相应 realized values。当 $k=0$ 时，有 $\overline{X}_0 = X_0$，并且 $\overline{Z}_0$ 为空。
+每个 unit 有 $2^K$ 个 potential outcomes：
+$$
+Y(\overline{z}_K) \text{ for all } z_1,\ldots, z_K = 0,1.
+$$
+假设下面的 sequential ignorability。
+
+\begin{assumption}
+[sequential ignorability at multiple time points]\label{assume::si-multiple}
+有
+$$
+Z_k \ind Y(\overline{z}_K) \mid (\overline{Z}_{k-1}, \overline{X}_{k-1})
+$$
+对所有 $k=1,\ldots, K$ 以及所有 $z_1,\ldots, z_K = 0,1$ 成立。
+\end{assumption}
+
+
+证明下面的 \cref{thm::g-formula-multiple}。
+
+
+\begin{theorem}
+[g-formula with multiple time points]
+\label{thm::g-formula-multiple}
+在 \cref{assume::si-multiple} 下，
+$$
+E\{ Y(\overline{z}_K)  \} = E\left[ \cdots    
+E\{   E(Y\mid \overline{z}_K, \overline{X}_{K-1}) \mid \overline{z}_{K-1}, \overline{X}_{K-2} \}
+\cdots \mid z_1,  X_0 \right] .
+$$
+\end{theorem}
+
+
+Remark:
+在 \cref{thm::g-formula-multiple} 中，我用简写记号 ``$\overline{z}_k$'' 表示 ``$\overline{Z}_k = \overline{z}_k $.'' 
+当 $X$ 是 discrete 时，\cref{thm::g-formula-multiple} 化为
+\begin{eqnarray*}
+ E\{ Y(\overline{z}_K)  \}  
+&=& 
+\sum_{x_0} \sum_{x_1} \cdots   \sum_{x_{K-1}} 
+ E(Y\mid \overline{z}_K, \overline{x}_{K-1})   \\
+ && 
+\qquad \qquad \cdot  \pr(x_{K-1}\mid \overline{z}_{K-1}, \overline{x}_{K-2}) 
+ \cdots
+ \pr(x_1\mid z_{1}, x_0)
+ \pr(x_0) ; 
+\end{eqnarray*} 
+当 $X$ 是 continuous 时，\cref{thm::g-formula-multiple} 化为
+\begin{eqnarray*}
+  E\{ Y(\overline{z}_K)  \}  
+&=& 
+\int 
+ E(Y\mid \overline{z}_K, \overline{x}_{K-1})   \\
+ && \cdot 
+ f(x_{K-1}\mid \overline{z}_{K-1}, \overline{x}_{K-2}) 
+ \cdots
+ f(x_1\mid z_{1}, x_0)
+ f(x_0)
+ \d \overline{x}_{K-1}   . 
+\end{eqnarray*} 
+
+
+
+
+
+ 
+ \paragraph{IPW with treatments at multiple time points}\label{problem::ipw-multiple-time}
+
+沿用 \cref{problem::g-formula-multiple-time} 的设定。定义 $K$ 个时间点的 propensity score 为
+\begin{eqnarray*}
+e(z_1, X_0) &=& \pr(Z_1 = z_1\mid X_0) ,\\
+\vdots \\
+e(z_k, \overline{Z}_{k-1},  \overline{X}_{k-1}) &=&  \pr(Z_k = z_k \mid \overline{Z}_{k-1},  \overline{X}_{k-1}) ,\\
+\vdots \\
+e(z_K, \overline{Z}_{K-1},  \overline{X}_{K-1}) &=&  \pr(Z_K = z_K \mid \overline{Z}_{K-1},  \overline{X}_{K-1}) .
+\end{eqnarray*}
+
+
+在隐含假设 overlap 的前提下，证明下面的 \cref{thm::ipw-multiple}。
+
+
+\begin{theorem}
+[IPW with multiple time points]\label{thm::ipw-multiple}
+在 \cref{assume::si-multiple} 下，
+$$
+  E\{ Y(\overline{z}_K)  \}   = E\left\{  
+  \frac{1(Z_1 = z_1) \cdots  1( Z_K = z_K) Y}{    e(z_1, X_0)  \cdots  e(z_K, \overline{Z}_{K-1},  \overline{X}_{K-1})   }
+  \right\}.
+$$
+\end{theorem}
+
+
+基于 \cref{thm::ipw-multiple}，构造 Horvitz--Thompson 和 Hajek estimators。
+
+
+ \paragraph{MSM with treatments at multiple time points}\label{problem::msm-multiple-time}
+
+
+Potential outcomes 的数量会随 $K$ 指数增长。\cref{problem::g-formula-multiple-time} 和 \cref{problem::ipw-multiple-time} 中的公式在有限样本中不能直接应用。可以对 potential outcomes 施加下面的 structural assumptions。
+
+
+\begin{definition}
+[MSM with multiple time points]\label{definition::msm-multiple}
+假设
+$$
+  E\{ Y(\overline{z}_K)  \mid X_0\}  = f(\overline{z}_K, X_0 ; \beta  ).
+$$
+\end{definition}
+
+
+\cref{definition::msm-multiple} 的两个主要例子是
+$$
+  E\{ Y(\overline{z}_K)  \mid X_0\}   = \beta_0 + \beta_1 \sum_{k=1}^K z_k + \beta_2\tran X_0 
+  $$
+以及
+$$ 
+ E\{ Y(\overline{z}_K)  \mid X_0\}   = \beta_0 +  \sum_{k=1}^K \beta_k z_k + \beta_{K+1}\tran X_0 .
+ $$
+
+如果知道所有 potential outcomes，就可以从下面的 minimization problem 中求解 $\beta$：
+$$
+\beta = \arg \min_b  \sum_{  \overline{z}_K  }  E\{   Y(\overline{z}_K) -  f(\overline{z}_K, X_0 ; \beta  )\}^2.
+$$
+下面的 \cref{thm::ipw-msm-multiple} 说明，在 \cref{assume::si-multiple} 下，可以从一个只涉及 observables 的 minimization problem 中求解 $\beta$。
+
+
+\begin{theorem}
+[IPW for MSM with multiple time points]\label{thm::ipw-msm-multiple}
+在 \cref{assume::si-multiple} 下，
+$$
+\beta = \arg \min_b  \sum_{  \overline{z}_K  }    E\left[ 
+  \frac{1(Z_1 = z_1) \cdots 1( Z_K = z_K) }{    e(z_1, X_0)  \cdots  e(z_K, \overline{Z}_{K-1},  \overline{X}_{K-1})    }
+  \{ Y -  f(\overline{z}_K, X_0 ; \beta  )\} ^2
+  \right] .
+$$
+\end{theorem}
+
+
+
+  
+   \paragraph{Structural nested model with treatments at multiple time points}\label{problem::snm-multiple-time}
+
+
+沿用 \cref{problem::g-formula-multiple-time} 的设定以及 \cref{problem::ipw-multiple-time} 的记号。本题给出一个一般的 structural nested model。
+
+\begin{definition}
+[structural nested model with multiple time points]
+\label{def::snm-multiple}
+时间 $k$ 的 conditional effect 为
+$$
+E\{  Y(\overline{z}_k,0) - Y( \overline{z}_{k-1},0) \mid \overline{z}_k , \overline{X}_{k-1} \} = g_k( \overline{z}_k, \overline{X}_{k-1}; \beta) 
+$$
+对所有 $\overline{z}_k$ 以及所有 $k=1,\ldots, K$ 成立。
+\end{definition}
+
+
+ 
+在 \cref{def::snm-multiple} 中，一个 logical restriction 是
+$$
+g_k(0,  \overline{z}_{k-1}, \overline{X}_{k-1}; \beta)    = 0
+$$ 
+对所有 $\overline{z}_{k-1}$ 以及所有 $k=1,\ldots, K$ 成立。
+
+
+定义
+$$
+U_k(\beta) = Y - \sum_{s=1}^k  g_s( \overline{Z}_s, \overline{X}_{s-1}; \beta) 
+$$
+对所有 $k=1,\ldots, K$ 成立。下面的 \cref{thm::snm-estimating-equation-multiple} 推广了 \cref{thm::estimating-equation-snm}。
+
+
+
+\begin{theorem}
+\label{thm::snm-estimating-equation-multiple}
+在 \cref{assume::si-multiple} 和 \cref{def::snm-multiple} 下，有
+$$
+E\left[    h_k( \overline{Z}_{k-1}, \overline{X}_{k-1} ) \{  Z_k - e(1, \overline{Z}_{k-1}, \overline{X}_{k-1}) \}  U_k(\beta) 
+\right] = 0
+$$
+对任意函数 $h_k$ $(k=1,\ldots, K)$ 成立，只要相应 moment 存在。
+\end{theorem}
+
+
+
+Remark: 选择适当的 $h_k$'s 后，可以通过求解 \cref{thm::snm-estimating-equation-multiple} 的 empirical version 来估计 $\beta$。
+
+
+  
+    

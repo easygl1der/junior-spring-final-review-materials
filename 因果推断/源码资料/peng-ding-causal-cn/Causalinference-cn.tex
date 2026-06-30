@@ -1,0 +1,283 @@
+\documentclass[krantz1]{krantz}
+
+\usepackage{fixltx2e,fix-cm}
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\setCJKmainfont[
+  Path = fonts/source-han-serif/,
+  BoldFont = SourceHanSerifSC-Bold.otf
+]{SourceHanSerifSC-Regular.otf}
+\setCJKsansfont[
+  Path = fonts/source-han-serif/,
+  BoldFont = SourceHanSerifSC-Bold.otf
+]{SourceHanSerifSC-Regular.otf}
+\setCJKmonofont[
+  Path = fonts/source-han-serif/,
+  BoldFont = SourceHanSerifSC-Bold.otf
+]{SourceHanSerifSC-Regular.otf}
+
+\usepackage{amssymb, bbm, bm, mathtools}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{color, rotating}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage{makeidx}
+\usepackage{multicol}
+\usepackage[all,import]{xy}
+\usepackage{natbib}
+\usepackage{listings}
+\usepackage{hyperref}
+\hypersetup{unicode=true}
+\usepackage[nameinlink]{cleveref}
+
+\definecolor{mygray}{gray}{0.6}
+
+\lstset{language=R,
+    basicstyle=\small\ttfamily,
+    showstringspaces=false,
+    commentstyle=\color{mygray},
+}
+
+\lstnewenvironment{rc}[1][]{\lstset{language=R}}{}
+\newcommand{\ri}[1]{\lstinline{#1}}
+\lstset{language=R}
+
+\renewcommand{\theparagraph}{\arabic{chapter}.\arabic{paragraph}}
+\setcounter{secnumdepth}{5}
+\newenvironment{myproof}[2]{\noindent {\bfseries 证明 {#1} {#2}:}}{\hfill$\square$}
+\newenvironment{mysolution}[1]{\vspace{0.1in} \noindent {\bfseries 习题 {#1} 的解答:}}{\hfill$\square$}
+\newenvironment{exercisesolution}[2]{\vspace{0.12in}\noindent{\bfseries Solution to #1: #2.}}{\hfill$\square$\par\vspace{0.08in}}
+
+\newtheorem{lemma}{引理}
+\newtheorem{proposition}{命题}
+\newtheorem{assumption}{假设}
+\newtheorem{remark}{注}
+\newtheorem{condition}{条件}
+\newtheorem{corollary}{推论}
+
+\crefname{part}{部分}{部分}
+\Crefname{part}{部分}{部分}
+\crefname{chapter}{章}{章}
+\Crefname{chapter}{章}{章}
+\crefname{section}{节}{节}
+\Crefname{section}{节}{节}
+\crefname{subsection}{小节}{小节}
+\Crefname{subsection}{小节}{小节}
+\crefname{paragraph}{段落}{段落}
+\Crefname{paragraph}{段落}{段落}
+\crefname{equation}{式}{式}
+\Crefname{equation}{式}{式}
+\crefname{figure}{图}{图}
+\Crefname{figure}{图}{图}
+\crefname{table}{表}{表}
+\Crefname{table}{表}{表}
+\crefname{theorem}{定理}{定理}
+\Crefname{theorem}{定理}{定理}
+\crefname{lemma}{引理}{引理}
+\Crefname{lemma}{引理}{引理}
+\crefname{proposition}{命题}{命题}
+\Crefname{proposition}{命题}{命题}
+\crefname{example}{例}{例}
+\Crefname{example}{例}{例}
+\crefname{remark}{注}{注}
+\Crefname{remark}{注}{注}
+\crefname{assumption}{假设}{假设}
+\Crefname{assumption}{假设}{假设}
+\newcommand{\homeworksolutionref}[1]{%
+  \par\smallskip
+  \noindent\textbf{解答：}本章习题解答见 \cref{sol:chapter#1}。%
+  \par\smallskip
+}
+
+\newcommand{\pkg}[1]{{\fontseries{b}\selectfont #1}}
+\def\letas{\mathrel{\mathop{=}\limits^{\triangle}}}
+\def\ind{\begin{picture}(9,8)
+         \put(0,0){\line(1,0){9}}
+         \put(3,0){\line(0,1){8}}
+         \put(6,0){\line(0,1){8}}
+         \end{picture}
+        }
+\def\nind{\begin{picture}(9,8)
+         \put(0,0){\line(1,0){9}}
+         \put(3,0){\line(0,1){8}}
+         \put(6,0){\line(0,1){8}}
+         \put(1,0){{\it /}}
+         \end{picture}
+    }
+
+\def\AVar{\text{AsyVar}}
+\def\var{\textup{var}}
+\def\cov{\textup{cov}}
+\def\sumn{\sum_{i=1}^n}
+\def\summ{\sum_{j=1}^m}
+\def\convergeas{\stackrel{a.s.}{\longrightarrow}}
+\def\converged{\stackrel{\textup{d}}{\longrightarrow}}
+\def\iidsim{\stackrel{\textup{IID}}{\sim}}
+\def\indsim{\stackrel{ind}{\sim}}
+\def\pr{\textup{pr}}
+\def\RD{\textsc{rd}}
+\def\RR{\textsc{rr}}
+\def\OR{\textsc{or}}
+\def\true{\textup{true}}
+\def\obs{\textup{obs}}
+\def\G{\text{Gamma}}
+\def\d{\textnormal{d}}
+\def\N01{\textsc{N}(0,1)}
+\def\HF{H_{0\textsc{f}}}
+\def\HN{H_{0\textsc{n}}}
+\newcommand*{\tran }{^{\mkern-1.5mu\mathsf{T}}}
+\def\asim{\stackrel{\cdot}{\sim}}
+\def\diff{\textup{d}}
+\def\at{\textup{a}}
+\def\nt{\textup{n}}
+\def\cp{\textup{c}}
+\def\df{\textup{d}}
+\def\logit{\textup{logit}}
+\def\expit{\textup{expit}}
+\def\L{\ell}
+\def\U{u}
+\def\CDE{\textsc{cde}}
+\def\NDE{\textsc{nde}}
+\def\NIE{\textsc{nie}}
+\def\se{\textup{se}}
+\def\frt{\textsc{frt}}
+\newcommand{\term}[2]{#1（#2）}
+\newcommand{\translatornote}[1]{\begin{remark}\textbf{译者注：}#1\end{remark}}
+
+\frenchspacing
+\tolerance=5000
+\makeindex
+
+\include{frontmatter/preamble}
+
+\begin{document}
+
+\frontmatter
+
+\title{A First Course in Causal Inference}
+\author{Peng Ding}
+
+\maketitle
+
+\include{frontmatter/dedication}
+\tableofcontents
+\include{frontmatter/preface}
+\include{frontmatter/acronyms}
+\include{frontmatter/notation}
+
+\mainmatter
+
+\makeatletter
+\@addtoreset{assumption}{chapter}
+\@addtoreset{example}{chapter}
+\@addtoreset{lemma}{chapter}
+\@addtoreset{remark}{chapter}
+\@addtoreset{theorem}{chapter}
+\@addtoreset{corollary}{chapter}
+\@addtoreset{proposition}{chapter}
+\@addtoreset{definition}{chapter}
+\makeatother
+
+\renewcommand{\theexample}{\thechapter.\arabic{example}}
+\renewcommand{\theassumption}{\thechapter.\arabic{assumption}}
+\renewcommand{\thelemma}{\thechapter.\arabic{lemma}}
+\renewcommand{\thetheorem}{\thechapter.\arabic{theorem}}
+\renewcommand{\theremark}{\thechapter.\arabic{remark}}
+\renewcommand{\thecondition}{\thechapter.\arabic{condition}}
+\renewcommand{\thecorollary}{\thechapter.\arabic{corollary}}
+\renewcommand{\theproposition}{\thechapter.\arabic{proposition}}
+\renewcommand{\thedefinition}{\thechapter.\arabic{definition}}
+
+\part{Introduction}\label{part::introduction}
+\include{chapters/chapter01introduction}
+\include{chapters/chapter02potentialoutcomes}
+
+\part{Randomized experiments}\label{part::rcts}
+\include{chapters/chapter03CREFRT}
+\include{chapters/chapter04CRENeyman}
+\include{chapters/chapter05SRE}
+\include{chapters/chapter06ReMReg}
+\include{chapters/chapter07MPE}
+\include{chapters/chapter08unification}
+\include{chapters/chapter09bridge}
+
+\part{Observational studies}\label{part::observational-studies}
+\include{chapters/chapter10observationalstudies}
+\include{chapters/chapter11pscore}
+\include{chapters/chapter12doublyrobust}
+\include{chapters/chapter13ATT}
+\include{chapters/chapter14pscoreregression}
+\include{chapters/chapter15matching}
+
+\part{Difficulties and challenges of observational studies}\label{part::challenges-os}
+\include{chapters/chapter16confounding}
+\include{chapters/chapter17Evalue}
+\include{chapters/chapter18sensitivityACE}
+\include{chapters/chapter19Gamma}
+\include{chapters/chapter20OverlapRDD}
+
+\part{Instrumental variables}\label{part::instrumentalvariables}
+\include{chapters/chapter21CACE}
+\include{chapters/chapter22IVinequalities}
+\include{chapters/chapter23TSLS}
+\include{chapters/chapter24FRDD}
+\include{chapters/chapter25mendelianrandomization}
+
+\part{Causal Mechanisms with Post-Treatment Variables}\label{part::post-treatmentvariable}
+\include{chapters/chapter26principalstratification}
+\include{chapters/chapter27mediation}
+\include{chapters/chapter28CDE}
+\include{chapters/chapter29time}
+
+\appendix
+\part{附录}
+
+\renewcommand{\theparagraph}{\Alph{chapter}.\arabic{paragraph}}
+\include{chapters/appendix_basicstatistics}
+\include{chapters/appendix_linearmodel}
+\include{chapters/appendix_surveysampling}
+
+\part{译者附录}
+\include{appendix/qa}
+
+\part{Exercise Solutions}
+\setcounter{chapter}{0}
+\renewcommand{\thechapter}{S\arabic{chapter}}
+\renewcommand{\theparagraph}{S\arabic{chapter}.\arabic{paragraph}}
+\include{solutions/chapter01solutions}
+\include{solutions/chapter02solutions}
+\include{solutions/chapter03solutions}
+\include{solutions/chapter04solutions}
+\include{solutions/chapter05solutions}
+\include{solutions/chapter06solutions}
+\include{solutions/chapter07solutions}
+\include{solutions/chapter08solutions}
+\include{solutions/chapter09solutions}
+\include{solutions/chapter10solutions}
+\include{solutions/chapter11solutions}
+\include{solutions/chapter12solutions}
+\include{solutions/chapter13solutions}
+\include{solutions/chapter14solutions}
+\include{solutions/chapter15solutions}
+\include{solutions/chapter16solutions}
+\include{solutions/chapter17solutions}
+\include{solutions/chapter18solutions}
+\include{solutions/chapter19solutions}
+\include{solutions/chapter20solutions}
+\include{solutions/chapter21solutions}
+\include{solutions/chapter22solutions}
+\include{solutions/chapter23solutions}
+\include{solutions/chapter24solutions}
+\include{solutions/chapter25solutions}
+\include{solutions/chapter26solutions}
+\include{solutions/chapter27solutions}
+\include{solutions/chapter28solutions}
+\include{solutions/chapter29solutions}
+
+\bibliographystyle{apalike}
+\bibliography{causal}
+
+\printindex
+
+\end{document}

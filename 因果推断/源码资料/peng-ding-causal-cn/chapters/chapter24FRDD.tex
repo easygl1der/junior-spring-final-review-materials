@@ -1,0 +1,321 @@
+ 
+\chapter{Application of the Instrumental Variable Method: Fuzzy Regression Discontinuity}
+ \label{chapter::iv-frdd}
+
+
+
+\cref{chapter::overlap} 介绍的 regression discontinuity 方法，以及 \cref{chapter::iv-experiment,chapter::iv-econometric} 介绍的 instrumental variable 方法，都是 {\it natural experiments} 的重要例子。这些 study designs 并不像 \cref{part::rcts} 中的 randomized experiments 那样理想，但它们具有一些类似 randomized experiments 的特征。因此，它们被称为 natural experiments。
+
+
+把 regression discontinuity 方法与 instrumental variable 方法结合起来，就得到 {\it fuzzy regression discontinuity} 方法，这是另一类重要的 natural experiment。本章先从例子开始，然后给出数学表述。
+
+
+
+
+\section{Motivating examples}
+\label{sec::frdd-motivation}
+
+\cref{chapter::overlap} 介绍了 regression discontinuity 方法。下面三个例子略有不同，因为实际接受的 treatment 并不是 running variables 的确定性函数。更准确地说，running variables 会在 cutoff points 处使实际接受 treatment 的概率发生不连续变化。
+
+\begin{example}\label{eg::indianroad}
+2000 年，Government of India 启动了 Prime Minister's Village Road Program；到 2015 年，这一项目已经资助修建了通往近 200,000 个村庄的全天候道路。基于村庄层面的数据，
+\citet{asher2020rural} 使用 regression discontinuity 方法估计新建 feeder roads 对多个经济变量的影响。该全国项目的指南按照 2001 Population Census 中基于人口规模的若干任意阈值，优先支持较大的村庄。treatment variable 等于 1 表示村庄在 outcomes 被测量的年份之前获得了一条新道路。村庄人口规模与阈值之间的差并不决定 treatment variable，但它会在 cutoff point 0 处使 treatment probability 发生不连续变化。
+\end{example}
+
+
+\begin{example}\label{eg::italianuniversity}
+\citet{li2015evaluating} 使用两所 Italian universities 中 2004 至 2006 年入学的一年级学生数据，评估 university grant 对 dropout rate 的 causal effect。如果学生的 standardized family income 低于 15,000 euros，则该学生符合 grant 资格。为简单起见，我们把 running variable 定义为 15,000 减去 standardized family income。为了获得这项 grant，学生必须先申请。因此，eligibility 与 application status 共同决定最终的 treatment status。单独的 running variable 并不决定 treatment status，尽管它会在 cutoff point 0 处改变 treatment probability。
+\end{example}
+
+
+
+\begin{example}
+\citet{amarante2016cash} 估计了胎儿期暴露于一项 social assistance program 对 children's birth outcomes 的影响。他们使用由 Uruguay 的 {\it Plan de Atención Nacional a la Emergencia Social} 诱导出来的 regression discontinuity。该项目是一项临时 social assistance program，目标群体是最贫困的 10 percent 家庭，实施时间为 2005 年 4 月至 2007 年 12 月。
+如果一个家庭的 predicted low-income score 低于预先给定的阈值，该家庭就会被分配进入该项目。predicted income score 并不决定母亲在 pregnancy 期间是否至少收到一次 program transfer，但它会改变最终接受 treatment 的概率。birth outcomes 包括 birth weight、weeks of gestation 等。
+\end{example}
+
+
+上述例子称为 fuzzy regression discontinuity，以区别于 \cref{chapter::overlap} 中的 (sharp) regression discontinuity。我将在后面的 \cref{sec::application-frdd} 中分析 \cref{eg::indianroad,eg::italianuniversity} 的数据。
+
+\section{Mathematical formulation}
+\label{sec::frdd-math}
+
+
+令 $X_i$ 表示 running variable，它决定
+$$
+Z_i = I(X_i \geq x_0)
+$$ 
+其中 $x_0$ 是 cutoff point。实际接受的 treatment $D_i$ 未必等于 $Z_i$，但 $\pr(D_i=1\mid X_i = x)$ 会在 $x_0$ 处出现跳跃。\cref{fig::rdd-compare} 比较了 sharp regression discontinuity 与 fuzzy regression discontinuity 的实际接受 treatment 的概率。图中展示的是 fuzzy regression discontinuity 的一个特殊情形，其中 $\pr(D=1\mid X < x_0) = 0$，这与 \cref{eg::italianuniversity} 相一致。
+
+
+\begin{figure}
+\centering
+\includegraphics[width = \textwidth]{figures/RDcompare.pdf}
+\caption{Sharp regression discontinuity（左）与 fuzzy regression discontinuity（右）的 treatment assignments}
+\label{fig::rdd-compare}
+\end{figure}
+
+
+
+
+
+
+令 $Y_i$ 表示感兴趣的 outcome。把 $Z_i$ 看作 assigned treatment，我们可以定义 potential outcomes $\{ D_i(1), D_i(0), Y_i(1), Y_i(0) \}$。$Z$ 的 sharp regression discontinuity 允许识别
+\begin{eqnarray*}
+\tau_D(x_0)  &=& E\{ D(1) - D(0)  \mid X=x_0 \}\\
+&=& \lim_{\varepsilon \rightarrow 0+} E( D \mid Z=1, X=x_0+\varepsilon ) - \lim_{\varepsilon \rightarrow 0+} E( D \mid Z=0, X=x_0-\varepsilon )
+\end{eqnarray*}
+以及
+\begin{eqnarray*}
+\tau_Y(x_0)  &=& E\{ Y(1) - Y(0)  \mid X=x_0 \}\\
+&=& \lim_{\varepsilon \rightarrow 0+} E( Y \mid Z=1, X=x_0+\varepsilon ) - \lim_{\varepsilon \rightarrow 0+} E( Y \mid Z=0, X=x_0-\varepsilon )
+\end{eqnarray*}
+这基于 \cref{thm::identification-rdd}。
+把 $Z$ 作为 $D$ 的 IV，并在 $X = x_0$ 处施加 IV assumptions，就可以应用 \cref{thm::CACE-identification} 识别 local complier average causal effect。
+
+\begin{theorem}
+\label{thm::identification-frdd}
+假设 treatment 由 $Z = I(X \geq x_0)$ 决定，其中 $x_0$ 是预先给定的 threshold。
+假设在 $x_0$ 的 infinitesimal neighborhood 内有 monotonicity
+$$
+D_i(1) \geq D_i(0)
+$$ 
+以及 exclusion restriction
+$$
+D_i(1) = D_i(0) \Longrightarrow  Y_i(1) = Y_i(0) 
+$$
+成立。local complier average causal effect 定义为
+$$
+ \tau_\cp(x_0)   
+= E\{ Y(1) - Y(0)  \mid D(1)  >  D(0),  X=x_0 \},
+$$
+它可以由下式识别：
+$$
+ \tau_\cp(x_0)   
+=  \frac{ E\{ Y(1) - Y(0)  \mid X=x_0 \}  }{E\{ D(1) - D(0)  \mid X=x_0 \}} .
+$$
+进一步假设 $E\{ D(1) \mid X=x   \}$ 与 $E\{ Y(1) \mid X=x   \}$ 在 $x=x_0$ 处右连续，而 $E\{ D(0) \mid X=x   \}$ 与 $E\{ Y(0) \mid X=x   \}$ 在 $x=x_0$ 处左连续。
+如果 $E(D\mid X=x)$ 在 $x=x_0$ 处有非零跳跃，则 local complier average causal effect 可以由下式识别：
+$$
+ \tau_\cp(x_0) 
+ = \frac{ \lim_{\varepsilon \rightarrow 0+} E( Y \mid Z=1, X=x_0+\varepsilon ) - \lim_{\varepsilon \rightarrow 0+} E( Y \mid Z=0, X=x_0-\varepsilon ) }
+{\lim_{\varepsilon \rightarrow 0+} E( D \mid Z=1, X=x_0+\varepsilon ) - \lim_{\varepsilon \rightarrow 0+} E( D \mid Z=0, X=x_0-\varepsilon )}
+$$
+\end{theorem}
+
+
+ \cref{thm::identification-frdd} 是 \cref{thm::identification-rdd,thm::CACE-identification} 的叠加。我把它的证明留作 \cref{para::proof-theorem-frd}。
+ 
+
+在 sharp 和 fuzzy regression discontinuity 中，关键都是指定 cutoff point 附近的 neighborhood。实践中，更小的 neighborhood 会带来更小的 bias 但更大的 variance；更大的 neighborhood 则会带来更大的 bias 但更小的 variance。也就是说，我们面对的是一个 bias-variance trade-off。一些 automatic procedures 可以基于统计准则选择 neighborhood，但这些方法依赖若干较强条件。因此，更稳妥的做法通常是在一系列 neighborhood 选择上做 sensitivity analysis。
+
+假设我们已经用 bandwidth $h$ 指定了 $x_0$ 的 neighborhood。
+对于满足 $X_i \in [x_0-h, x_0 + h]$ 的数据，可以用下式估计 $\tau_D(x_0)$：
+$$
+\hat{\tau}_D(x_0) = \text{the coefficient of } Z_i
+\text{ in the OLS fit of } D_i \text{ on } \{1, Z_i, R_i, L_i\},
+$$
+并用下式估计 $\tau_Y(x_0)$：
+$$
+\hat{\tau}_Y(x_0) = \text{the coefficient of } Z_i
+\text{ in the OLS fit of } Y_i \text{ on } \{1, Z_i, R_i, L_i\},
+$$
+其中回忆定义 $R_i = \max(X_i - x_0, 0)$ 与 $L_i= \min (X_i - x_0, 0)$。于是可以用
+$$
+\hat\tau_\cp(x_0)  = \hat{\tau}_Y(x_0) / \hat{\tau}_D(x_0)
+$$ 
+估计 local complier average causal effect。这是一个 indirect least squares estimator。由 \cref{thm::ils=2sls}，它在数值上等同于
+$$
+\text{the coefficient of } D_i
+\text{ in the TSLS fit of } Y_i \text{ on } \{1, D_i, R_i, L_i\}  
+$$
+其中 $D_i$ 用 $Z_i$ 作为 instrument。总之，在指定 $h$ 之后，估计 $ \tau_\cp(x_0)$ 就归约为使用 cutoff point 附近 local data 的 TSLS procedure。
+
+
+\section{Application}
+ \label{sec::application-frdd}
+
+\subsection{Re-analyzing \citet{asher2020rural}'s data}
+\label{sec::indian-road-data}
+
+回到 \cref{eg::indianroad}。基于 outcome \ri{occupation_index_andrsn}，我们可以对一系列 $h$ 计算 point estimates 与 standard errors。
+\begin{lstlisting}
+library("car")
+road_dat = read.csv("indianroad.csv")
+table(road_dat$t, road_dat$r2012)
+road_dat$runv = road_dat$left + road_dat$right
+## sensitivity analysis 
+seq.h  = seq(10, 80, 1)
+frd_sa = lapply(seq.h, function(h){
+  road_sub = subset(road_dat, abs(runv)<=h)
+  road_sub$r2012hat = lm(r2012 ~ t + left + right,
+                         data = road_sub)$fitted.values
+  tslsreg = lm(occupation_index_andrsn ~ r2012hat + left + right,
+               data = road_sub)
+  res = with(road_sub,
+             {
+               occupation_index_andrsn -
+                 cbind(1, r2012, left, right)%*%coef(tslsreg)
+             })
+  tslsreg$residuals = as.vector(res)
+  
+  c(coef(tslsreg)[2],
+    sqrt(hccm(tslsreg, type = "hc2")[2, 2]),
+    length(res))
+})
+frd_sa = do.call(rbind, frd_sa)
+\end{lstlisting}
+\cref{fig::indian_road} 展示了结果。除非 $h$ 很大，否则 treatment effect 并不显著。
+
+\begin{figure}
+\centering
+\includegraphics[width = 0.9\textwidth]{figures/frd_indian.pdf}
+\caption{重新分析 \citet{asher2020rural} 的数据；point estimates 与 standard errors 来自 TSLS。}
+\label{fig::indian_road}
+\end{figure} 
+
+
+\ri{rdrobust} package 会自动选择 bandwidth。结果表明，获得新道路并没有显著影响该 outcome。
+
+\begin{lstlisting}
+> library("rdrobust")
+> frd_road = with(road_dat,
++                 {
++                   rdrobust(y = occupation_index_andrsn,
++                            x = runv,
++                            c = 0,
++                            fuzzy = r2012)
++                 })
+> res = cbind(frd_road$coef, frd_road$se)
+> round(res, 3)
+                Coeff Std. Err.
+Conventional   -0.253     0.301
+Bias-Corrected -0.283     0.301
+Robust         -0.283     0.359
+\end{lstlisting}
+
+\subsection{Re-analyzing \citet{li2015evaluating}'s data}
+ \label{sec::italian-university}
+ 
+ 
+ 回到 \cref{eg::italianuniversity}。
+回忆 running variable 是 15,000 减去 standardized income。在分析中，我把数据限制在该 running variable 位于 $[-5,000,5,000]$ 的子样本内，然后把 running variable 除以 $5,000$，使得它在 cutoff point zero 附近被缩放到 $[-1,1]$ 之间。
+我们可以对一系列 $h$ 计算 point estimates 与 standard errors。
+\begin{lstlisting}
+library("car")
+italy = read.csv("italy.csv")
+italy$left  = pmin(italy$rv0, 0)
+italy$right = pmax(italy$rv0, 0)
+## sensitivity analysis 
+seq.h  = seq(0.1, 1, 0.01)
+frd_sa = lapply(seq.h, function(h){
+  italy_sub = subset(italy, abs(rv0)<=h)
+  italy_sub$Dhat = lm(D ~ Z + left + right,
+                      data = italy_sub)$fitted.values
+  tslsreg = lm(outcome ~ Dhat + left + right,
+               data = italy_sub)
+  res = with(italy_sub,
+             {
+               outcome -
+                 cbind(1, D, left, right)%*%coef(tslsreg)
+             })
+  tslsreg$residuals = as.vector(res)
+  
+  c(coef(tslsreg)[2],
+    sqrt(hccm(tslsreg, type = "hc2")[2, 2]),
+    length(res))
+})
+frd_sa = do.call(rbind, frd_sa)
+ \end{lstlisting}
+ 
+
+
+  \cref{fig::italy_university} 展示了结果，并表明 university grant 并没有显著影响 dropout rate。
+\begin{figure}
+\centering
+\includegraphics[width = 0.9\textwidth]{figures/frd_italy.pdf}
+\caption{重新分析 \citet{li2015evaluating} 的数据；point estimates 与 standard errors 来自 TSLS。}
+\label{fig::italy_university}
+\end{figure} 
+ 
+ 
+ 
+基于 \ri{rdrobust} package 的结果也得到相同结论。
+ 
+ \begin{lstlisting}
+> library("rdrobust")
+> frd_italy = with(italy,
++                  {
++                    rdrobust(y = outcome,
++                             x = rv0,
++                             c = 0,
++                             fuzzy = D)
++                  })
+> res = cbind(frd_italy$coef, frd_italy$se)
+> round(res, 3)
+                Coeff Std. Err.
+Conventional   -0.149     0.101
+Bias-Corrected -0.155     0.101
+Robust         -0.155     0.121
+ \end{lstlisting}
+ 
+ 
+ 
+ \section{Discussion}
+
+
+\cref{chapter::overlap} 和本章都从给定 running variables 后 potential outcomes 的 conditional expectations 的连续性出发，来表述 regression discontinuity。这个视角在数学上更简单，但它只能精确识别 running variable 的 cutoff point 处的 local effects。\citet{hahn2001identification} 开创了这一支文献。
+
+另一种并不占主导的视角基于 {\it local randomization} \citep{cattaneo2015randomization, li2015evaluating}。如果我们把 running variable 看成某个 underlying truth 的 noisy measure，并且 cutoff point 的选择带有一定任意性，那么 cutoff point 附近的 units 就不会系统性地不同。这表明，在 cutoff point 的一个小 neighborhood 内，units 接受 treatment 或 control 的方式类似 randomized experiment。正如第一种视角下选择 $h$ 的问题一样，在 regression discontinuity 下决定这个 randomized experiment 应当多么 local 是关键问题。要把这个直觉精确地数学化并不容易；因此，在第二种视角下，对一系列 $h$ 做 sensitivity analysis 似乎同样是合理的做法。
+
+
+关于 regression discontinuity 的更概念化讨论，可参见 \citet{sekhon2017interpreting}。
+
+
+
+ 
+\section{Homework Problems}
+
+\homeworksolutionref{24}
+\paragraph{Proof of \cref{thm::identification-frdd}}\label{para::proof-theorem-frd}
+
+证明 \cref{thm::identification-frdd}。
+
+
+\paragraph{Data analysis}
+ 
+\cref{sec::indian-road-data} 报告了对 \ri{occupation_index_andrsn} 的 effect 估计。其他四个 outcome variables 是 \ri{transport_index_andrsn}、\ri{firms_index_andrsn}、\ri{consumption_index_andrsn} 和 \ri{agriculture_index_andrsn}，其含义在原论文中定义。估计这些 outcomes 上的 effects。
+
+ 
+
+\paragraph{Reflection on the analysis of \citet{li2015evaluating}'s data}
+\label{problem::italy-srd}
+
+在 \citet{li2015evaluating} 中，决定 treatment status 的一个关键变量是 binary application status $A$，它有 potential outcomes $A(1)$ 和 $A(0)$，分别对应 treatment $Z=1$ 与 control $Z=0$。由定义，
+$$
+D(1) = A(1), \quad D(0) = 0,
+$$
+因此 compliers $\{ D(1), D(0) \} = (1,0)$ 等价于 $A(1) = 1$。所以
+$$
+\tau_\cp(x_0) = E\{ Y(1) - Y(0) \mid A(1) = 1, X = x_0 \}. 
+$$
+\cref{sec::italian-university} 使用整个数据集来估计 $\tau_\cp(x_0)$。
+
+另一种分析是只使用 $A=1$ 的 units。此时 treatment status 由 $X$ 决定。然而，这种分析可能有问题，因为
+\begin{eqnarray}
+&& \lim_{\varepsilon \rightarrow 0+} E\{ Y \mid A  = 1, X = x_0 + \varepsilon \} -\lim_{\varepsilon \rightarrow 0+}  E\{ Y \mid A  = 1, X = x_0- \varepsilon  \}  \nonumber  \\
+&=& E\{ Y(1) \mid A(1)  = 1,   X = x_0   \} -  E\{ Y(0) \mid A(0)  = 1,   X = x_0   \} .\label{hw::frdd-florence-A=1}
+\end{eqnarray}
+证明 \cref{hw::frdd-florence-A=1}，并解释为什么这种分析可能有问题。
+
+
+Remark: 
+\cref{hw::frdd-florence-A=1} 左侧是在条件 $A=1$ 下、$X=x_0$ 处 local average treatment effect 的 identification formula。 \cref{hw::frdd-florence-A=1} 右侧则分别是在 $(A(1)  = 1,   X = x_0 )$ 与 $(A(0)  = 1,   X = x_0)$ 两个 units 子群中的 potential outcomes 均值差。
+相关讨论见后面的 \cref{chapter::principal-stratification}。
+ 
+
+
+ 
+ \paragraph{Recommended reading}
+
+\citet{imbens2008regression} 基于 potential outcomes framework 给出了 regression discontinuity 的实践指南。\citet{lee2010regression} 综述了 regression discontinuity 及其在 economics 中的应用。

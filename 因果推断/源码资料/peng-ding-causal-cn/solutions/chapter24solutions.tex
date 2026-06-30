@@ -1,0 +1,296 @@
+\chapter{Solutions to Chapter 24: Application of the Instrumental Variable Method: Fuzzy Regression Discontinuity}
+\label{sol:chapter24}
+
+\begin{exercisesolution}{Proof of \cref{thm::identification-frdd}}{fuzzy RDD 中 local Wald estimand 的识别}
+本题证明 \cref{thm::identification-frdd}。这一定理的底层结构很简单：在 cutoff point 附近，$Z=\mathbb{I}(X\geq x_0)$ 扮演一个 local instrument；outcome 的 jump 是 reduced form，treatment 的 jump 是 first stage，两者相除就是 cutoff point 处 compliers 的平均因果效应。
+
+先证明潜在结果层面的 Wald 分解。固定在 $X=x_0$ 的 local population 中。由 monotonicity，
+\[
+D(1)-D(0)\in\{0,1\},
+\]
+且事件 $D(1)>D(0)$ 正是 local compliers。由 exclusion restriction，当 $D(1)=D(0)$ 时，
+\[
+Y(1)-Y(0)=0.
+\]
+因此逐个 unit 都有恒等式
+\[
+Y(1)-Y(0)
+=
+\{D(1)-D(0)\}\{Y(1)-Y(0)\}.
+\]
+对 $X=x_0$ 条件取期望，得到
+\begin{align*}
+E\{Y(1)-Y(0)\mid X=x_0\}
+&=
+E\bigl[\{D(1)-D(0)\}\{Y(1)-Y(0)\}\mid X=x_0\bigr]\\
+&=
+E\{Y(1)-Y(0)\mid D(1)>D(0),X=x_0\}\\
+&\qquad {}\times
+\mathbb{P}\{D(1)>D(0)\mid X=x_0\}.
+\end{align*}
+另一方面，由 monotonicity，
+\[
+E\{D(1)-D(0)\mid X=x_0\}
+=
+\mathbb{P}\{D(1)>D(0)\mid X=x_0\}.
+\]
+只要 first stage 非零，也就是 local complier 比例为正，就有
+\[
+\tau_\cp(x_0)
+=
+\frac{E\{Y(1)-Y(0)\mid X=x_0\}}
+       {E\{D(1)-D(0)\mid X=x_0\}}.
+\]
+这证明了 \cref{thm::identification-frdd} 的第一个公式。
+
+接下来把上式中的两个潜在结果均值写成可观测的 left and right limits。因为 $Z=\mathbb{I}(X\geq x_0)$，当 $x>x_0$ 时 $Z=1$，当 $x<x_0$ 时 $Z=0$。由 consistency，
+\[
+D=D(1),\quad Y=Y(1)\qquad \text{if } Z=1,
+\]
+以及
+\[
+D=D(0),\quad Y=Y(0)\qquad \text{if } Z=0.
+\]
+于是
+\begin{align*}
+\lim_{\varepsilon\to 0+}E(D\mid Z=1,X=x_0+\varepsilon)
+&=
+\lim_{\varepsilon\to 0+}E\{D(1)\mid X=x_0+\varepsilon\}\\
+&=
+E\{D(1)\mid X=x_0\},
+\end{align*}
+其中最后一步使用 $E\{D(1)\mid X=x\}$ 在 $x_0$ 处的右连续性。类似地，由左连续性，
+\[
+\lim_{\varepsilon\to 0+}E(D\mid Z=0,X=x_0-\varepsilon)
+=
+E\{D(0)\mid X=x_0\}.
+\]
+两式相减，得到
+\[
+\tau_D(x_0)
+=
+E\{D(1)-D(0)\mid X=x_0\}.
+\]
+
+对 outcome 完全同理：
+\begin{align*}
+\lim_{\varepsilon\to 0+}E(Y\mid Z=1,X=x_0+\varepsilon)
+&=
+E\{Y(1)\mid X=x_0\},\\
+\lim_{\varepsilon\to 0+}E(Y\mid Z=0,X=x_0-\varepsilon)
+&=
+E\{Y(0)\mid X=x_0\}.
+\end{align*}
+因此
+\[
+\tau_Y(x_0)
+=
+E\{Y(1)-Y(0)\mid X=x_0\}.
+\]
+把 $\tau_Y(x_0)$ 与 $\tau_D(x_0)$ 代入刚才的潜在结果 Wald 分解，即得
+\[
+\tau_\cp(x_0)
+=
+\frac{
+\lim_{\varepsilon \rightarrow 0+} E( Y \mid Z=1, X=x_0+\varepsilon )
+-
+\lim_{\varepsilon \rightarrow 0+} E( Y \mid Z=0, X=x_0-\varepsilon )
+}{
+\lim_{\varepsilon \rightarrow 0+} E( D \mid Z=1, X=x_0+\varepsilon )
+-
+\lim_{\varepsilon \rightarrow 0+} E( D \mid Z=0, X=x_0-\varepsilon )
+}.
+\]
+这正是 \cref{thm::identification-frdd} 的 observed-data formula。
+
+\paragraph{Remark.}
+\cref{thm::identification-frdd} 不是把 ordinary IV 机械搬到 RDD 中，而是把 IV assumptions 局部化到 cutoff point。running variable 的作用是创造一个在 $x_0$ 附近发生跳跃的 instrument；Wald estimator 的解释只属于这个 cutoff-local complier population。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Data analysis}{Indian road 数据中四个额外 outcomes 的 fuzzy RDD 分析框架}
+本题要求在 \cref{sec::indian-road-data} 的分析基础上，把 outcome 从 \ri{occupation_index_andrsn} 扩展到 \ri{transport_index_andrsn}、\ri{firms_index_andrsn}、\ri{consumption_index_andrsn} 和 \ri{agriculture_index_andrsn}。当前 worktree 和项目根目录中没有找到 \ri{indianroad.csv}，因此这里不编造新的 numerical estimates。下面给出完整可复现代码；把 \ri{indianroad.csv} 放在运行目录后，它会对四个 outcomes 分别输出 bandwidth sensitivity estimates、EHW standard errors、样本量，以及 \ri{rdrobust} 的 conventional、bias-corrected 和 robust summaries。
+
+\begin{lstlisting}
+library(car)
+library(rdrobust)
+
+road_dat <- read.csv("indianroad.csv")
+
+## Chapter 24 uses t as the cutoff indicator and r2012 as the actual
+## treatment. The running variable is reconstructed from the left and
+## right local-linear terms.
+road_dat$runv <- road_dat$left + road_dat$right
+
+outcomes <- c("transport_index_andrsn",
+              "firms_index_andrsn",
+              "consumption_index_andrsn",
+              "agriculture_index_andrsn")
+
+frd_one_outcome <- function(yname, seq.h = seq(10, 80, 1)) {
+  sens <- lapply(seq.h, function(h) {
+    road_sub <- subset(road_dat, abs(runv) <= h)
+
+    ## First stage: local-linear jump in treatment probability.
+    fs <- lm(r2012 ~ t + left + right, data = road_sub)
+    road_sub$r2012hat <- fs$fitted.values
+
+    ## ILS/TSLS implementation parallel to Section 24.3.1.
+    tslsreg <- lm(road_sub[[yname]] ~ r2012hat + left + right,
+                  data = road_sub)
+
+    res <- with(road_sub, {
+      road_sub[[yname]] -
+        cbind(1, r2012, left, right) %*% coef(tslsreg)
+    })
+    tslsreg$residuals <- as.vector(res)
+
+    c(h = h,
+      estimate = coef(tslsreg)[2],
+      se_hc2 = sqrt(hccm(tslsreg, type = "hc2")[2, 2]),
+      n = length(res),
+      first_stage = coef(fs)["t"])
+  })
+  sens <- as.data.frame(do.call(rbind, sens))
+  rownames(sens) <- NULL
+
+  rdb <- rdrobust(y = road_dat[[yname]],
+                  x = road_dat$runv,
+                  c = 0,
+                  fuzzy = road_dat$r2012)
+  rd_summary <- data.frame(
+    method = rownames(rdb$coef),
+    estimate = as.vector(rdb$coef[, 1]),
+    se = as.vector(rdb$se[, 1])
+  )
+
+  list(sensitivity = sens,
+       rdrobust = rd_summary)
+}
+
+frd_results <- setNames(lapply(outcomes, frd_one_outcome), outcomes)
+
+## A compact reporting table at selected bandwidths.
+selected_h <- c(10, 20, 30, 40, 50, 60, 70, 80)
+selected_table <- do.call(rbind, lapply(outcomes, function(yname) {
+  sens <- frd_results[[yname]]$sensitivity
+  sens <- subset(sens, h %in% selected_h)
+  data.frame(outcome = yname, sens)
+}))
+print(selected_table, row.names = FALSE)
+
+## rdrobust summaries.
+rdrobust_table <- do.call(rbind, lapply(outcomes, function(yname) {
+  data.frame(outcome = yname, frd_results[[yname]]$rdrobust)
+}))
+print(rdrobust_table, row.names = FALSE)
+\end{lstlisting}
+
+如果还需要复现类似 \cref{fig::indian_road} 的 sensitivity plot，可以在上面结果基础上作图：
+\begin{lstlisting}
+par(mfrow = c(2, 2), mar = c(4, 4, 2, 1))
+for (yname in outcomes) {
+  sens <- frd_results[[yname]]$sensitivity
+  ylim <- range(c(sens$estimate - 1.96 * sens$se_hc2,
+                  sens$estimate + 1.96 * sens$se_hc2),
+                na.rm = TRUE)
+  plot(sens$h, sens$estimate, type = "l", lwd = 2,
+       ylim = ylim, xlab = "bandwidth h",
+       ylab = "FRD estimate", main = yname)
+  lines(sens$h, sens$estimate + 1.96 * sens$se_hc2,
+        lty = 2)
+  lines(sens$h, sens$estimate - 1.96 * sens$se_hc2,
+        lty = 2)
+  abline(h = 0, col = "grey")
+}
+\end{lstlisting}
+
+报告结果时应至少包含三类信息。第一，检查 first stage，即 \ri{first_stage} 是否在相关 bandwidths 下稳定地远离零；如果 first stage 太弱，\cref{thm::identification-frdd} 的 Wald ratio 会非常不稳定。第二，比较不同 $h$ 下的 estimates 与 confidence intervals，因为 \cref{sec::frdd-math} 已经说明 fuzzy RDD 的 neighborhood choice 面临 bias-variance trade-off。第三，把手工 local-linear TSLS 结果与 \ri{rdrobust} 的 robust intervals 放在一起；若结论只在某个特殊 bandwidth 下成立，就不应过度解释。
+
+\paragraph{Remark.}
+这道题的实证重点不是一次性给出四个系数，而是训练 fuzzy RDD 的诊断习惯：每个 outcome 都要同时看 reduced form、first stage、Wald ratio 和 bandwidth sensitivity。没有原始数据时，诚实给出可复现代码比编造 point estimates 更符合统计报告的底线。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Reflection on the analysis of \citet{li2015evaluating}'s data}{只分析申请者时的 principal-stratum 问题}
+本题证明 \cref{hw::frdd-florence-A=1}，并解释为什么只使用 $A=1$ 的 units 可能有问题。核心区别是：\cref{sec::italian-university} 的 fuzzy RDD 使用 eligibility $Z$ 作为 instrument，目标是 cutoff point 处满足 $A(1)=1$ 的 local compliers；而只保留 observed applicants $A=1$ 会在 cutoff 两侧选择不同的 principal strata。
+
+由题设，
+\[
+D(1)=A(1),\qquad D(0)=0.
+\]
+在 $X>x_0$ 的右侧，$Z=1$。此时 observed application status 满足
+\[
+A=A(1),
+\]
+且 observed outcome 满足
+\[
+Y=Y(1)
+\]
+对于那些 $A=1$ 的 treated applicants。因此，由 $E\{Y(1)\mid X=x\}$ 在 cutoff 右侧的局部连续性，或者更直接地由 local RDD continuity applied within the selected right-side group，
+\[
+\lim_{\varepsilon\to 0+}
+E\{Y\mid A=1,X=x_0+\varepsilon\}
+=
+E\{Y(1)\mid A(1)=1,X=x_0\}.
+\]
+
+在 $X<x_0$ 的左侧，$Z=0$。此时 observed application status 满足
+\[
+A=A(0),
+\]
+并且 observed outcome 是未接受 grant 时的 outcome：
+\[
+Y=Y(0).
+\]
+同理，
+\[
+\lim_{\varepsilon\to 0+}
+E\{Y\mid A=1,X=x_0-\varepsilon\}
+=
+E\{Y(0)\mid A(0)=1,X=x_0\}.
+\]
+两式相减，得到
+\begin{align*}
+&\lim_{\varepsilon \rightarrow 0+} E\{ Y \mid A  = 1, X = x_0 + \varepsilon \}
+-
+\lim_{\varepsilon \rightarrow 0+}  E\{ Y \mid A  = 1, X = x_0- \varepsilon  \}\\
+&\qquad =
+E\{ Y(1) \mid A(1)  = 1,   X = x_0   \}
+-
+E\{ Y(0) \mid A(0)  = 1,   X = x_0   \},
+\end{align*}
+这正是 \cref{hw::frdd-florence-A=1}。
+
+问题在于，右侧均值和左侧均值并不对应同一个 subpopulation。右侧条件是
+\[
+A(1)=1,
+\]
+左侧条件是
+\[
+A(0)=1.
+\]
+一般而言，$A(1)=1$ 的人和 $A(0)=1$ 的人不是同一群人。若 grant eligibility 会影响学生是否申请，那么存在一些只在 eligible 时才申请的学生，即
+\[
+A(1)=1,\qquad A(0)=0.
+\]
+这些学生会进入右侧的 $A=1$ group，却不会进入左侧的 $A=1$ group。因此 \cref{hw::frdd-florence-A=1} 右侧是两个不同 principal strata 中的均值差，不是
+\[
+E\{Y(1)-Y(0)\mid A(1)=1,X=x_0\}.
+\]
+
+这也解释了为什么 \cref{sec::italian-university} 使用整个数据集估计 fuzzy RDD estimand。由题设 $D(0)=0$，local compliers 满足
+\[
+D(1)>D(0)
+\quad\Longleftrightarrow\quad
+A(1)=1.
+\]
+因此 \cref{thm::identification-frdd} 识别的是
+\[
+\tau_\cp(x_0)
+=
+E\{Y(1)-Y(0)\mid A(1)=1,X=x_0\}.
+\]
+这个 estimand 的两项 potential-outcome means 都属于同一个 principal stratum $A(1)=1$。相反，只分析 observed applicants $A=1$，虽然看起来把问题变成了 sharp RDD，却把右侧的 $A(1)=1$ 与左侧的 $A(0)=1$ 混在一起比较；这种选择本身可能是 post-treatment selection。
+
+\paragraph{Remark.}
+这道题是 principal stratification 的预告。一个看似自然的数据清洗步骤，``只看真正申请 grant 的学生''，实际上可能改变 estimand：它不再是同一类人的 treatment-control contrast，而是两个由 assignment 诱导出来的不同申请者群体之间的差异。
+\end{exercisesolution}

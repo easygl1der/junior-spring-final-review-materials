@@ -1,0 +1,584 @@
+
+\chapter{Rerandomization and Regression Adjustment}
+ \label{chapter:rerandomization-regression}
+
+
+第 \ref{chapter::stratification-poststratification} 章中的 stratification 和 post-stratification，是 randomized experiments 中针对离散 covariates 在设计阶段和分析阶段使用 covariates 的一对对偶方法。那么，对于多维的、可能连续的 covariates，我们应该如何处理？我们当然可以把连续 covariates 离散化，但在 covariates 很多时，这并不是理想策略。Rerandomization 和 regression adjustment 是针对一般 covariates 的一对对偶方法，也是本章的主题。
+
+
+下表概括了第 \ref{chapter::stratification-poststratification} 章和第 \ref{chapter:rerandomization-regression} 章的主题：
+
+
+\begin{center}
+\begin{tabular}{c|c|c}
+\hline 
+ & design & analysis \\ 
+ \hline 
+ discrete covariate & stratification & post-stratification \\
+ \hline 
+ general covariate & rerandomization & regression adjustment \\
+ \hline 
+ \end{tabular}
+\end{center}
+
+\section{Rerandomization}
+
+\subsection{Experimental design}
+我们再次考虑一个由 $n$ 个 experimental units 组成的 finite population，其中 $n_1$ 个接受 treatment，$n_0$ 个接受 control。令
+ $\boldsymbol{Z} = (Z_1,\ldots, Z_n)$ 表示这些 units 的 treatment vector。Unit $i$ 具有 covariate $X_i \in \mathbb{R}^K$，它可以包含连续或二元分量。把它们拼接成一个 $n\times K$ covariate matrix $\boldsymbol{X} = (X_1 , \ldots, X_n )  \tran$，并将其中心化为均值为零，即 $\bar{X}  = n^{-1} \sumn X_i = 0$，以简化表述。
+
+CRE 使 treatment group 和 control group 中的 covariates 在平均意义下平衡；例如，covariates 的均值差
+$$
+\hat{\tau}_X  = n_1^{-1} \sumn Z_i X_i - n_0^{-1} \sumn (1-Z_i) X_i
+$$
+在 CRE 下均值为零。然而，在实际实现的 treatment allocation 中，它可能导致 treatment group 和 control group 之间不理想的 covariate balance；也就是说，$\hat{\tau}_X  $ 的 realized value 往往不为零。利用前面 Problem \ref{hw::vector-neyman1923} 中 \citet{Neyman:1923} 的向量形式，我们可以证明
+$$
+\cov(\hat{\tau}_X  ) 
+= \frac{1}{n_1}  S_X^2  + \frac{1}{n_0}  S_X^2   
+=  \frac{n}{n_1 n_0} S_X^2   ,
+$$
+其中 $ S_X^2   = (n-1)^{-1} \sumn  X_i X_i\tran $ 是 covariates 的 finite-population covariance matrix。下面的 Mahalanobis distance 衡量 treatment group 和 control group 之间的差异：
+\begin{equation}
+\label{eq::m-distance-def}
+M = \hat{\tau}_X \tran \cov(\hat{\tau}_X  )^{-1} \hat{\tau}_X  = \hat{\tau}_X \tran  \left(  \frac{n}{n_1 n_0} S_X^2   \right)^{-1} \hat{\tau}_X  . 
+\end{equation}
+从技术上说，\eqref{eq::m-distance-def} 中 $M$ 的上述公式只有在 $S_X^2 $ 可逆时才有意义，这意味着 covariate matrix $\boldsymbol{X}$ 的列线性无关。如果某一列可以由其他列的线性组合表示，那么它是冗余的，应该在实验之前删去。
+$M$ 的一个好性质是，它在 $X$ 的非退化线性变换下保持不变。下面的 Lemma \ref{lemma::invariance-mdistance} 总结了这一结果，证明留到 Problem \ref{para::invariance-M}。
+
+\begin{lemma}\label{lemma::invariance-mdistance}
+如果对所有 units $i=1,\ldots, n$，把 $X_i$ 变换为 $b_0  + BX_i$，其中 $b_0  \in \mathbb{R}^K$ 且 $B \in \mathbb{R}^{K\times K}$ 可逆，则 \eqref{eq::m-distance-def} 中的 $M$ 保持不变。
+\end{lemma}
+
+Finite population CLT \citep{li2017general} 保证，当 $n$ 很大时，Mahalanobis distance $M $ 在 CRE 下近似服从 $ \chi^2_K$。因此，在 CRE 下，$M$ 的 realized value 很可能较大，其 asymptotic mean 为 $K$，variance 为 $2K$。Rerandomization 通过丢弃 $M$ 取值较大的 treatment allocations 来避免 covariate imbalance。下面我给出基于 Mahalanobis distance 的 rerandomization（ReM）的正式定义；这一方法由 \citet{cox:1982} 提出，并由 \citet{morgan2012rerandomization} 进一步研究。
+
+
+\begin{definition}
+[ReM]
+从 CRE 中抽取 $\boldsymbol{Z}$，并且当且仅当
+$$
+M \leq a,
+$$  
+时接受它，其中 $a > 0$ 是某个预先给定的常数。
+\end{definition}
+
+如何选择 $a$，类似于在 SRE 中如何选择 strata 数量，这在实践中并不平凡。在一个极端，$a = \infty$，我们只是实施 CRE。在另一个极端，$a=0$，可行的 treatment allocations 非常少，因此实验几乎没有随机性，使得 randomization-based inference 失去作用。作为折中，我们选择一个小但并非极小的 $a$，例如 $a=0.001$，或者 $\chi^2_K$ 分布的某个上分位数。
+
+ReM 有许多理想性质。如上所述，它对 covariates 的线性变换不变。此外，它具有良好的几何性质和优雅的数学理论。本章将重点讨论 ReM。
+
+\subsection{Statistical inference}
+
+一个重要问题是如何分析 ReM 下的数据。\citet{bruhn2009pursuit} 和 \citet{morgan2012rerandomization} 认为，只要我们在约束 $M\leq a$ 下模拟 $\boldsymbol{Z}$，就总是可以使用 FRT。这总能在 sharp null hypothesis 下给出 finite-sample exact $p$-values。见 Problem \ref{hw::FRT-under-REM}。
+
+在不假设 sharp null hypothesis 的情况下推导 ReM 的 finite sample properties 是一个具有挑战性的问题。相反，\citet{li2018asymptotic} 在下面的 regularity conditions 下推导了 ReM 中 outcome 均值差 $\hat{\tau}$ 的 asymptotic distribution。
+
+\begin{condition}\label{condition::regularity-cre-rem}
+当 $n\rightarrow \infty$ 时，
+\begin{enumerate}
+\item 
+$n_1/n$ 和 $n_0/n$ 有正的极限；
+\item 
+$\{  X_i, Y_i(1), Y_i(0), \tau_i \}$ 的 finite population covariance 有有限极限；
+\item
+$\max_{1\leq i \leq n}  \{   Y_i(1) - \bar{Y}(1) \} ^2/n \rightarrow 0 $,
+$\max_{1\leq i \leq n}  \{   Y_i(0) - \bar{Y}(0) \}^2/n \rightarrow 0 $,
+并且 $\max_{1\leq i \leq n}   X_i \tran X_i/n \rightarrow 0 $,
+\end{enumerate}
+\end{condition} 
+
+下面是 ReM 的主要定理，它依赖一些额外记号。令
+$$
+L_{K,a} \sim D_1\mid \boldsymbol{D}\tran \boldsymbol{D} \leq a
+$$ 
+其中 $\boldsymbol{D} = (D_1,\ldots, D_K)$ 服从 $K$ 维 standard Normal distribution；令 $ \varepsilon$ 服从一维 standard Normal distribution；并且 $L_{K,a}  \ind \varepsilon .$
+
+\begin{theorem}\label{thm::remasymptotics}
+在满足 $M\leq a$ 的 ReM 和 Condition \ref{condition::regularity-cre-rem} 下，我们有\footnote{记号 ``$A \asim B$'' 表示 $A$ 和 $B$ 具有相同的 asymptotic distributions。}
+$$
+\hat{\tau} - \tau \asim \sqrt{ \var(\hat \tau) }  \left\{   \sqrt{R^2} L_{K,a}  + \sqrt{1-R^2} \varepsilon \right\},
+$$
+其中
+$$
+\var( \hat{\tau} ) = \frac{S^2(1)}{n_1} + \frac{S^2(0)}{n_0} - \frac{S^2(\tau)}{n}
+$$
+是第 \ref{chapter::neyman-cr} 章中证明的 \citet{Neyman:1923} variance formula，并且
+$$
+R^2 = \textup{corr}^2(\hat{\tau}, \hat{\tau}_X   )
+$$
+是在 CRE 下 $\hat{\tau}$ 与 $\hat{\tau}_X $ 之间的 squared multiple correlation coefficient（定义见 Section \ref{sec::measure-pearson-r2}）。
+\end{theorem}
+
+虽然 \citet{li2018asymptotic} 的证明技术性很强，但 Theorem \ref{thm::remasymptotics} 中的 asymptotic distribution 有清楚的几何解释，如 Figure \ref{fig::geometry-rem} 所示。它表明 $\hat\tau$ 可以分解为两个部分：一个是 $\hat\tau_X$ 的线性组合，另一个与 $\hat\tau_X$ 正交。从几何上看，$\cos^2 \theta = R^2$，其中 $\theta$ 是 $\hat\tau$ 与 $\hat\tau_X$ 之间的夹角。
+ReM 影响第一个分量，但不改变第二个分量。Truncated Normal distribution $L_{K,a}$ 来自 ReM 对第一个分量的限制。
+
+\begin{figure}
+\centering
+\includegraphics[width = 0.9\textwidth]{figures/rem_geometry.pdf}
+\caption{ReM 下 $\hat\tau$ 的 asymptotic distribution 的几何图像}\label{fig::geometry-rem}
+\end{figure}
+
+当 $a  = \infty$ 时，asymptotic distribution 简化为 CRE 下的分布：
+$$
+\hat{\tau} - \tau \asim \sqrt{ \var(\hat \tau) } \varepsilon .
+$$
+当 threshold $a$ 接近零时，asymptotic distribution 简化为
+$$
+\hat{\tau} - \tau \asim \sqrt{ \var(\hat \tau) (1-R^2)} \varepsilon ;
+$$
+严格证明见 \citet{wang2022rerandomization}。
+因此，当 threshold $a$ 很小时，ReM 带来的 efficiency gain 取决于 $R^2$，它有下面的等价形式。
+\begin{proposition}
+\label{prop::rsquared-forms}
+在 CRE 下，我们有
+$$
+R^2 = \textup{corr}^2(\hat{\tau}, \hat{\tau}_X   )
+= \frac{  n_1^{-1}  S^2(1\mid X) + n_0^{-1} S^2(0\mid X) - n^{-1} S^2(\tau \mid X) }
+{ n_1^{-1}  S^2( 1 ) + n_0^{-1} S^2( 0 ) - n^{-1} S^2( \tau  )},
+$$
+其中 $\{S^2( 1 ) , S^2( 0 ), S^2( \tau  )\}$ 是 $\{ Y_i(1), Y_i(0), \tau_i \}_{i=1}^n$ 的 finite population variances，而 $\{S^2( 1 \mid x ) , S^2( 0 \mid x ), S^2( \tau  \mid x )\}$ 是它们在 $(1, X_i)$ 上的 linear projections 的相应 finite population variances；linear projections 的定义见 Section \ref{sec::sampleOLS}。
+%\footnote{For example, the linear projection of $Y_i(1)$ on $(1,X_i)$ is $\alpha_1 + \beta_1 X_i$ where 
+%$$
+%(\alpha_1, \beta_1) = \arg \min_{a,b} \sumn \{  Y_i(1) - a - b\tran X_i\}^2.
+%$$
+%}
+在 constant causal effect assumption 且 $\tau_i = \tau$ 下，$R^2 $ 简化为 $S^2(0\mid X) / S^2( 0 ) $，即 $Y_i(0)$ 与 $X_i$ 之间的 finite population squared multiple correlation。
+\end{proposition}
+
+我把 Proposition \ref{prop::rsquared-forms} 的证明留给 Problem \ref{para::r2-cre}。
+
+当 $ 0 < a <\infty$ 时，$\hat{\tau}$ 的 asymptotic distribution 具有更复杂的形式，并且更集中于 $\tau$，因此在 ReM 下，均值差 $\hat{\tau}$ 比在 CRE 下更精确。
+
+如果我们忽略 ReM 的设计，仍然使用基于 \cite{Neyman:1923} variance formula 和 Normal approximation 的 confidence interval，那么它会过于保守，即使 individual causal effects 为常数，也会 overcover $\tau$。\citet{li2018asymptotic} 提出基于 Theorem \ref{thm::remasymptotics} 构造 confidence intervals。我们这里略去讨论，但会在 Section \ref{sec::unification-rem-regadj} 回到 inference 问题。
+
+\section{Regression adjustment}
+
+如果我们没有在设计阶段进行 rerandomization，但希望在 CRE 的分析阶段调整 covariate imbalance，该怎么办？我们将讨论几种 regression adjustment 策略。
+
+\subsection{Covariate-adjusted FRT}\label{sec::covariate-adjusted-frt-intro}
+
+Covariates $\boldsymbol{X}$ 全部是固定的；进一步地，在 $\HF$ 下，observed outcomes 也全部是固定的。因此，我们可以模拟任意 test statistic $T = T(\boldsymbol{Z}, \boldsymbol{Y}, \boldsymbol{X})$ 的分布并计算 $p$-value。在存在额外 covariates 时，FRT 的基本思想保持不变。
+
+构造 test statistic 有两类一般策略。前面的 Problem \ref{hw::frt-covariates} 已经提示了这两种策略。下面我用 \citet{zhao2020caFRT} 的术语来总结它们。
+
+\begin{definition}
+[pseudo-outcome strategy for covariate-adjusted FRT]
+\label{def::pseudo-y-frt}
+我们可以基于拟合 statistical models 得到的 residuals 构造 test statistic。可以将 $Y_i$ 对 $X_i$ 回归得到 residual $\hat \varepsilon_i$，然后把 $\hat \varepsilon_i$ 当作 pseudo outcome 来构造 test statistics。
+\end{definition}
+
+\begin{definition}
+[model-output strategy for covariate-adjusted FRT]
+\label{def::model-out-frt}
+我们可以使用 regression coefficient 作为 test statistic。可以将 $Y_i$ 对 $(Z_i, X_i)$ 回归，并把 $Z_i$ 的 coefficient 作为 test statistic。
+\end{definition}
+
+在 Definition \ref{def::pseudo-y-frt} 的 pseudo-outcome strategy 中，$Y_i$ 对 $X_i$ 的回归不应包含 treatment $Z_i$，因为我们希望保证：如果原始 outcome 满足 $\HF$，那么 pseudo outcome 也满足 $\HF$。
+在 Definition \ref{def::model-out-frt} 的 model-output strategy 中，$Y_i$ 对 $(Z_i, X_i)$ 的回归包含 treatment $Z_i$，因为我们希望用 $Z_i$ 的 coefficient 来衡量对 $\HF$ 的偏离。
+从计算上看，在第一种策略中，我们只需要运行一次回归；而在第二种策略中，需要运行很多次回归。
+
+在上面的讨论中，``regression'' 是一个泛称，可以是 linear regression、logistic regression，甚至是 machine learning algorithms。使用来自这两种策略的任意 test statistics 的 FRT，在 $\HF$ 下都会是 finite-sample exact，尽管它们在 alternative hypotheses 下会有所不同。
+本节余下部分将回顾一些基于 OLS 的 test statistics。
+
+\subsection{Analysis of covariance and extensions}\label{sec::ancova}
+
+现在我们转向对 average causal effect $\tau$ 的直接估计，同时调整 observed covariates。
+
+从历史上看，\citet{fisher1925statistical} 提出使用 analysis of covariance (ANCOVA) 来提高估计效率。这在许多领域仍是标准策略。他建议运行 $Y_i$ 对 $(1, Z_i, X_i)$ 的 OLS，并把 $Z_i$ 的 coefficient 作为 $\tau$ 的 estimator。令 $\hat{\tau}_\textsc{F}$ 表示 Fisher's ANCOVA estimator。
+
+曾任 Berkeley Statistics Professor 的 David A. Freedman 在 \citet{Neyman:1923} 的 potential outcomes framework 下重新分析了 Fisher's ANCOVA。\citet{freedman2008regression_a, freedman2008regression_b} 得到如下负面结果：
+\begin{enumerate}
+[(1)]
+\item
+$\hat{\tau}_\textsc{F}$ 有 bias，但简单均值差 $\hat{\tau}$ 是 unbiased 的。
+\item 
+当 $n_1\neq n_0$ 时，$\hat{\tau}_\textsc{F}$ 的 asymptotic variance 甚至可能大于 $\hat{\tau}$ 的 asymptotic variance。
+\item 
+来自 OLS 的 standard error 对 CRE 下 $\hat{\tau}_\textsc{F}$ 的真实 standard error 是 inconsistent 的。
+\end{enumerate}
+
+曾是 Berkeley Ph.D. student 的 Winston Lin 写了一篇论文回应 Freedman 的批评。\citet{lin2013} 得到如下正面结果：
+\begin{enumerate}
+[(1)]
+\item
+$\hat{\tau}_\textsc{F}$ 的 bias 在大样本中很小，并且随着 sample size 趋于无穷而趋于零。
+\item
+通过在 $Y_i$ 对 $(1, Z_i, X_i, Z_i\times X_i)$ 的 OLS 中使用 $Z_i$ 的 coefficient，我们可以提高 $\hat{\tau}$ 和 $\hat{\tau}_\textsc{F}$ 二者的 asymptotic efficiency。令 $\hat{\tau}_\textsc{L}$ 表示 \citet{lin2013} 的 estimator。此外，在 CRE 下，EHW standard error 是 $\hat{\tau}_\textsc{L}$ 真实 standard error 的 conservative estimator。
+\item
+在 $Y_i$ 对 $(1, Z_i, X_i)$ 的 OLS 拟合中，$\hat{\tau}_\textsc{F}$ 的 EHW standard error\footnote{没有 covariates 时，HC2 correction 给出的 variance estimator 与 \citet{Neyman:1923} 的经典 estimator 完全相同；见 Problem \ref{hw::neyman-ols-nox}。为了保持一致，对于带有 covariate adjustment 的 \citet{lin2013} estimator，我们也可以使用 HC2 correction。当 covariates 的数量相对于 sample size 较小，并且 covariates 不含 outliers 时，EHW standard error 的各个变体与原始版本表现相近。当 covariates 的数量相对于 sample size 较大，或者 covariates 含有 outliers 时，这些变体可能优于原始版本。在这些情形下，\citet{lei2018regression} 建议使用 EHW standard error 的 HC3 变体。}
+是 CRE 下 $\hat{\tau}_\textsc{F}$ 真实 standard error 的 conservative estimator。
+\end{enumerate}
+
+\subsubsection{Some heuristics for \citet{lin2013}'s results}
+
+\citet{Neyman:1923} 的结果说明，difference-in-means estimator $\hat{\tau}$ 的 variance 取决于 potential outcomes 的 variances。直观地说，我们可以通过降低 potential outcomes 的 variances 来降低 estimator 的 variance。一族 linearly adjusted estimators 为
+\begin{eqnarray} 
+\hat{\tau}(\beta_1, \beta_0) &=& n_1^{-1} \sumn Z_i(Y_i - \beta_1\tran X_i) - n_0^{-1} \sumn (1-Z_i) (Y_i - \beta_0\tran X_i)  \label{eq::linear-adj-1}\\
+&=& \left\{  \hat{\bar{Y}}(1) - \beta_1\tran \hat{\bar{X} }(1) \right\}  -  \left\{   \hat{\bar{Y}}(0) - \beta_0\tran \hat{\bar{X} }(0) \right\},
+\label{eq::linear-adj-2}
+\end{eqnarray}
+其中 $\{ \hat{\bar{Y}}(1), \hat{\bar{Y}}(0) \}$ 是 outcomes 的 sample means，$\{ \hat{\bar{X} }(1), \hat{\bar{X} }(0)\}$ 是 covariates 的 sample means。这个 covariate-adjusted estimator $\hat{\tau}(\beta_1, \beta_0)$ 试图通过对 potential outcomes residualize 来降低 $\hat\tau$ 的 variance。当 $\beta_1 = \beta_0 = 0$ 时，它退化为 $\hat\tau$。
+由于 $\bar{X}  = 0$，对任意固定的 $\beta_1$ 和 $\beta_0$，它的均值都是 $\tau$。我们关心的是找到使 $\hat{\tau}(\beta_1, \beta_0)$ 的 variance 最小的 $(\beta_1, \beta_0)$。这个 estimator 本质上是 adjusted potential outcomes $\{ Y_i(1) - \beta_1\tran X_i  , Y_i(0) - \beta_0\tran  X_i \}_{i=1}^n $ 的均值差。应用 \citet{Neyman:1923} 的结果，这个 estimator 的 variance 为
+$$
+\var\{ \hat{\tau}(\beta_1, \beta_0) \} = \frac{ {S}^2(1; \beta_1) }{ n_1 } + \frac{ {S}^2(0; \beta_0) }{ n_0 }
+- \frac{  S^2(\tau; \beta_1, \beta_0)  }{ n },
+$$
+其中 $ {S}^2(z; \beta_z)$ $(z=1,0)$ 和 $S^2(\tau; \beta_1, \beta_0)$ 分别是 adjusted potential outcomes 和 individual causal effects 的 finite population variances；此外，一个 conservative variance estimate 为
+$$
+\hat{V}( \beta_1, \beta_0 ) = \frac{ \hat{S}^2(1; \beta_1) }{ n_1 } + \frac{ \hat{S}^2(0; \beta_0) }{ n_0 },
+$$
+其中
+\begin{eqnarray*}
+\hat{S}^2(1; \beta_1) &=& (n_1-1)^{-1} \sumn Z_i  ( Y_i - \gamma_1 - \beta_1\tran  X_i )^2,\\ 
+\hat{S}^2(0; \beta_0) &=& (n_0-1)^{-1} \sumn (1-Z_i)  ( Y_i - \gamma_0 - \beta_0\tran  X_i )^2
+\end{eqnarray*}
+是 adjusted potential outcomes 的 sample variances，其中 $\gamma_1$ 和 $\gamma_0$ 分别是 treatment 下 $Y_i - \beta_1\tran  X_i$ 和 control 下 $Y_i   - \beta_0\tran  X_i $ 的 sample means。
+为了最小化 $\hat{V}( \beta_1, \beta_0 )$，我们需要解两个 OLS 问题\footnote{
+我们也可以最小化 $\hat{\tau}(\beta_1, \beta_0) $ 的真实 variance。
+更多细节见 Problem \ref{hw::compare-true-variance}。
+}：
+$$
+\min_{\gamma_1 , \beta_1 }
+\sumn Z_i  ( Y_i - \gamma_1 - \beta_1\tran  X_i )^2,\quad
+\min_{\gamma_0 , \beta_0 }
+\sumn (1-Z_i)  ( Y_i - \gamma_0 - \beta_0\tran  X_i  )^2.
+$$
+我们分别在 treatment group 和 control group 中运行 $Y_i$ 对 $X_i$ 的 OLS，得到 $( \hat{\gamma}_1, \hat{\beta}_1 )$ 和 $( \hat{\gamma}_0, \hat{\beta}_0 )$。最终 estimator 为
+\begin{eqnarray*}
+ \hat{\tau}( \hat{\beta}_1, \hat{\beta}_0) &=& n_1^{-1} \sumn Z_i(Y_i - \hat{\beta}_1\tran  X_i) 
+- n_0^{-1} \sumn (1-Z_i)  (Y_i - \hat{\beta}_0\tran  X_i) \\
+&=&\left\{  \hat{\bar{Y}}(1) - \hat \beta_1\tran \hat{\bar{X} }(1) \right\}  
+-  \left\{   \hat{\bar{Y}}(0) - \hat \beta_0\tran \hat{\bar{X} }(0) \right\} . 
+\end{eqnarray*}
+由 OLS 拟合的性质（见 \eqref{eq::OLS-mean-data}），我们知道
+$$
+\hat{\bar{Y}}(1) =  \hat{\gamma}_1 + \hat{\beta}_1\tran  \hat{\bar{X} }(1),\quad
+\hat{\bar{Y}}(0) =  \hat{\gamma}_0 + \hat{\beta}_0\tran  \hat{\bar{X} }(0).
+$$
+因此，我们可以把 estimator 改写为
+\begin{equation}
+\label{eq::lin-intercepts}
+ \hat{\tau}( \hat{\beta}_1, \hat{\beta}_0)  =  \hat{\gamma}_1 - \hat{\gamma}_0  
+\end{equation}
+\eqref{eq::lin-intercepts} 中的等价形式表明，我们可以从下面的单个 OLS 拟合中得到 $ \hat{\tau}( \hat{\beta}_1, \hat{\beta}_0) $。
+
+\begin{proposition}\label{prop::lin-ols}
+\eqref{eq::lin-intercepts} 中的 estimator $ \hat{\tau}( \hat{\beta}_1, \hat{\beta}_0) $ 等于 $Y_i$ 对 $(1, Z_i, X_i, Z_i\times X_i)$ 的 OLS 拟合中 $Z_i$ 的 coefficient，也就是前面介绍的 \citet{lin2013} estimator $\hat{\tau}_\textsc{L}$。
+\end{proposition}
+
+我把 Proposition \ref{prop::lin-ols} 的证明留给 Problem \ref{para::lin-ols-covadj}；这只是一个纯粹的线性代数事实。
+
+基于上面的讨论，$\hat{\tau}_\textsc{L}$ 的一个 conservative variance estimator 为
+\begin{eqnarray*}
+\hat{V}(  \hat{\beta}_1, \hat{\beta}_0 ) 
+%= \frac{ \hat{S}^2(1; \hat{\beta}_1) }{ n_1 } + \frac{ \hat{S}^2(0; \hat{\beta}_0) }{ n_0 }
+&=& \frac{1}{n_1(n_1 - 1)} \sumn Z_i  ( Y_i - \hat{\gamma}_1 - \hat{\beta}_1\tran  X_i  ) ^2 \\
+&& \qquad + \frac{1}{n_0(n_0 - 1)} \sumn (1-Z_i)  ( Y_i - \hat{\gamma}_0 - \hat{\beta}_0\tran  X_i )^2.
+\end{eqnarray*}
+基于相当技术性的计算，\citet{lin2013} 进一步说明，Proposition \ref{prop::lin-ols} 中 OLS 的 EHW standard error 与 $\hat{V}(  \hat{\beta}_1, \hat{\beta}_0 ) $ 几乎相同，而后者是 CRE 下 $\hat{\tau}_\textsc{L}$ 真实 standard error 的 conservative estimator。直观地说，这是因为我们并不假设 linear model 被正确设定，而 EHW standard error 对 model misspecification 是 robust 的。
+
+上面的讨论有一个微妙问题。Variance formula $\var\{ \hat{\tau}(\beta_1, \beta_0) \} $ 适用于固定的 $(\beta_1, \beta_0)$，但 estimator $ \hat{\tau}( \hat{\beta}_1, \hat{\beta}_0) $ 使用了两个估计得到的 coefficients $( \hat{\beta}_1, \hat{\beta}_0) $。估计 coefficients 中的额外不确定性可能导致最终 estimator 的 finite-sample bias。\citet{lin2013} 说明，这个问题在 asymptotics 中会消失，因为 $ \hat{\tau}( \hat{\beta}_1, \hat{\beta}_0) $ 的行为类似于 $ \hat{\tau}( \tilde{\beta}_1, \tilde{\beta}_0) $，其中 $\tilde{\beta}_1$ 和 $\tilde{\beta}_0$ 分别是 $\hat{\beta}_1$ 和 $ \hat{\beta}_0$ 的极限。启发式地看，$ \hat{\tau}( \hat{\beta}_1, \hat{\beta}_0) $ 与 $ \hat{\tau}( \tilde{\beta}_1, \tilde{\beta}_0) $ 的差异取决于
+$$
+(\hat{\beta}_z - \tilde{\beta}_z)\tran \hat{\bar{X} }(z) ,\quad (z=0,1) 
+$$
+这是两个小阶项的乘积。作为提醒，asymptotic theory 需要较大的 sample size，以及 potential outcomes 和 covariates 上的一些 regularity conditions。在 finite samples 中，由于 estimated coefficients $\hat{\beta}_1$ 和 $\hat{\beta}_0$ 中的额外不确定性，regression adjustment 甚至可能有害。
+
+\subsubsection{Understanding \citet{lin2013}'s estimator via predicting the potential outcomes}
+\label{sec::understand-lin-predict}
+ 
+\begin{table}
+\centering
+\caption{预测 potential outcomes}\label{tb::predict-po-ols}
+\begin{tabular}{cccccc}
+\hline 
+$X$ & $Z$ & $Y(1)$ & $Y(0)$ &  $\hat{Y}(1)$ & $\hat{Y}(0)$ \\
+\hline
+$X_1 $ & 1 & $Y_1(1)$ & ? & $\hat{\mu}_1(X_1 )$ & $\hat{\mu}_0(X_1)$ \\
+\vdots \\
+$X_{n_1}$ & 1 & $Y_{n_1}(1)$ & ? & $\hat{\mu}_1(X_{n_1})$ & $\hat{\mu}_0(X_{n_1})$ \\
+$X_{n_1 + 1}$ & 0 & ? & $Y_{n_1+1}(0)$ & $\hat{\mu}_1(X_{n_1+1})$ & $\hat{\mu}_0(X_{n_1+1})$ \\
+\vdots \\
+$X_{n}$ & 0 & ? & $Y_{n}(0)$ & $\hat{\mu}_1(X_{n})$ & $\hat{\mu}_0(X_{n})$ \\
+\hline 
+\end{tabular}
+\end{table}
+
+我们可以把 \citet{lin2013} estimator 看作一个基于 potential outcomes 对 covariates 的 OLS 拟合的 {\it predictive estimator}。我们使用 treatment group 中的数据，基于 $X$ 为 $Y(1)$ 建立 prediction model：
+\begin{eqnarray}
+\label{eq::pred-y1-linear}
+\hat{\mu}_1(X) = \hat{\gamma}_1 + \hat{\beta}_1\tran X.
+\end{eqnarray}
+类似地，我们使用 control group 中的数据，基于 $X$ 为 $Y(0)$ 建立 prediction model：
+\begin{eqnarray}
+\label{eq::pred-y0-linear}
+\hat{\mu}_0(X)= \hat{\gamma}_0 + \hat{\beta}_0\tran X . 
+\end{eqnarray}
+Table \ref{tb::predict-po-ols} 展示了 potential outcomes 的预测。
+如果我们预测 missing potential outcomes，那么得到下面的 predictive estimator：
+\begin{eqnarray}\label{eq::predictive-estimator-generic}
+\hat{\tau}_\text{pred} = n^{-1} \left\{   \sum_{Z_i=1}Y_i + \sum_{Z_i=0}\hat{\mu}_1(X_i) - \sum_{Z_i=1} \hat{\mu}_0(X_i) - \sum_{Z_i=0} Y_i     \right\} .
+\end{eqnarray}
+可以验证，在 \eqref{eq::pred-y1-linear} 和 \eqref{eq::pred-y0-linear} 下，这个 predictive estimator 等于 \citet{lin2013} estimator：
+\begin{eqnarray}
+\label{eq::predictiveestimator}
+\hat{\tau}_\text{pred} = \hat{\tau}_\textsc{L}.
+\end{eqnarray}
+如果我们预测所有 potential outcomes，即使它们已经被观测到，那么得到下面的 {\it projective estimator}：
+\begin{eqnarray}\label{eq::projective-estimator-generic}
+\hat{\tau}_\text{proj} = n^{-1}  \sumn \{ \hat{\mu}_1(X_i) - \hat{\mu}_0(X_i)    \}.
+\end{eqnarray}
+可以验证，在 \eqref{eq::pred-y1-linear} 和 \eqref{eq::pred-y0-linear} 下，这个 projective estimator 等于 \citet{lin2013} estimator：
+\begin{eqnarray}
+\label{eq::projectiveestimator}
+\hat{\tau}_\text{proj} = \hat{\tau}_\textsc{L}.
+\end{eqnarray}
+我把 \eqref{eq::predictiveestimator} 和 \eqref{eq::projectiveestimator} 的证明留给 Problem \ref{para::predictiveestimator}。
+
+术语 ``predictive'' 和 ``projective'' 来自 survey sampling 文献 \citep{firth1998robust, ding2018causal}。
+更一般的公式 \eqref{eq::predictive-estimator-generic} 和 \eqref{eq::projective-estimator-generic} 对 potential outcomes 的其他 predictors 也定义良好。为了与 \citet{lin2013} estimator 建立联系，我在这里聚焦于 linear predictors。Predictors $\hat{\mu}_1(X)$ 和 $\hat{\mu}_0(X)$ 可以非常一般，包括复杂得多的 machine learning algorithms。然而，构造 point estimator 只是分析 CRE 的第一步。更重要的第二步是量化与 estimator 相关的不确定性，而这取决于 potential outcomes 的 predictors 的性质。尽管如此，在不做额外 theoretical analysis 的情况下，我们总是可以把 \eqref{eq::predictive-estimator-generic} 和 \eqref{eq::projective-estimator-generic} 作为 FRT 中的 test statistics。
+ 
+\subsubsection{Understanding \citet{lin2013}'s estimator via adjusting for covariate imbalance}
+\label{sec::lin=adjustingforimbalance}
+
+Linearly adjusted estimator 有一个等价形式
+\begin{eqnarray}\label{eq::linear-covariate-imbalance}
+%\hat{\tau}(\gamma) = 
+\hat{\tau}(\beta_1, \beta_0) = \hat{\tau} - \gamma\tran \hat{\tau}_X 
+\end{eqnarray}
+其中 $\gamma =\frac{n_0}{n} \beta_1 + \frac{n_1}{n} \beta_0$，所以我们也可以把它写作 $\hat{\tau}(\gamma) = 
+\hat{\tau}(\beta_1, \beta_0) .$ 类似地，\citet{lin2013} estimator 有一个等价形式
+\begin{eqnarray}\label{eq::lin-covariate-imbalance}
+\hat{\tau}_\textsc{L} = \hat{\tau} - \hat \gamma\tran \hat{\tau}_X ,
+\end{eqnarray}
+其中 $\hat \gamma =\frac{n_0}{n} \hat \beta_1 + \frac{n_1}{n} \hat  \beta_0$。
+我把 \eqref{eq::linear-covariate-imbalance} 和 \eqref{eq::lin-covariate-imbalance} 的证明留给 Problem \ref{para::reg-covariate-imbalance}。\eqref{eq::linear-covariate-imbalance} 和 \eqref{eq::lin-covariate-imbalance} 是 ``adjusting for the covariate imbalance'' 的数学表述。它们本质上减去了 covariates 均值差的某些线性组合。由于 $\hat{\tau} $ 和 $\hat{\tau}_X $ 在 CRE 下相关，使用适当选择的 $\gamma$ 做 covariate adjustment 会降低 $\hat{\tau} $ 的 variance。
+\eqref{eq::linear-covariate-imbalance} 和 \eqref{eq::lin-covariate-imbalance} 的另一个有趣性质是，最终 estimators 只依赖于 $\gamma$ 或 $\hat \gamma$，所以 $\beta$-coefficients 的选择并不唯一。\citet{li2019rerandomization} 指出了这一简单事实。因此，\citet{lin2013} estimator 只是 optimal estimators 之一。不过，它可以通过带 EHW standard error 的标准 OLS 很容易地实现。这就是本书聚焦于它的原因。
+
+\subsection{Some additional remarks on regression adjustment}
+
+\subsubsection{Duality between ReM and regression adjustment}
+\citet{li2018asymptotic} 指出，在实验的设计阶段和分析阶段使用 covariates 这一点上，ReM 与 \citet{lin2013} 的 regression adjustment 是对偶的。更具体地说，当 $a$ 很小时，ReM 下 $\hat{\tau}$ 的 asymptotic distribution 与 CRE 下 $\hat{\tau}_\textsc{L}$ 的 asymptotic distribution 几乎相同。因此，ReM 在设计阶段使用 covariates，而 \citet{lin2013} 的 regression adjustment 在分析阶段使用 covariates；当 $a$ 很小时，二者实现了近乎相同的 asymptotic efficiency gain。
+
+ \subsubsection{Equivalence of regression adjustment and post-stratification}
+如果我们有一个带 $K$ 个类别的离散 covariate $C_i$，可以构造 $K-1$ 个中心化 dummy variables：
+$$
+X_i = ( I(C_i=1) - \pi_{[1]}, \ldots,   I(C_i=K-1) - \pi_{[K-1]})
+$$ 
+其中 $\pi_{[k]}$ 等于满足 $C_i = k$ 的 units 比例。
+在这种情况下，\citet{lin2013} 的 regression adjustment 等价于 post-stratification，如下面的 proposition 所总结。
+
+\begin{proposition}
+\label{prop::lin=ps-discrete}
+基于 $X_i$ 的 $\hat{\tau}_\textsc{L}$ 与基于 $C_i$ 的 post-stratification estimator $\hat{\tau}_\textsc{PS}$ 在数值上完全相同（见 Chapter \ref{sec::poststra-cre}）。
+\end{proposition}
+
+我把 Proposition \ref{prop::lin=ps-discrete} 的证明作为 Problem \ref{para::lin=ps-discrete}。
+
+\subsubsection{Difference-in-difference as a special case of covariate adjustment $\hat \tau(\beta_1, \beta_0)$}\label{sec::difference-in-difference-CRE}
+许多研究中的一个重要 covariate $X$ 是 treatment 之前的 lagged outcome。例如，在教育研究中，如果 outcome $Y$ 是 post-test score，那么 covariate $X$ 就是 pre-test score；如果 outcome $Y$ 是 job training program 之后的 log wage，那么 covariate $X$ 就是该项目之前的 log wage。以 lagged outcome $X$ 作为 covariate 时，一个常用 estimator 是 {\it gain score} 或 {\it difference-in-difference} estimator，也就是在 \eqref{eq::linear-adj-1} 和 \eqref{eq::linear-adj-2} 中取 $\beta_1 = \beta_0=1$：
+\begin{eqnarray*}
+\hat{\tau}(1,1) &=& n_1^{-1} \sumn Z_i(Y_i -   X_i) - n_0^{-1} \sumn (1-Z_i) (Y_i -   X_i) \\
+&=& \left\{   \hat{\bar{Y}}(1) - \hat{\bar{Y}}(0) \right\} -  \left\{   \hat{\bar{X} }(1) - \hat{\bar{X} }(0) \right\} .
+\end{eqnarray*}
+$\hat{\tau}(1,1) $ 的第一种形式解释了 {\it gain score} 这个名称，因为它本质上是 gain score $g_i = Y_i - X_i$ 的均值差。
+$\hat{\tau}(1,1) $ 的第二种形式解释了 {\it difference-in-difference} 这个名称，因为它是两个均值差之间的差。
+这个 estimator 不同于 \citet{lin2013} estimator：它事先固定 $\beta_1 = \beta_0=1$，而 \citet{lin2013} estimator 涉及两个估计得到的 $\beta$。$\hat{\tau}(1,1) $ 是 unbiased 的，并且有 conservative variance estimator
+\begin{eqnarray*}
+\hat{V}( 1,1 ) 
+&=& \frac{1}{n_1(n_1 - 1)} \sumn Z_i  \{ g_i - \hat{\bar{g}}(1)   \}^2 \\
+& & \qquad + \frac{1}{n_0(n_0 - 1)} \sumn (1-Z_i)  \{ g_i - \hat{\bar{g}}(0)   \}^2,
+\end{eqnarray*}
+其中 $\hat{\bar{g}}(1)$ 和 $ \hat{\bar{g}}(0)$ 分别是 treatment 和 control 下 gain score $g_i = Y_i - X_i$ 的 sample means。
+当 lagged outcome 是 outcome 的强 predictor 时，gain score $g_i = Y_i - X_i$ 的 variance 往往远小于 outcome 本身的 variance。在这种情况下，$\hat{\tau}(1,1) $ 往往能大幅降低 outcome 的简单均值差的 variance。
+更多细节见 Problem \ref{hw::did-CRE}。
+
+从理论上说，在大样本中，\citet{lin2013} estimator 总是比 $\hat{\tau}(1,1)$ 更有效。然而，\citet{lin2013} estimator 在 finite samples 中有 bias，而 $\hat{\tau}(1,1)$ 总是 unbiased。
+
+\subsection{Extension to the SRE}\label{sec::covariate-SRE}
+
+有可能我们有一个按离散变量 $C$ 分层的实验，同时还观测到额外 covariates $X$。如果所有 strata 都很大，那么我们可以在 strata 内得到 \citet{lin2013} estimators $\hat{\tau}_{\textsc{L},[k]}$，并把最终 estimator 写为
+$$
+\hat{\tau}_{\textsc{L},\textsc{S}} = \sum_{k=1}^K \pi_{[k]} \hat{\tau}_{\textsc{L},[k]} . 
+$$
+一个 conservative variance estimator 为
+$$
+\hat{V}_{\textsc{L},\textsc{S}} =  \sum_{k=1}^K \pi_{[k]}^2 \hat{V}_{\textsc{ehw},[k]},
+$$
+其中 $\hat{V}_{\textsc{ehw},[k]}$ 是在 stratum $k$ 内，将 outcome 对 intercept、treatment indicator、covariates 及其 interactions 做 OLS 拟合得到的 EHW variance estimator。重要的是，我们需要用各 stratum 自身的均值对 covariates 做中心化。
+ 
+\section{Unification, combination, and comparison}
+\label{sec::unification-rem-regadj}
+
+\citet{li2019rerandomization} 统一了相关文献，并说明我们可以结合 rerandomization 和 regression adjustment。也就是说，如果我们在设计阶段进行了 rerandomization，那么在分析阶段可以使用带 EHW standard error 的 \citet{lin2013} estimator。Rerandomization 和 regression adjustment 的结合，在设计阶段改善 covariate balance，在分析阶段提高 estimation efficiency。
+
+Table \ref{tb::rerandomization-regression} 总结了从 \citet{Neyman:1923} 到 \citet{li2019rerandomization} 的文献。Arrow 1 展示了 CRE 中 covariate adjustment 的 efficiency gain：asymptotically，$\hat\tau_\textsc{L}$ 的 variance 小于 $\hat\tau$ 的 variance。
+Arrow 2 展示了 ReM 的 efficiency gain：asymptotically，$\hat{\tau}$ 在 ReM 下比在 CRE 下具有更窄的 quantile ranges。
+Arrows 3 和 4 展示了 ReM 与 CRE 结合的好处。
+
+\begin{table}
+\centering
+\caption{实验的设计与分析}\label{tb::design-analysis-2x2}
+\label{tb::rerandomization-regression}
+\begin{tabular}{c|cccc}
+\hline 
+  & & & analysis & \\
+  \hline 
+  & CRE & $\hat\tau$ \citep{Neyman:1923} &  $\stackrel{1}{\longrightarrow}$  &  $\hat\tau_\textsc{L}$ \citep{lin2013} \\
+  design&  &  $2\Big\downarrow$ && $  \Big\downarrow 4$ \\
+  & ReM & $\hat\tau$  \citep{li2018asymptotic} &  $\stackrel{3}{\longrightarrow}$  &$\hat\tau_\textsc{L}$ \citep{li2019rerandomization}  \\
+  \hline 
+\end{tabular}
+\end{table}
+
+\section{Final remarks}
+
+ReM 使用 Mahalanobis distance 作为 balance criterion。我们可以考虑更一般的 rerandomization，其中 balance criterion 定义为 $\boldsymbol{Z}$ 和 $\boldsymbol{X}$ 的函数。例如，可以使用下面这个基于 $X_i = (x_{i1}, \ldots, x_{iK})\tran$ 所有坐标的 marginal tests 的 criterion。当且仅当
+\begin{equation}
+\label{eq::marginal-testing-rerandomization}
+\left | \frac{  \hat{\tau}_{xk} }{   \sqrt{  \frac{n}{n_1 n_0} S_{xk}^2       }  }   \right | \leq  a \quad ( k=1,\ldots, K )
+\end{equation}
+时，我们接受 $\boldsymbol{Z}$，其中 $a > 0$ 是某个预先给定的常数，$S_{xk}^2$ 是 covariate $x_{ik}$ 的 finite-population variance。例如，$a$ 可以是 standard Normal distribution 的某个上分位数。关于基于 criterion \eqref{eq::marginal-testing-rerandomization} 以及其他 criteria 的 rerandomization 理论，见 \citet{zhao2021no}。
+
+对于 continuous outcome，Fisher's ANCOVA 多年来一直是标准方法。\citet{lin2013} 的改进即使在 linear model misspecified 时也具有更好的理论性质。对于 binary outcome，常见做法是在 observed outcome 对 intercept、treatment indicator 和 covariates 的 logistic regression 中，使用 treatment 的 coefficient 来估计 causal effects。然而，\citet{freedman2008randomization} 说明，这种 logistic regression 在 potential outcomes framework 下没有良好性质。即使 logistic model 正确，该 coefficient 估计的是 conditional odds ratio（见 Chapter \ref{sec::logistic-regression}），它可能不是感兴趣的 parameter；当 logistic model 不正确时，这个 coefficient 更难解释。根据上面的讨论，如果感兴趣的 parameter 是 average causal effect，我们仍然可以使用 \citet{lin2013} estimator 来分析 CRE 中的 binary outcome data。\cite{guo2020generalized} 将 \citet{lin2013} 的理论扩展到允许使用 generalized linear models，在 potential outcomes framework 下构造 average causal effect 的 estimators。
+
+其他对 \citet{lin2013} 理论的扩展聚焦于 high dimensional covariates。\citet{bloniarz2015lasso} 聚焦于 covariates 数量多于 sample size 的情形，并建议把 OLS 拟合替换为 outcome 对 intercept、treatment、covariates 及其 interactions 的 least absolute shrinkage and selection operator (LASSO) 拟合 \citep{tibshirani1996regression}。\citet{lei2018regression} 聚焦于 covariates 数量发散且不假设 sparsity 的情形；在某些 regularity conditions 下，他们证明 \citet{lin2013} estimator 仍然 consistent 且 asymptotically Normal。\citet{wager2016high} 提出使用 machine learning methods 分析 high dimensional experimental data。
+
+\section{Homework Problems}
+
+\homeworksolutionref{06}
+\paragraph{FRT under ReM}\label{hw::FRT-under-REM}
+
+描述 ReM 下的 FRT。
+
+\paragraph{Invariance of the Mahalanobis Distance}\label{para::invariance-M}
+
+证明 Lemma \ref{lemma::invariance-mdistance}。
+
+\paragraph{Bias of the difference-in-means estimator under rerandomization}\label{hw::unbiasednessof-tauhat-rerandom}
+
+假设我们从 CRE 中抽取 $\boldsymbol{Z} = (Z_1, \ldots, Z_n)$，并且当且仅当 $\phi(\boldsymbol{Z}, \boldsymbol{X}) = 1$ 时接受它，其中 $\phi$ 是预先给定的 balance criterion。证明：如果 $n_1 = n_0$ 且
+\begin{eqnarray}
+\phi(\boldsymbol{Z}, \boldsymbol{X}) = \phi(\boldsymbol{1}_n-\boldsymbol{Z}, \boldsymbol{X}), \label{eq::symmetry}
+\end{eqnarray}
+那么 $\hat{\tau}$ 是 $\tau$ 的 unbiased estimator。
+验证当 $n_1 = n_0$ 时，使用 Mahalanobis distance 的 rerandomization 满足 \eqref{eq::symmetry}。
+给出一个反例，说明当这两个条件不成立时，$\hat{\tau}$ 对 $\tau$ 有 bias。
+
+Remark: 在本题中，$\phi(\boldsymbol{Z}, \boldsymbol{X}) $ 可以是一般的 balance criterion。ReM 是特殊情形，其中 $\phi(\boldsymbol{Z}, \boldsymbol{X})  =  I(M\leq a) $。
+
+\paragraph{Equivalent form of $R^2$ in the CRE}\label{para::r2-cre}
+
+证明 Proposition \ref{prop::rsquared-forms}。
+
+\paragraph{More on linear projections of the potential outcomes onto covariates}\label{hw::projection-po-onto-x}
+
+证明
+$$
+S^2(1\mid X) = S_{Y(1)X} (S_X^2)^{-1} S_{XY(1)}
+$$
+其中 $S_{XY(1)}$ 是 $Y_i(1)$ 和 $X_i$ 之间的 finite population covariance，$S_{Y(1)X} = S_{XY(1)}\tran$，而 $S_X^2$ 是 $X_i$ 的 finite population covariance matrix。
+找出 $S^2(0\mid X) $ 和 $S^2(\tau\mid X) $ 的类似公式。
+
+\paragraph{Comparing the true variances within the family of linearly adjusted estimator}\label{hw::compare-true-variance} 
+
+证明 variance $\hat{\tau}(\beta_1, \beta_0)$ 可以分解为
+$$
+\var\{ \hat{\tau}(\beta_1, \beta_0) \} 
+=  
+\var\{ \hat{\tau}( \tilde{\beta}_1, \tilde{\beta}_0) \}  
++
+\var\{ \hat{\tau}(\beta_1, \beta_0) - \hat{\tau}(\tilde{\beta}_1, \tilde{\beta}_0) \}
+$$
+其中 $\tilde{\beta}_1$ 和 $\tilde{\beta}_0$ 分别是 $Y_i(1)$ 和 $Y_i(0)$ 在 $(1, X_i)$ 上做 OLS projection 时 $X_i$ 的 coefficients。
+
+Remark: \citet[][Example 9]{li2017general} 推导了这一分解。它表明，基于真实 variance，$\hat{\tau}( \tilde{\beta}_1, \tilde{\beta}_0)$ 是 linearly adjusted estimator 这一族中的 optimal choice，因为 $\var\{ \hat{\tau}(\beta_1, \beta_0) - \hat{\tau}(\tilde{\beta}_1, \tilde{\beta}_0) \}$ 总是非负的。
+
+\paragraph{Lin's estimator for covariate adjustment}\label{para::lin-ols-covadj}
+
+证明 Proposition \ref{prop::lin-ols}。
+
+\paragraph{Predictive and projective estimators}\label{para::predictiveestimator}
+证明 \eqref{eq::predictiveestimator} 和 \eqref{eq::projectiveestimator}。
+ 
+ \paragraph{Equivalent form of the covariate-adjusted estimator}\label{para::reg-covariate-imbalance}
+
+证明 \eqref{eq::linear-covariate-imbalance} 和 \eqref{eq::lin-covariate-imbalance}。
+ 
+\paragraph{ANCOVA also adjusts for covariate imbalance}
+\label{para::ancova-imbalance}
+
+本题给出一个与 \eqref{eq::lin-covariate-imbalance} 类似的 ANCOVA 结果。
+
+证明
+$$
+\hat{\tau}_\textsc{F} =\hat\tau  - \hat\gamma_\textsc{F}\tran \hat\tau_X,
+$$
+其中 $ \hat\gamma_\textsc{F}$ 是 $Y_i$ 对 $(1,Z_i, X_i)$ 做 OLS 拟合时 $X_i$ 的 coefficient。
+
+ \paragraph{Regression adjustment / post-stratification of CRE}\label{para::lin=ps-discrete}
+ 
+ 证明 Proposition \ref{prop::lin=ps-discrete}。
+ 
+Remark: 有时 $\hat{\tau}_{\textsc{ps}}$ 或 $ \hat{\tau}_\textsc{L}$ 可能没有良好定义。在这些情形下，我们把 $\hat{\tau}_{\textsc{ps}}$ 和 $ \hat{\tau}_\textsc{L}$ 视为相等。证明中可以忽略这一复杂性。
+ 
+%In a completely randomized experiment, we have a binary treatment indicator $Z$, an outcome $Y$, and a discrete covariate $X \in \{  1, \ldots, K \}$. We can use two methods to use covariates to improve estimation efficiency. 
+%
+%First, we can use the post-stratification estimator, pretending that the experiment is a stratified randomized experiment, conditional on $X$. This estimator is $\hat{\tau}_{\textsc{ps}}$. 
+%
+%Second, we can create $K-1$ dummy variables $\delta_{1i} = I(X_i=1), \ldots, \delta_{K-1,i} = I(X_i=K-1)$, and use Lin's estimator with covariates $\delta_1,\ldots, \delta_{K-1}$. This estimator is $\hat{\tau}_\textsc{L}$. 
+%
+%Show that $\hat{\tau}_{\textsc{ps}} = \hat{\tau}_\textsc{L}.$ Note that sometimes $\hat{\tau}_{\textsc{ps}}$ or $ \hat{\tau}_\textsc{L}$ may not be well-defined. In those cases, we treat $\hat{\tau}_{\textsc{ps}}$ and $ \hat{\tau}_\textsc{L}$ as equal. 
+
+% \paragraph{Regression adjustment in the Fisher Randomization Test}
+%This is a reanalysis of the LaLonde experimental data used in the lecture. In \texttt{FRTlalonde.R}, I conduct the Fisher randomization test using four test statistics. The Fisher randomization test can be more general with at least the following two additional strategies. Under the potential outcomes framework, {\it all potential outcomes and covariates are fixed numbers}. 
+%
+%
+%First, we can use test statistics based on residuals from the linear regression. Run a linear regression of the outcomes on the covariates, and obtain the residuals (i.e., treat the residuals as the pseudo ``outcomes''). Then define the four test statistics based on the residuals. Conduct the Fisher randomization test using these four new test statistics. Report the corresponding $p$-values.
+%
+%
+%Second, we can define the test statistic as the coefficient in the linear regression of the outcomes on the treatment and covariates. Conduct the Fisher randomization test using this test statistic. Report the corresponding $p$-value. 
+%
+%
+%Why the five $p$-values from the above two strategies are exact $p$-values? Justify them. 
+
+\paragraph{More on the difference-in-difference estimator in the CRE}\label{hw::did-CRE}
+
+本题给出 Section \ref{sec::difference-in-difference-CRE} 中 CRE 下 difference-in-difference estimator 的更多细节。
+
+证明 $\hat{\tau}(1,1) $ 是 $\tau$ 的 unbiased estimator，计算它的 variance，并证明 $\hat{V}( 1,1 ) $ 是 $\hat{\tau}(1,1) $ 真实 variance 的 conservative estimator。什么时候 $E\{\hat{V}( 1,1 ) \} = \var\{  \hat{\tau}(1,1)  \}$ 成立？
+
+比较 $\hat{\tau}(0,0) $ 和 $\hat{\tau}(1,1) $ 的 variances，以证明
+$$
+\var\{ \hat{\tau}(0,0) \}  \geq \var\{  \hat{\tau}(1,1)  \}
+$$
+当且仅当
+$$
+2 \frac{n_0}{n} \beta_1 + 2\frac{n_1}{n} \beta_0 \geq 1,
+$$
+其中
+$$
+\beta_1 = \frac{\sum_{i=1}^n (X_i-\bar{X})\{  Y_i(1)-\bar{Y}(1) \}  }{  \sum_{i=1}^n (X_i-\bar{X})^2 },\quad
+\beta_0 = \frac{\sum_{i=1}^n (X_i-\bar{X})\{  Y_i(0)-\bar{Y}(0) \}  }{  \sum_{i=1}^n (X_i-\bar{X})^2 }
+$$
+分别是 $Y_i(1)$ 和 $Y_i(0)$ 对 $(1,X_i)$ 做 OLS 拟合时 $X_i$ 的 coefficients。
+
+Remark: \citet[][page 28]{gerber2012field} 讨论了本题在 $n_1=n_0$ 时的一个特殊情形。
+
+\paragraph{Data re-analyses of the Penn Bonus Experiment}
+
+重新分析 Penn Bonus Experiment 数据。第 \ref{chapter::stratification-poststratification} 章中的分析使用了 treatment indicator、outcome 和 block indicator。现在我们想使用所有其他 covariates。
+
+在实验的 strata 内进行 regression adjustments，然后结合这些 adjusted estimators 来估计 average causal effect。报告 point estimator、estimated standard error 和 95\% confidence interval。将它们与没有 regression adjustment 时的结果比较。
+ 
+\paragraph{Missing outcomes in randomized experiments}\label{hw::missing-y-experiments}
+
+数据分析使用了一种 naive imputation method 来处理 missing outcomes。这有些任意。
+
+分别基于 observed means，对 treatment 和 control 下的 missing outcomes 做 imputation。结果是否改变？
+
+分别基于 observed outcomes 对 covariates 的 linear regressions，对 treatment 和 control 下的 missing outcomes 做 imputation。结果是否改变？
+
+你是否有其他处理 missing outcomes 的方法？请说明理由，并实现这些方法来分析数据集。
+
+\paragraph{Recommended reading}
+
+本章标题与 \citet{li2019rerandomization} 的标题相同；该文分别研究了 rerandomization 和 regression adjustment 在 randomized experiments 的设计阶段与分析阶段中的作用。
+

@@ -1,0 +1,812 @@
+\chapter{Solutions to Chapter 13: The Average Causal Effect on the Treated Units and Other Estimands}
+\label{sol:chapter13}
+
+\begin{exercisesolution}{Comparing $\tau_\textsc{T}, \tau_\textsc{C},$ and $\tau$}{propensity score 与 CATE 的 covariance}
+本题的核心是把 treated population 与 control population 看成对原 population 的重新加权。由 consistency 和 ignorability，
+\[
+\tau_\textsc{T}
+=\mathbb{E}\{Y(1)-Y(0)\mid Z=1\}
+=\mathbb{E}\{\tau(X)\mid Z=1\}.
+\]
+对任意可积函数 $g(X)$，都有
+\[
+\mathbb{E}\{g(X)\mid Z=1\}
+=\frac{\mathbb{E}\{Zg(X)\}}{\mathbb{P}(Z=1)}
+=\frac{\mathbb{E}\{e(X)g(X)\}}{e}.
+\]
+取 $g(X)=\tau(X)$，得到
+\[
+\tau_\textsc{T}
+=\frac{\mathbb{E}\{e(X)\tau(X)\}}{e}.
+\]
+另一方面，
+\[
+\tau=\mathbb{E}\{\tau(X)\}.
+\]
+因此
+\begin{align*}
+\tau_\textsc{T}-\tau
+&=\frac{\mathbb{E}\{e(X)\tau(X)\}}{e}
+  -\mathbb{E}\{\tau(X)\} \\
+&=\frac{\mathbb{E}\{e(X)\tau(X)\}
+  -e\mathbb{E}\{\tau(X)\}}{e} \\
+&=\frac{\text{cov}\{e(X),\tau(X)\}}{e}.
+\end{align*}
+
+同理，
+\[
+\mathbb{E}\{g(X)\mid Z=0\}
+=\frac{\mathbb{E}[\{1-e(X)\}g(X)]}{1-e}.
+\]
+于是
+\begin{align*}
+\tau_\textsc{C}-\tau
+&=\frac{\mathbb{E}[\{1-e(X)\}\tau(X)]}{1-e}
+  -\mathbb{E}\{\tau(X)\} \\
+&=\frac{\mathbb{E}\{\tau(X)\}
+  -\mathbb{E}\{e(X)\tau(X)\}
+  -(1-e)\mathbb{E}\{\tau(X)\}}{1-e} \\
+&=-\frac{\mathbb{E}\{e(X)\tau(X)\}
+  -e\mathbb{E}\{\tau(X)\}}{1-e} \\
+&=-\frac{\text{cov}\{e(X),\tau(X)\}}{1-e}.
+\end{align*}
+
+\paragraph{Remark.}
+这个恒等式给出了一个很直接的诊断：如果 treatment 更容易发生在 treatment effect 较大的 covariate 区域，那么 $\text{cov}\{e(X),\tau(X)\}>0$，于是 $\tau_\textsc{T}>\tau>\tau_\textsc{C}$。反过来，如果 treatment 倾向于发生在受益较小的人群中，三个 estimands 的排序会反转。
+\end{exercisesolution}
+
+\begin{exercisesolution}{An algebraic fact about a regression estimator for $\tau_\textsc{T}$}{交互 OLS 的 treatment 系数}
+本题补全 \cref{eg::att-regression2} 末尾的代数事实。记
+\[
+\tilde X_i=X_i-\hat{\bar X}(1),\qquad
+\hat{\bar X}(1)=n_1^{-1}\sumn Z_iX_i.
+\]
+考虑所有 units 上的 fully interacted OLS：
+\[
+Y_i=\gamma_0+\gamma_zZ_i+\gamma_x\tran \tilde X_i
+      +\gamma_{zx}\tran Z_i\tilde X_i+\varepsilon_i.
+\]
+由于模型包含 $Z_i\tilde X_i$，它等价于在 control group 和 treatment group 中分别拟合两条线性回归。对 control group，
+\[
+Y_i=\gamma_0+\gamma_x\tran \tilde X_i+\varepsilon_i,\qquad Z_i=0;
+\]
+对 treatment group，
+\[
+Y_i=(\gamma_0+\gamma_z)+(\gamma_x+\gamma_{zx})\tran \tilde X_i+\varepsilon_i,\qquad Z_i=1.
+\]
+因此 $\gamma_0$ 是 control regression 在 $\tilde X=0$，也就是 $X=\hat{\bar X}(1)$ 处的 fitted value；而 $\gamma_0+\gamma_z$ 是 treatment regression 在同一点处的 fitted value。
+
+先看 treatment group。因为 treatment group 中
+\[
+n_1^{-1}\sumn Z_i\tilde X_i=0,
+\]
+含 intercept 的 OLS 正规方程给出
+\[
+\hat\gamma_0+\hat\gamma_z
+=n_1^{-1}\sumn Z_iY_i
+=\hat{\bar Y}(1).
+\]
+再看 control group。只在 control units 上回归 $Y$ 对 intercept 与 $X$，得到 \cref{eg::att-regression2} 中的
+\[
+\hat\beta_{0\mid 0},\qquad \hat\beta_{x\mid 0}.
+\]
+同一条 control fitted line 用中心化 covariate 表示时，在 $\tilde X=0$ 处的值为
+\[
+\hat\gamma_0
+=\hat\beta_{0\mid 0}+\hat\beta_{x\mid 0}\tran \hat{\bar X}(1).
+\]
+于是 fully interacted OLS 中 $Z$ 的系数为
+\begin{align*}
+\hat\gamma_z
+&=(\hat\gamma_0+\hat\gamma_z)-\hat\gamma_0 \\
+&=\hat{\bar Y}(1)
+  -\hat\beta_{0\mid 0}
+  -\hat\beta_{x\mid 0}\tran \hat{\bar X}(1).
+\end{align*}
+这正是 \cref{eg::att-regression2} 中的 estimator
+\[
+\hat{\tau}_\textsc{T}
+=\hat{\bar Y}(1)
+  -\hat\beta_{0\mid 0}
+  -\hat\beta_{x\mid 0}\tran \hat{\bar X}(1).
+\]
+
+\paragraph{Remark.}
+中心化点必须是 treated covariate mean。这样 $Z$ 的系数才是在 treated population 的 covariate profile 上比较 treated regression surface 与 control regression surface，而不是在 overall mean 或 control mean 上比较。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Simulation studies for $\tau_\textsc{T}$}{DR estimator 的有限样本表现}
+本题要求仿照 \cref{chapter::doubly-robust} 对 $\tau$ 的 simulation studies，为 $\tau_\textsc{T}$ 比较 outcome regression、HT、Hajek 和 doubly robust estimators。下面给出一个可复现实验。生成机制为
+\[
+X\sim N(0,1),\qquad e(X)=\frac{\exp(-0.2+0.8X)}{1+\exp(-0.2+0.8X)},
+\]
+\[
+Z\mid X\sim \operatorname{Bernoulli}\{e(X)\},
+\qquad
+Y(0)=1+X+\frac{1}{2}X^2+\varepsilon,\quad \varepsilon\sim N(0,1),
+\]
+\[
+Y(1)=Y(0)+1+\frac{1}{2}X.
+\]
+因此
+\[
+\tau(X)=1+\frac{1}{2}X,\qquad
+\tau_\textsc{T}=\frac{\mathbb{E}\{e(X)\tau(X)\}}{\mathbb{E}\{e(X)\}}.
+\]
+用 $10^6$ 次 Monte Carlo integration 近似得到
+\[
+\mathbb{E}\{e(X)\}\approx 0.456,\qquad
+\tau_\textsc{T}\approx 1.191.
+\]
+
+每次 simulation 取 $n=1000$，重复 $300$ 次；每次用 $80$ 个 bootstrap samples 估计 standard error。propensity score model 正确时拟合 logistic regression $Z\sim X$，错误时只拟合 intercept。outcome model 正确时在 control units 中拟合 $Y\sim X+X^2$，错误时只拟合 $Y\sim X$。得到如下结果：
+\[
+\begin{array}{cccrrrr}
+\hline
+\text{PS} & \text{OM} & \text{Estimator} & \text{Mean} & \text{Bias} & \text{SD} & \text{Mean boot SE}\\
+\hline
+\text{correct} & \text{correct} & \text{reg}   & 1.187 & -0.004 & 0.079 & 0.077\\
+\text{correct} & \text{correct} & \text{HT}    & 1.177 & -0.014 & 0.177 & 0.163\\
+\text{correct} & \text{correct} & \text{Hajek} & 1.180 & -0.010 & 0.152 & 0.139\\
+\text{correct} & \text{correct} & \text{DR}    & 1.186 & -0.004 & 0.079 & 0.077\\
+\text{wrong} & \text{correct} & \text{reg}   & 1.192 &  0.001 & 0.077 & 0.077\\
+\text{wrong} & \text{correct} & \text{HT}    & 1.915 &  0.724 & 0.120 & 0.115\\
+\text{wrong} & \text{correct} & \text{Hajek} & 1.915 &  0.724 & 0.120 & 0.115\\
+\text{wrong} & \text{correct} & \text{DR}    & 1.192 &  0.001 & 0.077 & 0.077\\
+\text{correct} & \text{wrong} & \text{reg}   & 1.444 &  0.253 & 0.104 & 0.106\\
+\text{correct} & \text{wrong} & \text{HT}    & 1.198 &  0.008 & 0.155 & 0.158\\
+\text{correct} & \text{wrong} & \text{Hajek} & 1.199 &  0.009 & 0.134 & 0.135\\
+\text{correct} & \text{wrong} & \text{DR}    & 1.199 &  0.008 & 0.116 & 0.117\\
+\text{wrong} & \text{wrong} & \text{reg}   & 1.439 &  0.249 & 0.105 & 0.107\\
+\text{wrong} & \text{wrong} & \text{HT}    & 1.912 &  0.722 & 0.110 & 0.114\\
+\text{wrong} & \text{wrong} & \text{Hajek} & 1.912 &  0.722 & 0.110 & 0.114\\
+\text{wrong} & \text{wrong} & \text{DR}    & 1.439 &  0.249 & 0.105 & 0.107\\
+\hline
+\end{array}
+\]
+
+结果与 \cref{thm::dr-att} 的 double robustness 完全一致。当 outcome model 正确时，regression estimator 与 DR estimator 几乎无偏；即使 propensity score model 错误，DR estimator 仍然保持无偏。当 propensity score model 正确而 outcome model 错误时，HT、Hajek 和 DR estimators 都接近真实 $\tau_\textsc{T}$；其中 DR 的 variability 小于纯 weighting estimators。当两个 nuisance models 都错时，DR estimator 不再有保护，它退化到错误 outcome regression 的偏差水平。
+
+复现代码如下。
+\begin{lstlisting}
+set.seed(20260606)
+
+expit <- function(x) 1 / (1 + exp(-x))
+
+true_att_mc <- function(N = 1000000) {
+  x <- rnorm(N)
+  e <- expit(-0.2 + 0.8 * x)
+  tau <- 1 + 0.5 * x
+  c(e = mean(e), ATT = mean(e * tau) / mean(e))
+}
+
+att_est <- function(z, y, x, ps = c("correct", "wrong"),
+                    om = c("correct", "wrong")) {
+  ps <- match.arg(ps)
+  om <- match.arg(om)
+  n <- length(z)
+  n1 <- sum(z)
+  dat <- data.frame(z = z, y = y, x = x)
+
+  if (ps == "correct") {
+    phat <- glm(z ~ x, data = dat, family = binomial())$fitted.values
+  } else {
+    phat <- glm(z ~ 1, data = dat, family = binomial())$fitted.values
+  }
+  phat <- pmin(0.995, pmax(0.005, phat))
+  odds <- phat / (1 - phat)
+
+  if (om == "correct") {
+    m0 <- glm(y ~ x + I(x^2), data = dat, weights = 1 - z,
+              family = gaussian())$fitted.values
+  } else {
+    m0 <- glm(y ~ x, data = dat, weights = 1 - z,
+              family = gaussian())$fitted.values
+  }
+
+  reg <- mean(y[z == 1]) - mean(m0[z == 1])
+  ht <- mean(y[z == 1]) - mean(odds * (1 - z) * y) * n / n1
+  hajek <- mean(y[z == 1]) -
+           sum(odds * (1 - z) * y) / sum(odds * (1 - z))
+  dr <- reg - mean(odds * (1 - z) * (y - m0)) * n / n1
+  c(reg = reg, HT = ht, Hajek = hajek, DR = dr)
+}
+
+one_run <- function(n = 1000, ps = "correct",
+                    om = "correct", B = 80) {
+  x <- rnorm(n)
+  e <- expit(-0.2 + 0.8 * x)
+  z <- rbinom(n, 1, e)
+  y0 <- 1 + x + 0.5 * x^2 + rnorm(n)
+  y1 <- y0 + 1 + 0.5 * x
+  y <- z * y1 + (1 - z) * y0
+
+  est <- att_est(z, y, x, ps, om)
+  boot <- replicate(B, {
+    id <- sample.int(n, n, replace = TRUE)
+    att_est(z[id], y[id], x[id], ps, om)
+  })
+  c(est, bootse = apply(boot, 1, sd))
+}
+
+truth <- true_att_mc()
+settings <- expand.grid(ps = c("correct", "wrong"),
+                        om = c("correct", "wrong"),
+                        stringsAsFactors = FALSE)
+nsim <- 300
+B <- 80
+
+res <- lapply(seq_len(nrow(settings)), function(j) {
+  ps <- settings$ps[j]
+  om <- settings$om[j]
+  mat <- replicate(nsim, one_run(ps = ps, om = om, B = B))
+  est <- t(mat[1:4, ])
+  bse <- t(mat[5:8, ])
+  data.frame(ps = ps, om = om, estimator = colnames(est),
+             mean = colMeans(est),
+             bias = colMeans(est) - truth["ATT"],
+             sd = apply(est, 2, sd),
+             mean_boot_se = colMeans(bse))
+})
+
+out <- do.call(rbind, res)
+round(out, 3)
+\end{lstlisting}
+
+\paragraph{Remark.}
+这个 simulation 也说明 ATT 问题中 HT estimator 的不稳定性。即使 propensity score model 正确，HT 的 Monte Carlo standard deviation 仍明显大于 regression 和 DR estimators；Hajek normalization 降低了一部分波动，但不能替代一个有预测力的 outcome model。
+\end{exercisesolution}
+
+\begin{exercisesolution}{An alternative form of the doubly robust estimator for $\tau_\textsc{T}$}{Robins 型 normalized residual correction}
+记
+\[
+o_\alpha(X)=\frac{e(X,\alpha)}{1-e(X,\alpha)},\qquad
+m_0(X)=\mu_0(X,\beta_0).
+\]
+题目中的 estimator 可写成
+\[
+\tilde{\mu}_{0\textsc{T}}^\textup{dr2}
+=\frac{\mathbb{E}[o_\alpha(X)(1-Z)\{Y-m_0(X)\}]}
+        {\mathbb{E}\{o_\alpha(X)(1-Z)\}}
+ +\frac{\mathbb{E}\{Zm_0(X)\}}{e}.
+\]
+
+先假设 propensity score model 正确，即 $e(X,\alpha)=e(X)$。分母为
+\[
+\mathbb{E}\{o(X)(1-Z)\}
+=\mathbb{E}\left[
+\frac{e(X)}{1-e(X)}\mathbb{E}(1-Z\mid X)
+\right]
+=\mathbb{E}\{e(X)\}=e.
+\]
+分子为
+\begin{align*}
+\mathbb{E}[o(X)(1-Z)\{Y-m_0(X)\}]
+&=\mathbb{E}\left[
+\frac{e(X)}{1-e(X)}
+\mathbb{E}\{(1-Z)(Y(0)-m_0(X))\mid X\}
+\right] \\
+&=\mathbb{E}\left[e(X)\{\mu_0(X)-m_0(X)\}\right].
+\end{align*}
+因此
+\begin{align*}
+\tilde{\mu}_{0\textsc{T}}^\textup{dr2}
+&=\frac{\mathbb{E}[e(X)\{\mu_0(X)-m_0(X)\}]}{e}
+  +\frac{\mathbb{E}\{e(X)m_0(X)\}}{e} \\
+&=\frac{\mathbb{E}\{e(X)\mu_0(X)\}}{e}
+=\mathbb{E}\{Y(0)\mid Z=1\}.
+\end{align*}
+
+再假设 outcome model 正确，即 $m_0(X)=\mu_0(X)$，但不要求 propensity score model 正确。条件于 $X$，
+\[
+\mathbb{E}\{(1-Z)(Y-m_0(X))\mid X\}
+=\mathbb{E}\{(1-Z)(Y(0)-\mu_0(X))\mid X\}=0.
+\]
+所以 normalized residual correction 的分子为 $0$。同时
+\[
+\frac{\mathbb{E}\{Z\mu_0(X)\}}{e}
+=\frac{\mathbb{E}\{e(X)\mu_0(X)\}}{e}
+=\mathbb{E}\{Y(0)\mid Z=1\}.
+\]
+这证明了 $\tilde{\mu}_{0\textsc{T}}^\textup{dr2}$ 的 double robustness。
+
+样本 analog 为
+\[
+\hat{\mu}_{0\textsc{T}}^\textup{dr2}
+=
+\frac{\sumn \hat o_i(1-Z_i)\{Y_i-\hat m_{0i}\}}
+     {\sumn \hat o_i(1-Z_i)}
++\frac{1}{n_1}\sumn Z_i\hat m_{0i},
+\]
+其中
+\[
+\hat o_i=\frac{e(X_i,\hat\alpha)}{1-e(X_i,\hat\alpha)},\qquad
+\hat m_{0i}=\mu_0(X_i,\hat\beta_0).
+\]
+于是
+\[
+\hat\tau_\textsc{T}^\textup{dr2}
+=\hat{\bar Y}(1)-\hat{\mu}_{0\textsc{T}}^\textup{dr2}.
+\]
+
+\paragraph{Remark.}
+这个形式与 \cref{def::dr-att} 的区别在于 residual correction 被 odds weights 的总量 normalize。它类似于从 HT 到 Hajek 的改动：population 层面不改变 double robustness，finite sample 中常常减轻权重总量偏离目标带来的不稳定性。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Average causal effect on the control units}{ATC 的识别、IPW 与 DR 形式}
+对 $\tau_\textsc{C}$，需要识别的 counterfactual mean 是 $\mathbb{E}\{Y(1)\mid Z=0\}$。与 \cref{assume::ignorability-y0} 对称，假设
+\[
+Z\ind Y(1)\mid X,\qquad e(X)>0.
+\]
+则
+\begin{align*}
+\mathbb{E}\{Y(1)\mid Z=0\}
+&=\mathbb{E}\left[\mathbb{E}\{Y(1)\mid Z=0,X\}\mid Z=0\right] \\
+&=\mathbb{E}\left[\mathbb{E}\{Y(1)\mid Z=1,X\}\mid Z=0\right] \\
+&=\mathbb{E}\left\{\mathbb{E}(Y\mid Z=1,X)\mid Z=0\right\}.
+\end{align*}
+因此 outcome-regression identification formula 为
+\[
+\tau_\textsc{C}
+=\mathbb{E}\left\{\mathbb{E}(Y\mid Z=1,X)\mid Z=0\right\}
+ -\mathbb{E}(Y\mid Z=0).
+\]
+这正是 \cref{eq::att-identification} 的 control-population analog。
+
+IPW 形式也完全对称。令 $1-e=\mathbb{P}(Z=0)$，则
+\begin{align*}
+\mathbb{E}\left\{
+\frac{1-e(X)}{1-e}\frac{Z}{e(X)}Y
+\right\}
+&=\mathbb{E}\left[
+\frac{1-e(X)}{(1-e)e(X)}
+\mathbb{E}\{ZY(1)\mid X\}
+\right] \\
+&=\mathbb{E}\left[
+\frac{1-e(X)}{(1-e)e(X)}
+e(X)\mu_1(X)
+\right] \\
+&=\frac{\mathbb{E}[\{1-e(X)\}\mu_1(X)]}{1-e}
+=\mathbb{E}\{Y(1)\mid Z=0\}.
+\end{align*}
+于是
+\[
+\tau_\textsc{C}
+=\mathbb{E}\left\{
+\frac{1-e(X)}{1-e}\frac{Z}{e(X)}Y
+\right\}
+-\mathbb{E}(Y\mid Z=0).
+\]
+若记 inverse odds
+\[
+r(X)=\frac{1-e(X)}{e(X)},
+\]
+则 HT 和 Hajek estimators 可写为
+\[
+\hat\tau_\textsc{C}^\textup{ht}
+=n_0^{-1}\sumn \hat r(X_i)Z_iY_i-\hat{\bar Y}(0),
+\]
+\[
+\hat\tau_\textsc{C}^\textup{hajek}
+=\frac{\sumn \hat r(X_i)Z_iY_i}{\sumn \hat r(X_i)Z_i}
+ -\hat{\bar Y}(0).
+\]
+
+最后给出 DR estimator。设 $\mu_1(X,\beta_1)$ 是 treatment outcome model，$r(X,\alpha)=\{1-e(X,\alpha)\}/e(X,\alpha)$。population version 为
+\[
+\tilde\mu_{1\textsc{C}}^\textup{dr}
+=\mathbb{E}\left[
+r(X,\alpha)Z\{Y-\mu_1(X,\beta_1)\}
++(1-Z)\mu_1(X,\beta_1)
+\right]/(1-e),
+\]
+并定义
+\[
+\tilde\tau_\textsc{C}^\textup{dr}
+=\tilde\mu_{1\textsc{C}}^\textup{dr}-\mathbb{E}(Y\mid Z=0).
+\]
+样本 analog 为
+\[
+\hat\mu_{1\textsc{C}}^\textup{dr}
+=\frac{1}{n_0}\sumn
+\left[
+\hat r_iZ_i\{Y_i-\hat m_{1i}\}
++(1-Z_i)\hat m_{1i}
+\right],
+\]
+\[
+\hat\tau_\textsc{C}^\textup{dr}
+=\hat\mu_{1\textsc{C}}^\textup{dr}-\hat{\bar Y}(0).
+\]
+
+\paragraph{Remark.}
+ATT 和 ATC 的公式不是简单地把符号 $1$ 与 $0$ 互换；更重要的是目标 population 变了。ATT 使用 treated covariate distribution，ATC 使用 control covariate distribution。因此两者在 treatment effect heterogeneity 下回答的是不同实际问题。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Estimating individual effect and conditional average causal effect}{IPW pseudo-outcome 的无偏性}
+先考虑 randomized assignment。由 consistency，
+\[
+Y_i=Z_iY_i(1)+(1-Z_i)Y_i(0).
+\]
+题目中的 pseudo-outcome 为
+\[
+\delta_i=\frac{Z_iY_i}{e}-\frac{(1-Z_i)Y_i}{1-e}
+=\frac{Z_iY_i(1)}{e}-\frac{(1-Z_i)Y_i(0)}{1-e}.
+\]
+因为 $Z_i\ind\{Y_i(1),Y_i(0)\}$，条件于 potential outcomes 有
+\begin{align*}
+\mathbb{E}\{\delta_i\mid Y_i(1),Y_i(0)\}
+&=\frac{\mathbb{E}(Z_i)}{e}Y_i(1)
+  -\frac{\mathbb{E}(1-Z_i)}{1-e}Y_i(0)\\
+&=Y_i(1)-Y_i(0)
+=\tau_i.
+\end{align*}
+所以
+\[
+\mathbb{E}(\delta_i-\tau_i)=0.
+\]
+再取 unconditional expectation，
+\[
+\mathbb{E}(\delta_i)=\mathbb{E}(\tau_i)
+=\mathbb{E}\{Y(1)-Y(0)\}
+=\tau.
+\]
+
+再考虑 observational study 中的 ignorability。此时
+\[
+\delta_i
+=\frac{Z_iY_i(1)}{e(X_i)}
+ -\frac{(1-Z_i)Y_i(0)}{1-e(X_i)}.
+\]
+由 $Z_i\ind\{Y_i(1),Y_i(0)\}\mid X_i$，条件于 $X_i,Y_i(1),Y_i(0)$，
+\begin{align*}
+\mathbb{E}\{\delta_i\mid X_i,Y_i(1),Y_i(0)\}
+&=\frac{\mathbb{E}(Z_i\mid X_i)}{e(X_i)}Y_i(1)
+ -\frac{\mathbb{E}(1-Z_i\mid X_i)}{1-e(X_i)}Y_i(0)\\
+&=Y_i(1)-Y_i(0)
+=\tau_i.
+\end{align*}
+因此
+\[
+\mathbb{E}(\delta_i-\tau_i)=0.
+\]
+同时，条件于 $X_i$，
+\begin{align*}
+\mathbb{E}(\delta_i\mid X_i)
+&=\mathbb{E}\{Y_i(1)-Y_i(0)\mid X_i\}\\
+&=\tau(X_i).
+\end{align*}
+所以
+\[
+\mathbb{E}\{\delta_i-\tau(X_i)\}=0.
+\]
+进一步，
+\[
+\mathbb{E}(\delta_i)
+=\mathbb{E}\{\mathbb{E}(\delta_i\mid X_i)\}
+=\mathbb{E}\{\tau(X_i)\}
+=\tau.
+\]
+
+\paragraph{Remark.}
+$\delta_i$ 是 unbiased predictor，不是 reliable individual-effect estimator。单个 realized unit 仍然只观测一个 potential outcome，另一个 potential outcome 被 inverse-probability term 以极高方差的方式补偿。因此这种 pseudo-outcome 更适合作为平均或条件平均效应学习中的构造工具，而不是直接解释某个个体的真实 causal effect。
+\end{exercisesolution}
+
+\begin{exercisesolution}{General estimand and $(\tau_\textsc{T}, \tau_\textsc{C})$}{一般加权 estimand 的两个特例}
+一般 estimand 定义为
+\[
+\tau^h=\frac{\mathbb{E}\{h(X)\tau(X)\}}{\mathbb{E}\{h(X)\}},
+\qquad
+\tau(X)=\mathbb{E}\{Y(1)-Y(0)\mid X\}.
+\]
+当 $h(X)=e(X)$ 时，
+\[
+\mathbb{E}\{h(X)\}=\mathbb{E}\{e(X)\}=e.
+\]
+并且
+\[
+\mathbb{E}\{e(X)\tau(X)\}
+=\mathbb{E}\{Z\tau(X)\}.
+\]
+因此
+\[
+\tau^h
+=\frac{\mathbb{E}\{Z\tau(X)\}}{e}
+=\mathbb{E}\{\tau(X)\mid Z=1\}.
+\]
+在 unconfoundedness 下，
+\[
+\mathbb{E}\{\tau(X)\mid Z=1\}
+=\mathbb{E}\{Y(1)-Y(0)\mid Z=1\}
+=\tau_\textsc{T}.
+\]
+
+当 $h(X)=1-e(X)$ 时，
+\[
+\tau^h
+=\frac{\mathbb{E}[\{1-e(X)\}\tau(X)]}{1-e}
+=\mathbb{E}\{\tau(X)\mid Z=0\}
+=\tau_\textsc{C}.
+\]
+
+\paragraph{Remark.}
+\cref{sec::other-estmand-overlap} 的统一公式把 target population 的选择显式化了。选择 $h(X)=1$ 是 combined population；选择 $h(X)=e(X)$ 是 treated population；选择 $h(X)=1-e(X)$ 是 control population。
+\end{exercisesolution}
+
+\begin{exercisesolution}{More on $\tau_\textsc{O}$}{overlap population 的 treated/control 表示}
+overlap estimand 定义为
+\[
+\tau_\textsc{O}
+=\frac{\mathbb{E}[e(X)\{1-e(X)\}\tau(X)]}
+       {\mathbb{E}[e(X)\{1-e(X)\}]}.
+\]
+先看 treated-population 表示。对 numerator，
+\begin{align*}
+\mathbb{E}[\{1-e(X)\}\tau(X)\mid Z=1]
+&=\frac{\mathbb{E}[Z\{1-e(X)\}\tau(X)]}{e}\\
+&=\frac{\mathbb{E}[e(X)\{1-e(X)\}\tau(X)]}{e}.
+\end{align*}
+对 denominator，
+\[
+\mathbb{E}\{1-e(X)\mid Z=1\}
+=\frac{\mathbb{E}[e(X)\{1-e(X)\}]}{e}.
+\]
+两者相除，公共因子 $e^{-1}$ 抵消，所以
+\[
+\tau_\textsc{O}
+=\frac{\mathbb{E}[\{1-e(X)\}\tau(X)\mid Z=1]}
+       {\mathbb{E}\{1-e(X)\mid Z=1\}}.
+\]
+
+control-population 表示同理。因为
+\[
+\mathbb{E}\{e(X)\tau(X)\mid Z=0\}
+=\frac{\mathbb{E}[\{1-e(X)\}e(X)\tau(X)]}{1-e},
+\]
+且
+\[
+\mathbb{E}\{e(X)\mid Z=0\}
+=\frac{\mathbb{E}[\{1-e(X)\}e(X)]}{1-e},
+\]
+所以
+\[
+\tau_\textsc{O}
+=\frac{\mathbb{E}\{e(X)\tau(X)\mid Z=0\}}
+       {\mathbb{E}\{e(X)\mid Z=0\}}.
+\]
+
+\paragraph{Remark.}
+这两个表示说明 overlap estimand 可以从 treated side 或 control side 看。站在 treated side，它下调 $e(X)$ 接近 $1$ 的 treated units；站在 control side，它下调 $e(X)$ 接近 $0$ 的 control units。两种说法都在强调同一件事：overlap population 聚焦于 treatment assignment 最不确定的区域。
+\end{exercisesolution}
+
+\begin{exercisesolution}{IPW for the general estimand}{\cref{thm::weighted-estimand-li} 的证明}
+在 ignorability 和 overlap 下，
+\[
+Z\ind \{Y(1),Y(0)\}\mid X,\qquad 0<e(X)<1.
+\]
+由 consistency，
+\[
+ZY=ZY(1),\qquad (1-Z)Y=(1-Z)Y(0).
+\]
+因此
+\begin{align*}
+\mathbb{E}\left\{\frac{ZYh(X)}{e(X)}\right\}
+&=\mathbb{E}\left[
+\mathbb{E}\left\{\frac{ZY(1)h(X)}{e(X)}\mid X\right\}
+\right] \\
+&=\mathbb{E}\left[
+\frac{h(X)}{e(X)}
+\mathbb{E}(Z\mid X)
+\mathbb{E}\{Y(1)\mid X\}
+\right] \\
+&=\mathbb{E}\{h(X)\mu_1(X)\}.
+\end{align*}
+同理，
+\[
+\mathbb{E}\left\{\frac{(1-Z)Yh(X)}{1-e(X)}\right\}
+=\mathbb{E}\{h(X)\mu_0(X)\}.
+\]
+两式相减得
+\[
+\mathbb{E}\left\{
+\frac{ZYh(X)}{e(X)}
+-\frac{(1-Z)Yh(X)}{1-e(X)}
+\right\}
+=\mathbb{E}\{h(X)(\mu_1(X)-\mu_0(X))\}.
+\]
+而
+\[
+\mu_1(X)-\mu_0(X)
+=\mathbb{E}\{Y(1)-Y(0)\mid X\}
+=\tau(X).
+\]
+于是
+\[
+\frac{
+\mathbb{E}\left\{
+ZYh(X)/e(X)-(1-Z)Yh(X)/\{1-e(X)\}
+\right\}
+}{
+\mathbb{E}\{h(X)\}
+}
+=\frac{\mathbb{E}\{h(X)\tau(X)\}}{\mathbb{E}\{h(X)\}}
+=\tau^h,
+\]
+即 \cref{thm::weighted-estimand-li} 成立。
+
+\paragraph{Remark.}
+这个证明把 estimand weighting 和 treatment-assignment weighting 分开了。$h(X)$ 决定我们想平均到哪个 population；$1/e(X)$ 与 $1/\{1-e(X)\}$ 则只是把 observed treated/control outcomes 还原到这个目标 population 的工具。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Doubly robust estimation for general estimand}{固定 $h(X)$ 时的乘积偏差}
+令
+\[
+m_1(X)=\mu_1(X,\beta_1),\qquad
+m_0(X)=\mu_0(X,\beta_0),\qquad
+e_\alpha(X)=e(X,\alpha).
+\]
+先证明 treatment mean 部分。由 consistency 和 ignorability，
+\begin{align*}
+\tilde{\mu}_1^{h,\textup{dr}}
+&=\mathbb{E}\left[
+\frac{Zh(X)\{Y(1)-m_1(X)\}}{e_\alpha(X)}
++h(X)m_1(X)
+\right] \\
+&=\mathbb{E}\left[
+\frac{h(X)e(X)}{e_\alpha(X)}
+\{\mu_1(X)-m_1(X)\}
++h(X)m_1(X)
+\right].
+\end{align*}
+所以
+\begin{align*}
+\tilde{\mu}_1^{h,\textup{dr}}-\mathbb{E}\{h(X)Y(1)\}
+&=\mathbb{E}\left[
+h(X)\left\{\frac{e(X)}{e_\alpha(X)}-1\right\}
+\{\mu_1(X)-m_1(X)\}
+\right] \\
+&=\mathbb{E}\left[
+h(X)\frac{e(X)-e_\alpha(X)}{e_\alpha(X)}
+\{\mu_1(X)-m_1(X)\}
+\right].
+\end{align*}
+因此，如果 $e_\alpha(X)=e(X)$ 或 $m_1(X)=\mu_1(X)$，上式为 $0$，即
+\[
+\tilde{\mu}_1^{h,\textup{dr}}=\mathbb{E}\{h(X)Y(1)\}.
+\]
+
+control mean 部分完全平行：
+\begin{align*}
+\tilde{\mu}_0^{h,\textup{dr}}
+&=\mathbb{E}\left[
+\frac{(1-Z)h(X)\{Y(0)-m_0(X)\}}{1-e_\alpha(X)}
++h(X)m_0(X)
+\right] \\
+&=\mathbb{E}\left[
+\frac{h(X)\{1-e(X)\}}{1-e_\alpha(X)}
+\{\mu_0(X)-m_0(X)\}
++h(X)m_0(X)
+\right].
+\end{align*}
+于是
+\begin{align*}
+\tilde{\mu}_0^{h,\textup{dr}}-\mathbb{E}\{h(X)Y(0)\}
+&=\mathbb{E}\left[
+h(X)\left\{\frac{1-e(X)}{1-e_\alpha(X)}-1\right\}
+\{\mu_0(X)-m_0(X)\}
+\right] \\
+&=\mathbb{E}\left[
+h(X)\frac{e_\alpha(X)-e(X)}{1-e_\alpha(X)}
+\{\mu_0(X)-m_0(X)\}
+\right].
+\end{align*}
+如果 $e_\alpha(X)=e(X)$ 或 $m_0(X)=\mu_0(X)$，则
+\[
+\tilde{\mu}_0^{h,\textup{dr}}=\mathbb{E}\{h(X)Y(0)\}.
+\]
+
+最后，若 propensity score model 正确，则上面两个 weighted means 都正确；若 propensity score model 可能错误但两个 outcome models 都正确，则上面两个 weighted means 也都正确。因此在题目给出的两类条件之一成立时，
+\[
+\frac{\tilde{\mu}_1^{h,\textup{dr}}-\tilde{\mu}_0^{h,\textup{dr}}}
+     {\mathbb{E}\{h(X)\}}
+=\frac{\mathbb{E}[h(X)\{Y(1)-Y(0)\}]}
+       {\mathbb{E}\{h(X)\}}
+=\tau^h.
+\]
+
+\paragraph{Remark.}
+这里的 double robustness 是针对固定的 $h(X)$ 而言的。若 $h(X)$ 本身包含未知 propensity score，例如 ATT 的 $h(X)=e(X)$、ATC 的 $h(X)=1-e(X)$ 或 overlap estimand 的 $h(X)=e(X)\{1-e(X)\}$，那么估计 $h$ 的误差会进入 target population 的定义，不能直接套用本题的固定-$h$ 结论。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Analyzing a dataset from the Karolinska Institute}{二元结局下的 ATT 分析框架}
+本题要求重新考察 \cref{hw::Karolinska-dr}，但目标 estimand 改为 $\tau_\textsc{T}$。当前本地工程中没有找到 \ri{karolinska.txt}，因此这里不编造 point estimates。下面给出完整可复现代码；将数据文件放在运行目录后，它会输出 \cref{sec::dr-att-example} 中五个 ATT estimators 及 bootstrap standard errors。
+
+\begin{lstlisting}
+ATT_est <- function(z, y, x, out.family = binomial(),
+                    Utruncps = 1) {
+  n <- length(z)
+  n1 <- sum(z)
+  x <- as.matrix(x)
+
+  pscore <- glm(z ~ ., data = data.frame(z = z, x),
+                family = binomial())$fitted.values
+  pscore <- pmin(Utruncps, pscore)
+  pscore <- pmin(1 - 1e-6, pmax(1e-6, pscore))
+  odds <- pscore / (1 - pscore)
+
+  outcome0 <- glm(y ~ ., data = data.frame(y = y, x),
+                  weights = 1 - z,
+                  family = out.family)$fitted.values
+
+  reg0 <- lm(y ~ z + x)$coef["z"]
+  reg <- mean(y[z == 1]) - mean(outcome0[z == 1])
+  HT <- mean(y[z == 1]) - mean(odds * (1 - z) * y) * n / n1
+  Hajek <- mean(y[z == 1]) -
+           sum(odds * (1 - z) * y) / sum(odds * (1 - z))
+  DR <- reg - mean(odds * (1 - z) * (y - outcome0)) * n / n1
+
+  c(reg0 = reg0, reg = reg, HT = HT, Hajek = Hajek, DR = DR)
+}
+
+OS_ATT <- function(z, y, x, n.boot = 2000,
+                   out.family = binomial(),
+                   Utruncps = 1) {
+  point.est <- ATT_est(z, y, x, out.family, Utruncps)
+  n <- length(z)
+  x <- as.matrix(x)
+
+  boot.est <- replicate(n.boot, {
+    id <- sample.int(n, n, replace = TRUE)
+    ATT_est(z[id], y[id], x[id, , drop = FALSE],
+            out.family, Utruncps)
+  })
+
+  boot.se <- apply(boot.est, 1, sd)
+  out <- rbind(est = point.est, se = boot.se)
+  round(out, 3)
+}
+
+balance_table <- function(z, x) {
+  x <- as.data.frame(x)
+  ans <- lapply(names(x), function(v) {
+    xv <- x[[v]]
+    c(mean_treated = mean(xv[z == 1]),
+      mean_control = mean(xv[z == 0]),
+      diff = mean(xv[z == 1]) - mean(xv[z == 0]))
+  })
+  out <- do.call(rbind, ans)
+  rownames(out) <- names(x)
+  round(out, 3)
+}
+
+karolinska <- read.table("karolinska.txt", header = TRUE)
+z <- karolinska$hvdiag
+y <- 1 - (karolinska$year.survival == 1)
+x <- as.matrix(karolinska[, c(3, 4, 5)])
+
+table(z)
+table(y, z)
+balance_table(z, x)
+
+ps <- glm(z ~ x, family = binomial())$fitted.values
+round(c(min = min(ps),
+        q05 = quantile(ps, 0.05),
+        median = median(ps),
+        q95 = quantile(ps, 0.95),
+        max = max(ps)), 3)
+
+OS_ATT(z, y, x, n.boot = 2000,
+       out.family = binomial(), Utruncps = 1)
+OS_ATT(z, y, x, n.boot = 2000,
+       out.family = binomial(), Utruncps = 0.95)
+OS_ATT(z, y, x, n.boot = 2000,
+       out.family = binomial(), Utruncps = 0.90)
+\end{lstlisting}
+
+解释结果时应当把 $\tau_\textsc{T}$ 与 \cref{hw::Karolinska-dr} 中的 $\tau$ 区分开。$\tau$ 估计的是 combined population 上 large volume hospital diagnosis 的平均效应；$\tau_\textsc{T}$ 估计的是实际在 large volume hospital 诊断的患者，如果他们改在 small volume hospital 诊断，风险会如何变化。若 treated patients 的 age、rural status 或 gender 分布不同于 overall population，那么 $\tau_\textsc{T}$ 与 $\tau$ 可以有实质差异。
+
+报告时至少应包含四项诊断。第一，报告 crude risk difference，但只把它作为 descriptive contrast。第二，报告 estimated propensity scores 的分布，尤其是 $e(X)$ 接近 $1$ 的 treated units；ATT 的 control weights 为 $e(X)/\{1-e(X)\}$，这一区域会放大 control outcomes。第三，比较 HT 与 Hajek；若二者差异很大，说明 odds weights 的总量不稳定。第四，比较 regression、Hajek 和 DR；若 DR 接近 regression 而远离 weighting，说明 outcome model 在主导结论；若 DR 接近 weighting 而远离 regression，说明 control outcome extrapolation 可能较弱。
+
+\paragraph{Remark.}
+在 ATT 分析中，overlap 的关注点是不一样的。我们不要求每个 control-like unit 都有 treated counterpart；我们要求 treated covariate profile 能在 control group 中找到足够相近的对照。对 Karolinska 这样样本量只有 $158$ 的数据，truncation sensitivity 和 bootstrap instability 本身就是需要报告的实证发现。
+\end{exercisesolution}

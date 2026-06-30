@@ -1,0 +1,133 @@
+\chapter{Solutions to Chapter 19: Rosenbaum-Style $p$-Values for Matched Observational Studies with Unmeasured Confounding}
+\label{sol:chapter19}
+
+\begin{exercisesolution}{A model for \cref{assume::rosenbaum-sensitivity}}{logistic unobserved covariate model implies Rosenbaum's bound}
+本题证明 \cref{assume::rosenbaum-equivalent} 蕴含 \cref{assume::rosenbaum-sensitivity}，其中 $\Gamma=\exp(\gamma)$。关键是把 logistic propensity score model 转化为 matched pair 内两个 units 的 treatment odds ratio。
+
+由 \cref{assume::rosenbaum-equivalent}，
+\[
+\log \frac{\pi_{ij}}{1-\pi_{ij}}
+=g(X_i)+\gamma U_{ij},
+\qquad 0\leq U_{ij}\leq 1.
+\]
+因此 unit $(i,j)$ 的 treatment odds 为
+\[
+\frac{\pi_{ij}}{1-\pi_{ij}}
+=\exp\{g(X_i)\}\exp(\gamma U_{ij}).
+\]
+在第 $i$ 个 matched pair 中，两个 units 有相同的 observed covariates $X_i$，所以 unknown function $g(X_i)$ 对 $j=1,2$ 相同。于是两个 units 的 treatment odds ratio 为
+\[
+\frac{\pi_{i1}/(1-\pi_{i1})}{\pi_{i2}/(1-\pi_{i2})}
+=
+\exp\{\gamma(U_{i1}-U_{i2})\}.
+\]
+由于 $U_{i1},U_{i2}\in[0,1]$，有
+\[
+-1\leq U_{i1}-U_{i2}\leq 1.
+\]
+如果 $\gamma\geq 0$，则
+\[
+\exp(-\gamma)
+\leq
+\frac{\pi_{i1}/(1-\pi_{i1})}{\pi_{i2}/(1-\pi_{i2})}
+\leq
+\exp(\gamma).
+\]
+令 $\Gamma=\exp(\gamma)$，上式正是
+\[
+\frac{1}{\Gamma}
+\leq
+\frac{\pi_{i1}(1-\pi_{i2})}{\pi_{i2}(1-\pi_{i1})}
+\leq
+\Gamma,
+\]
+也就是 \cref{assume::rosenbaum-sensitivity}。
+
+如果 $\gamma<0$，同一推导给出界限 $\exp(\gamma)$ 与 $\exp(-\gamma)$；此时可把 $\Gamma=\exp(|\gamma|)$。本章通常把 $\Gamma\geq 1$ 作为 sensitivity parameter，因此 $\Gamma$ 衡量的是 unobserved covariate 能在同一 matched pair 内把 treatment odds 放大到多大。
+
+\paragraph{Remark.}
+这个练习说明 Rosenbaum's sensitivity model 有一个直接的 logistic-regression 解释：在 exact matching 后，observed covariates 的贡献 $g(X_i)$ 被 pair-specific comparison 消掉，剩下的只有 bounded unobserved covariate $U$ 对 treatment odds 的影响。$\Gamma=1$ 对应没有 hidden bias；$\Gamma$ 越大，允许的 unmeasured confounding 越强。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Application of Rosenbaum's approach}{Chan BMI matching sensitivity workflow}
+本题要求用基于 matching 的 Rosenbaum's approach 重新分析 \cref{eg::chan-bmi-ATE}。在当前工程中，相关原始数据文件并不总是随源码一起出现；因此这里给出一套可复现的分析流程。若本地存在 \ri{nhanes_bmi.csv} 或正文示例使用的整理后数据，只需把文件路径和变量名替换为实际名称即可复现数值结果。
+
+分析目标是：先用 observed covariates 做 matched observational study，再考察多大的 hidden bias，即多大的 $\Gamma$，会使结论不再显著。典型流程如下。
+
+\begin{enumerate}
+\item
+指定 treatment、outcome 与 pretreatment covariates。对 \cref{eg::chan-bmi-ATE}，treatment 是是否参加 school meal plan，outcome 是 BMI，covariates 使用正文示例中的 baseline variables。
+
+\item
+估计 propensity score，并用 nearest-neighbor matching 构造 treated-control matched pairs。可以使用 \ri{MatchIt} 或 \ri{optmatch}。
+
+\item
+检查匹配后 covariate balance。若 balance 很差，Rosenbaum sensitivity analysis 的解释会变弱，因为 observed confounding 尚未充分控制。
+
+\item
+对 matched-pair differences 运行 Rosenbaum sensitivity analysis。若 outcome 是连续变量，常用 signed-rank sensitivity analysis；若 outcome 被二值化，可用 Mantel--Haenszel type sensitivity analysis。
+
+\item
+报告作为 $\Gamma$ 函数的 upper-bound $p$-values，并给出 critical $\Gamma$：即使 $p$-value 超过显著性阈值所需的最小 $\Gamma$。
+\end{enumerate}
+
+下面是一段可复现的 R 代码框架。它不假设具体数据文件已经存在，因此把数据读入和变量名留成清晰的占位。
+
+\begin{lstlisting}
+library(MatchIt)
+library(cobalt)
+library(sensitivitymw)
+
+## Replace this by the actual file and variable names used in
+## Example eg::chan-bmi-ATE.
+dat = read.csv("nhanes_bmi.csv")
+
+treat = "School_meal"
+outcome = "BMI"
+covars = c("age", "gender", "race", "income", "baseline_bmi")
+
+form = as.formula(
+  paste(treat, "~", paste(covars, collapse = " + "))
+)
+
+## One-to-one nearest-neighbor propensity-score matching.
+mfit = matchit(
+  formula = form,
+  data = dat,
+  method = "nearest",
+  distance = "logit",
+  replace = FALSE
+)
+
+summary(mfit)
+bal.tab(mfit)
+
+mdat = match.data(mfit)
+
+## Create matched-pair differences. The exact extraction of subclasses
+## depends on the matching object and whether ties are present.
+pair_ids = sort(unique(mdat$subclass))
+pair_diff = sapply(pair_ids, function(s) {
+  d = mdat[mdat$subclass == s, ]
+  y_t = d[d[[treat]] == 1, outcome]
+  y_c = d[d[[treat]] == 0, outcome]
+  y_t - y_c
+})
+
+## Rosenbaum-style sensitivity analysis for continuous outcomes.
+## The senmw function reports sensitivity bounds over Gamma.
+senmw(pair_diff, gamma = 1.0)
+senmw(pair_diff, gamma = 1.5)
+senmw(pair_diff, gamma = 2.0)
+
+## A small grid for reporting the sensitivity curve.
+gammas = seq(1, 3, by = 0.1)
+sens = lapply(gammas, function(g) senmw(pair_diff, gamma = g))
+names(sens) = paste0("Gamma=", gammas)
+\end{lstlisting}
+
+The final report should include the matched sample size, the matched-pair point estimate, balance diagnostics before and after matching, and a table or plot of sensitivity upper-bound $p$-values against $\Gamma$.
+
+\paragraph{Remark.}
+The critical $\Gamma$ is not an estimate of actual hidden bias. It is a design sensitivity summary: it answers how strong an unobserved covariate would have to be, on the treatment odds scale within matched pairs, to overturn the qualitative conclusion. A small critical $\Gamma$ means the finding is fragile to hidden bias; a large critical $\Gamma$ means the finding is more robust under Rosenbaum's model.
+\end{exercisesolution}

@@ -1,0 +1,504 @@
+\chapter{Solutions to Chapter 29: Time-Varying Treatment and Confounding}
+\label{sol:chapter29}
+
+\begin{exercisesolution}{g-null paradox}{\cref{problem::g-null-paradox} 中 linear g-formula 的零效应条件}
+由 \cref{example::linear-si}，在 linear outcome model 下
+\[
+E\{Y(z_1,z_2)\}
+=
+\beta_0+\beta_1 z_2+\beta_2 z_1
++\beta_3 E\{X_1(z_1)\}+\beta_4 E(X_0).
+\]
+\cref{problem::g-null-paradox} 的设定没有 baseline covariates，所以可以把最后一项省去，或者把 $X_0$ 视为常数而吸收到 intercept 中。于是
+\[
+E\{Y(z_1,z_2)\}
+=
+\beta_0+\beta_1 z_2+\beta_2 z_1+\beta_3 E\{X_1(z_1)\}.
+\]
+
+若
+\[
+\beta_1=\beta_2=0,\qquad \beta_3=0,
+\]
+则
+\[
+E\{Y(z_1,z_2)\}=\beta_0,
+\]
+显然不依赖于 $(z_1,z_2)$。
+
+若
+\[
+\beta_1=\beta_2=0
+\]
+且 $E\{X_1(z_1)\}$ 不依赖于 $z_1$，则存在常数 $\mu_X$ 使得
+\[
+E\{X_1(0)\}=E\{X_1(1)\}=\mu_X.
+\]
+此时
+\[
+E\{Y(z_1,z_2)\}=\beta_0+\beta_3\mu_X,
+\]
+也不依赖于 $(z_1,z_2)$。这证明了题目中的两个 sufficient conditions。
+
+\paragraph{Remark.}
+这道题的目的不是说明 linear g-formula 错了，而是说明 model compatibility 很脆弱。在 \cref{fig::si-g-null-paradox} 中，真实 causal effect 为零；但若 outcome model 同时试图保留 $Z_1\rightarrow X_1$ 和 $X_1\leftrightarrow Y$ 这两种结构，简单 linear formula 往往会把 noncausal association 错写成 treatment effect。这正是 g-null paradox 的直观来源。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Recursive estimation under the null model}{\cref{problem::recursive-null} 中 recursive regression 的零极限}
+在 \cref{problem::g-null-paradox} 的 causal diagram 下，$Y$ 不受 $(Z_1,Z_2)$ 影响。因此对所有 $z_1,z_2$，
+\[
+Y(z_1,z_2)=Y.
+\]
+虽然 $X_1$ 与 $Y$ 之间可能存在 unmeasured confounding，sequential ignorability 对 treatments 仍成立。由 \cref{thm::sr-outcome}，
+\[
+E\{Y(z_1,z_2)\}
+=
+E\Big[E\{E(Y\mid z_2,z_1,X_1)\mid z_1\}\Big].
+\]
+
+考虑 \cref{section::recursive} 中的两步 linear recursive estimation。第一步拟合
+\[
+E(Y\mid Z_2,Z_1,X_1)
+\]
+的 linear projection。由于 causal diagram 中 $Z_2$ 没有指向 $Y$，并且给定 $(Z_1,X_1)$ 后 $Z_2$ 的 residual variation 只来自 randomized assignment，population linear regression 中 $Z_2$ 的 coefficient 为零。于是第一步的 population fitted value 可以写成
+\[
+\tilde Y_2(z_1,z_2)=a_0+a_1 z_1+a_2 X_1,
+\]
+不依赖于 $z_2$。
+
+第二步在 $Z_1=z_1$ 的子样本中，把 $\tilde Y_2(z_1,z_2)$ 对常数项作 linear regression。其 population fitted value 是
+\[
+\tilde Y_1(z_1,z_2)
+=
+E\{\tilde Y_2(z_1,z_2)\mid Z_1=z_1\}
+=a_0+a_1 z_1+a_2 E(X_1\mid Z_1=z_1).
+\]
+由于图中 $Z_1$ 可能影响 $X_1$，右端可以依赖于 $z_1$。但注意 recursive method 的 target 是 intervention 下的 mean；在 null model 中，真实 target 满足
+\[
+E\{Y(1,z_2)\}-E\{Y(0,z_2)\}=0,
+\qquad
+E\{Y(z_1,1)\}-E\{Y(z_1,0)\}=0.
+\]
+当第二步按 \cref{section::recursive} 的算法对所有 units 进行 prediction 并取平均时，population limit 等于
+\[
+E\{\tilde Y_1(z_1,z_2)\}
+=E\Big[E\{E(Y\mid z_2,z_1,X_1)\mid z_1\}\Big]
+=E\{Y(z_1,z_2)\}.
+\]
+最后一个等式来自 \cref{thm::sr-outcome}。由于 null model 下 $E\{Y(z_1,z_2)\}=E(Y)$ 对 $(z_1,z_2)$ 不变，任何两个 treatment regimes 的 contrast 的 probability limit 都是
+\[
+E(Y)-E(Y)=0.
+\]
+因此，基于 linear models 的 recursive estimator 对 causal effect 的估计收敛到 0。
+
+\paragraph{Remark.}
+这里的关键是 recursive regression 每一步都只把下一步 treatment 的随机 variation 用来识别局部 contrast；它不需要为 $X_1$ 的生成机制写模型。因此它避开了 \cref{problem::g-null-paradox} 中 plug-in g-formula 的不兼容性。
+\end{exercisesolution}
+
+\begin{exercisesolution}{IPW under MSM}{\cref{thm::si-msm-ipw} 的证明}
+记
+\[
+W(z_1,z_2)
+=
+\frac{1(Z_1=z_1)1(Z_2=z_2)}
+{e(z_1,X_0)e(z_2,Z_1,X_1,X_0)}.
+\]
+我们先证明一个基本恒等式：对任意 integrable function $q(Y,X_0)$，
+\[
+E\{W(z_1,z_2)q(Y,X_0)\}
+=
+E\{q(Y(z_1,z_2),X_0)\}.
+\]
+条件化于 $(Z_1,X_1,X_0)$，并使用 consistency 与 \cref{assume::sr-time-varying} (2)，有
+\begin{align*}
+&E\left\{
+\frac{1(Z_2=z_2)q(Y,X_0)}
+{e(z_2,Z_1,X_1,X_0)}
+\mid Z_1=z_1,X_1,X_0
+\right\}\\
+&\quad =
+E\{q(Y(z_1,z_2),X_0)\mid Z_1=z_1,X_1,X_0\}.
+\end{align*}
+再条件化于 $X_0$ 并使用 \cref{assume::sr-time-varying} (1)，得到
+\[
+E\{W(z_1,z_2)q(Y,X_0)\}
+=E\{q(Y(z_1,z_2),X_0)\}.
+\]
+
+令
+\[
+q(Y,X_0)=\{Y-f(z_1,z_2,X_0\,;\,b)\}^2,
+\]
+上面的恒等式给出
+\[
+E\left[W(z_1,z_2)\{Y-f(z_1,z_2,X_0\,;\,b)\}^2\right]
+=
+E\left[\{Y(z_1,z_2)-f(z_1,z_2,X_0\,;\,b)\}^2\right].
+\]
+对 $z_1,z_2$ 求和，右端正是 \cref{eq::beta-ols-msm} 的 objective。因此两个 minimization problems 有相同 objective function，也就有相同的 minimizer $\beta$。这证明了 \cref{thm::si-msm-ipw}。
+
+\paragraph{Remark.}
+IPW 的作用是把观测数据重新加权成一个 pseudo-population。在这个 pseudo-population 中，特定 treatment path $(z_1,z_2)$ 下的 observed outcomes 代表了全体 units 在 intervention $(z_1,z_2)$ 下的 potential outcomes。
+\end{exercisesolution}
+
+\begin{exercisesolution}{A nonlinear example of \cref{def::si-msm-with-x0}}{\cref{thm::si-msm-ipw-logistic} 的证明}
+本题与 \cref{thm::si-msm-ipw} 的 proof 完全平行，只是 squared loss 换成 logistic negative log-likelihood。仍记
+\[
+W(z_1,z_2)
+=
+\frac{1(Z_1=z_1)1(Z_2=z_2)}
+{e(z_1,X_0)e(z_2,Z_1,X_1,X_0)}.
+\]
+由上一题证明的 IPW 恒等式，对任意 integrable $q(Y,X_0)$ 都有
+\[
+E\{W(z_1,z_2)q(Y,X_0)\}
+=
+E\{q(Y(z_1,z_2),X_0)\}.
+\]
+
+令候选值 $b=(b_0,b_1,b_2,b_3)$ 对应的 linear predictor 为
+\[
+\ell_b=b_0+b_1z_1+b_2z_2+b_3\tran X_0,
+\]
+并取
+\[
+q(Y,X_0)=\log(1+e^{\ell_b})-Y\ell_b.
+\]
+则
+\begin{align*}
+&E\left[
+W(z_1,z_2)\{\log(1+e^{\ell_b})-Y\ell_b\}
+\right]\\
+&\quad =
+E\left[
+\log(1+e^{\ell_b})-Y(z_1,z_2)\ell_b
+\right].
+\end{align*}
+对 $z_1,z_2$ 求和，左端就是 \cref{thm::si-msm-ipw-logistic} 中只含 observables 的 weighted objective，右端就是 \cref{eq::beta-logistic} 的 full-data objective。因此二者有同一个 minimizer。这证明了 \cref{thm::si-msm-ipw-logistic}。
+
+\paragraph{Remark.}
+Logistic MSM 只改变了 link function 和 loss function，没有改变 identification 的核心。只要 loss 是 fixed treatment regime 下 potential outcome 的函数，sequential IPW 恒等式就能把 full-data objective 换成 observed-data weighted objective。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Structural nested model with a single time point}{\cref{definition::snm-single} 下 estimating equation 的证明}
+先证明第一部分。Observed outcome 满足 $Y=Y(Z)$。由 \cref{definition::snm-single}，
+\[
+E\{Y(Z)-Y(0)\mid Z,X\}=g(Z,X;\beta).
+\]
+因此
+\begin{align*}
+E\{Y-g(Z,X;\beta)\mid Z,X\}
+&=
+E\{Y(Z)-g(Z,X;\beta)\mid Z,X\}\\
+&=
+E\{Y(0)\mid Z,X\}.
+\end{align*}
+由题设 $Z\ind Y(0)\mid X$，
+\[
+E\{Y(0)\mid Z,X\}=E\{Y(0)\mid X\}.
+\]
+于是
+\[
+E\{Y-g(Z,X;\beta)\mid X,Z\}
+=E\{Y(0)\mid X\}.
+\]
+右端不依赖于 $Z$，所以也等于
+\[
+E\{Y-g(Z,X;\beta)\mid X\}.
+\]
+第一部分得证。
+
+第二部分由 tower property 直接推出：
+\begin{align*}
+&E\Big[h(X)\{Z-e(X)\}\{Y-g(Z,X;\beta)\}\Big]\\
+&\quad =
+E\Big[
+h(X)\{Z-e(X)\}
+E\{Y-g(Z,X;\beta)\mid Z,X\}
+\Big]\\
+&\quad =
+E\Big[
+h(X)\{Z-e(X)\}E\{Y(0)\mid X\}
+\Big]\\
+&\quad =
+E\Big[
+h(X)E\{Y(0)\mid X\}
+E\{Z-e(X)\mid X\}
+\Big]
+=0.
+\end{align*}
+最后一步使用 $E(Z\mid X)=e(X)$。这正是 \cref{eq::Estimating-equation-snm-1}。
+
+\paragraph{Remark.}
+Structural nested model 的思想是先从 observed outcome 中减去 treatment 已经产生的 conditional effect，得到一个像 untreated potential outcome 的 residualized outcome。这个 residualized outcome 与 centered treatment 正交，于是产生 estimating equation。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Estimation under \cref{example::g-estimation-snm}}{\cref{example::g-estimation-snm} 中 estimating equations 与 TSLS 的等价}
+在 \cref{example::g-estimation-snm} 中，前两个 population equations 为
+\[
+E\left[\check Z_2\{Y-(\beta_2+\beta_3Z_1)Z_2\}\right]=0,
+\qquad
+E\left[Z_1\check Z_2\{Y-(\beta_2+\beta_3Z_1)Z_2\}\right]=0,
+\]
+其中 population 版本的 centered treatment 是
+\[
+\check Z_2=Z_2-e(1,Z_1,X_1,X_0).
+\]
+把 regressors 写成
+\[
+D_2=(Z_2,\ Z_1Z_2)\tran,
+\]
+把 instruments 写成
+\[
+A_2=(\check Z_2,\ Z_1\check Z_2)\tran.
+\]
+上述两个 moment equations 正是
+\[
+E\{A_2(Y-D_2^\top\theta_2)\}=0,
+\qquad
+\theta_2=(\beta_2,\beta_3)\tran.
+\]
+这就是 just-identified IV/TSLS 的 population normal equations。因此，用 $(\check Z_{2i},Z_{1i}\check Z_{2i})$ 作为 $(Z_{2i},Z_{1i}Z_{2i})$ 的 IV，运行 $Y_i$ 关于 $(Z_{2i},Z_{1i}Z_{2i})$ 的 TSLS，得到的正是 $\beta_2,\beta_3$ 的 g-estimation estimator。
+
+估计出 $(\hat\beta_2,\hat\beta_3)$ 后，定义
+\[
+\tilde Y_i
+=
+Y_i-(\hat\beta_2+\hat\beta_3Z_{1i})Z_{2i}.
+\]
+第三个 estimating equation 的 empirical version 为
+\[
+n^{-1}\sum_{i=1}^n
+\check Z_{1i}\{\tilde Y_i-\beta_1Z_{1i}\}=0,
+\]
+其中
+\[
+\check Z_{1i}=Z_{1i}-\hat e(1,X_{0i}).
+\]
+这正是用 $\check Z_{1i}$ 作为 $Z_{1i}$ 的 IV，运行 $\tilde Y_i$ 关于 $Z_{1i}$ 的 just-identified TSLS。解为
+\[
+\hat\beta_1
+=
+\frac{\sum_{i=1}^n\check Z_{1i}\tilde Y_i}
+{\sum_{i=1}^n\check Z_{1i}Z_{1i}},
+\]
+只要 denominator 不为零。
+
+\paragraph{Remark.}
+本题说明 g-estimation 可以被看作一组 carefully chosen IV regressions。Centered treatments 扮演 instruments，因为在正确扣除后续 treatment effect 后，它们与相应的 blipped-down outcome 正交。
+\end{exercisesolution}
+
+\begin{exercisesolution}{g-formula with a treatment at multiple time points}{\cref{thm::g-formula-multiple} 的证明}
+记
+\[
+m_K(\overline z_K,\overline X_{K-1})
+=E(Y\mid \overline z_K,\overline X_{K-1}).
+\]
+递归定义
+\[
+m_{k-1}(\overline z_{k-1},\overline X_{k-2})
+=
+E\{m_k(\overline z_k,\overline X_{k-1})
+\mid \overline z_{k-1},\overline X_{k-2}\},
+\]
+其中 $k=K,\ldots,1$，最终 $E\{Y(\overline z_K)\}=E\{m_0\}$。
+
+证明从最后一个时间点向前剥离。由 consistency 和 \cref{assume::si-multiple} 在 $k=K$ 时的条件独立性，
+\begin{align*}
+&E\{Y(\overline z_K)\mid \overline z_K,\overline X_{K-1}\}\\
+&\quad =
+E(Y\mid \overline z_K,\overline X_{K-1})
+=m_K(\overline z_K,\overline X_{K-1}).
+\end{align*}
+因此
+\[
+E\{Y(\overline z_K)\mid \overline z_{K-1},\overline X_{K-2}\}
+=
+E\{m_K(\overline z_K,\overline X_{K-1})
+\mid \overline z_{K-1},\overline X_{K-2}\}.
+\]
+右端就是 $m_{K-1}$。
+
+现在假设已经把 $K,K-1,\ldots,k+1$ 的条件期望剥离完，得到
+\[
+E\{Y(\overline z_K)\mid \overline z_k,\overline X_{k-1}\}
+=m_k(\overline z_k,\overline X_{k-1}).
+\]
+由 tower property 和 \cref{assume::si-multiple} 在时间 $k$ 的 sequential ignorability，
+\begin{align*}
+&E\{Y(\overline z_K)\mid \overline z_{k-1},\overline X_{k-2}\}\\
+&\quad =
+E\{m_k(\overline z_k,\overline X_{k-1})
+\mid \overline z_{k-1},\overline X_{k-2}\}\\
+&\quad =m_{k-1}(\overline z_{k-1},\overline X_{k-2}).
+\end{align*}
+沿 $k=K,K-1,\ldots,1$ 递归，最后得到
+\[
+E\{Y(\overline z_K)\}
+=
+E\left[ \cdots
+E\{E(Y\mid \overline z_K,\overline X_{K-1})
+\mid \overline z_{K-1},\overline X_{K-2}\}
+\cdots \mid z_1,X_0
+\right],
+\]
+即 \cref{thm::g-formula-multiple}。
+
+\paragraph{Remark.}
+Multiple-time g-formula 只是 \cref{thm::sr-outcome} 的 backward induction 版本。每一步都把最后一个尚未固定的 randomized treatment 用 sequential ignorability 去掉，然后对新的 time-varying covariate distribution 取平均。
+\end{exercisesolution}
+
+\begin{exercisesolution}{IPW with treatments at multiple time points}{\cref{thm::ipw-multiple} 的证明与 HT/Hajek estimators}
+令
+\[
+W(\overline z_K)
+=
+\prod_{k=1}^K
+\frac{1(Z_k=z_k)}
+{e(z_k,\overline Z_{k-1},\overline X_{k-1})}.
+\]
+我们证明
+\[
+E\{W(\overline z_K)Y\}=E\{Y(\overline z_K)\}.
+\]
+从最后一个时间点开始条件化于 $(\overline Z_{K-1},\overline X_{K-1})$。由 consistency、\cref{assume::si-multiple} 和 propensity score 的定义，
+\begin{align*}
+&E\left[
+\frac{1(Z_K=z_K)Y}
+{e(z_K,\overline Z_{K-1},\overline X_{K-1})}
+\mid \overline Z_{K-1},\overline X_{K-1}
+\right]\\
+&\quad =
+E\{Y(\overline z_K)\mid \overline Z_{K-1},\overline X_{K-1}\}
+\quad\text{when } \overline Z_{K-1}=\overline z_{K-1}.
+\end{align*}
+继续向前迭代，同样地依次消去 $Z_{K-1},\ldots,Z_1$ 的 inverse propensity factors。最终得到
+\[
+E\{W(\overline z_K)Y\}=E\{Y(\overline z_K)\},
+\]
+这正是 \cref{thm::ipw-multiple}。
+
+基于 \cref{thm::ipw-multiple}，Horvitz--Thompson estimator 为
+\[
+\hat E_{\textup{HT}}\{Y(\overline z_K)\}
+=
+\frac1n\sum_{i=1}^n
+\left[
+\prod_{k=1}^K
+\frac{1(Z_{ki}=z_k)}
+{\hat e(z_k,\overline Z_{k-1,i},\overline X_{k-1,i})}
+\right]Y_i.
+\]
+Hajek estimator 把 weights normalization 到和为一：
+\[
+\hat E_{\textup{Hajek}}\{Y(\overline z_K)\}
+=
+\frac{
+\sum_{i=1}^n
+\left[
+\prod_{k=1}^K
+\frac{1(Z_{ki}=z_k)}
+{\hat e(z_k,\overline Z_{k-1,i},\overline X_{k-1,i})}
+\right]Y_i
+}{
+\sum_{i=1}^n
+\left[
+\prod_{k=1}^K
+\frac{1(Z_{ki}=z_k)}
+{\hat e(z_k,\overline Z_{k-1,i},\overline X_{k-1,i})}
+\right]
+}.
+\]
+
+\paragraph{Remark.}
+HT estimator 对应 unbiased estimating identity；Hajek estimator 用 self-normalization 换取更稳定的有限样本行为。随着 $K$ 增大，权重是多个 inverse probabilities 的乘积，所以 overlap 是实际应用中的主要瓶颈。
+\end{exercisesolution}
+
+\begin{exercisesolution}{MSM with treatments at multiple time points}{\cref{thm::ipw-msm-multiple} 的证明}
+由 \cref{thm::ipw-multiple} 的证明可知，对任意 integrable $q(Y,X_0)$，
+\[
+E\{W(\overline z_K)q(Y,X_0)\}
+=
+E\{q(Y(\overline z_K),X_0)\},
+\]
+其中
+\[
+W(\overline z_K)
+=
+\prod_{k=1}^K
+\frac{1(Z_k=z_k)}
+{e(z_k,\overline Z_{k-1},\overline X_{k-1})}.
+\]
+令
+\[
+q(Y,X_0)=\{Y-f(\overline z_K,X_0\,;\,b)\}^2.
+\]
+则
+\[
+E\left[
+W(\overline z_K)\{Y-f(\overline z_K,X_0\,;\,b)\}^2
+\right]
+=
+E\left[
+\{Y(\overline z_K)-f(\overline z_K,X_0\,;\,b)\}^2
+\right].
+\]
+对所有 $\overline z_K$ 求和，observable weighted objective 与 full-potential-outcome objective 完全相同。因此它们有相同 minimizer $\beta$，即 \cref{thm::ipw-msm-multiple}。
+
+\paragraph{Remark.}
+MSM 的作用是用低维 $\beta$ 描述指数多个 potential outcome means。IPW 负责 identification；MSM 负责 dimension reduction。二者合在一起，才使多时间点 treatment regime 的估计在有限样本中可操作。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Structural nested model with treatments at multiple time points}{\cref{thm::snm-estimating-equation-multiple} 的证明}
+固定 $k$。由 \cref{def::snm-multiple} 和 logical restriction，$U_k(\beta)$ 可以理解为把前 $k$ 个 treatment effects 从 observed outcome 中逐步 blip down 后得到的 outcome。更具体地，在真实 $\beta$ 处，
+\[
+E\{U_k(\beta)\mid \overline Z_k,\overline X_{k-1}\}
+=
+E\{Y(\overline Z_{k-1},0)\mid \overline Z_k,\overline X_{k-1}\}.
+\]
+由 \cref{assume::si-multiple}，给定 $(\overline Z_{k-1},\overline X_{k-1})$ 后，$Z_k$ 与未来 fixed-regime potential outcome 无关。因此上式不依赖于 $Z_k$，即
+\[
+E\{U_k(\beta)\mid \overline Z_k,\overline X_{k-1}\}
+=
+E\{U_k(\beta)\mid \overline Z_{k-1},\overline X_{k-1}\}.
+\]
+
+现在使用 tower property：
+\begin{align*}
+&E\left[
+h_k(\overline Z_{k-1},\overline X_{k-1})
+\{Z_k-e(1,\overline Z_{k-1},\overline X_{k-1})\}
+U_k(\beta)
+\right]\\
+&\quad =
+E\left[
+h_k(\overline Z_{k-1},\overline X_{k-1})
+\{Z_k-e(1,\overline Z_{k-1},\overline X_{k-1})\}
+E\{U_k(\beta)\mid \overline Z_k,\overline X_{k-1}\}
+\right]\\
+&\quad =
+E\left[
+h_k(\overline Z_{k-1},\overline X_{k-1})
+\{Z_k-e(1,\overline Z_{k-1},\overline X_{k-1})\}
+E\{U_k(\beta)\mid \overline Z_{k-1},\overline X_{k-1}\}
+\right].
+\end{align*}
+再条件化于 $(\overline Z_{k-1},\overline X_{k-1})$，最后一项等于
+\[
+E\left[
+h_k(\overline Z_{k-1},\overline X_{k-1})
+E\{U_k(\beta)\mid \overline Z_{k-1},\overline X_{k-1}\}
+E\{Z_k-e(1,\overline Z_{k-1},\overline X_{k-1})
+\mid \overline Z_{k-1},\overline X_{k-1}\}
+\right]=0,
+\]
+因为
+\[
+E(Z_k\mid \overline Z_{k-1},\overline X_{k-1})
+=e(1,\overline Z_{k-1},\overline X_{k-1}).
+\]
+这证明了 \cref{thm::snm-estimating-equation-multiple}。
+
+\paragraph{Remark.}
+\cref{thm::snm-estimating-equation-multiple} 是 \cref{thm::estimating-equation-snm} 的逐时间点版本。每个 $k$ 都产生一组 centered-treatment moments；选择不同 $h_k$ 会改变 estimator 的效率，但正交性的来源始终是 sequential ignorability。
+\end{exercisesolution}

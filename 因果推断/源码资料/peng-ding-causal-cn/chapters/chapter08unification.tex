@@ -1,0 +1,204 @@
+\chapter{Unification of the Fisherian and Neymanian Inferences in Randomized Experiments}\label{chapter::unification-fisher-neyman}
+ \chaptermark{Unification of Fisherian and Neymanian Inferences}
+第 \ref{ch::frt-cre}--\ref{chapter::mpe} 章讨论了不同类型实验中的 Fisherian inference 和 Neymanian inference。Fisherian 视角关注有限样本精确的 $p$-value，用来检验任意单元都不存在因果效应的 strong null hypothesis；而 Neymanian 视角关注平均因果效应的无偏估计，以及保守的大样本 confidence interval。二者都由实验设计所保证的物理随机化来支撑。因此，它们都称为 {\it randomization-based inference} 或 {\it design-based inference}。由于它们考察的是实验中单元构成的有限总体，也称为 {\it finite-population inference}。二者彼此相关，但也有各自鲜明的特征。
+
+1935 年，Neyman 在 Royal Statistical Society 宣读了他关于 randomization-based inference 的开创性论文。他的论文 \citep{neyman1935statistical} 在讨论环节受到 Fisher 的批评。\cite{sabbaghi2014comments} 回顾了这场著名的 Neyman--Fisher controversy，并为这个老问题给出了一些新结果。本章不进入哲学层面的争论，而是尝试给出一个统一的讨论。
+
+\section{Testing strong and weak null hypotheses in the CRE} 
+ \label{sec::strong-weak-cre-frt}
+ 
+ 
+让我们重新考察 treatment-control CRE。Fisherian 视角关注检验如下 strong null hypothesis：
+$$
+\HF: Y_i(1) = Y_i(0) \text{ for all units } i=1,\ldots, n.
+$$
+FRT 给出 \eqref{eq::exactpvalue} 中定义的有限样本精确 $p_\frt$。
+ 
+ 
+根据 confidence interval 与 hypothesis testing 之间的对偶关系，Neymanian 视角给出了针对如下 weak null hypothesis 的检验：
+$$
+\HN : \tau = 0  \Longleftrightarrow \HN: \bar{Y}(1) = \bar{Y}(0)
+$$ 
+其依据是
+$$
+t= 
+\frac{\hat{\tau} }{  \sqrt{  \hat{V}    } }  .
+$$
+由 $\hat\tau$ 的 CLT 以及方差估计量的保守性可知，
+$$
+t  =   \sqrt{  \frac{ \var(\hat{\tau}) }{ \hat{V} } } \times  \frac{\hat{\tau} }{  \sqrt{  \var(\hat{\tau})   } }    \rightarrow  C \times   \N01 
+$$
+依分布收敛，其中 $C$ 小于或等于 $1$，但依赖于未知的 potential outcomes。对 studentized statistic $t$ 使用 $\N01$ 分位数，就得到一个针对 $\HN$ 的保守大样本检验。
+
+进一步，\citet{ding2017randomization} 证明，使用 studentized statistic $t$ 的 FRT 具有如下双重保证：
+\begin{enumerate}
+\item 
+ 在 $\HF$ 下，$p_\frt$ 是有限样本精确的；
+\item
+ 在 $\HN$ 下，$p_\frt$ 是渐近保守的。
+\end{enumerate}
+重要的是，这是 studentized statistic $t$ 的一个特性。\citet{ding2017randomization} 说明，使用其他 test statistic 的 FRT 可能不具备这种双重保证。特别地，使用 $\hat{\tau}$ 的 FRT 在 $\HN$ 下可能是渐近反保守的。下面给出一些启发式说明，以展示 studentization 在 FRT 中的重要性。
+在 $\HN$ 下，有
+$$
+\hat{\tau} \asim \textsc{N}\left(0,    \frac{S^2(1)}{n_1} + \frac{S^2(0)}{n_0} -  \frac{S^2(\tau)}{n}    \right).
+$$
+FRT 假装 Science Table 是由 $\HF$ 诱导出的 $(Y_i, Y_i)_{i=1}^n$，因此 $\hat{\tau} $ 的 randomization distribution 为
+$$
+(\hat{\tau} )^\pi \asim \textsc{N}\left(0,    \frac{s^2}{n_1} + \frac{s^2}{n_0}    \right),
+$$
+其中 $(\cdot)^\pi$ 表示 randomization distribution\footnote{$\pi$ 是 random permutation 的标准记号。}
+且
+$
+s^2 
+$
+是观测结果的样本方差。根据 Chapter \ref{ch::frt-cre} 中的 \eqref{eq::frt-algebra-difference-in-means}，可以把 $\HF$ 下 $(\hat{\tau} )^\pi$ 的渐近方差近似为
+\begin{eqnarray*}
+\frac{s^2}{n_1} + \frac{s^2}{n_0} 
+& =& \frac{n}{n_1 n_0}  \left\{ 
+ \frac{n_1 -1}{ n-1 } \hat S^2(1) + \frac{n_0 - 1}{n-1} \hat S^2(0) + \frac{n_1n_0}{n(n-1)} \hat\tau^2
+ \right\} \\
+&\approx & \frac{\hat S^2(1) }{n_0} +  \frac{\hat S^2(0) }{n_1} \\ 
+&\approx & \frac{  S^2(1) }{n_0} +  \frac{  S^2(0) }{n_1},
+\end{eqnarray*}
+这与 $\hat{\tau} $ 的渐近方差并不匹配。理想情况下，我们应当基于 $\hat{\tau} $ 的真实分布来计算 $\HN$ 下的 $p$-value；然而，这个真实分布依赖于未知的 potential outcomes。相比之下，我们用 FRT 基于 permutation distribution $(\hat{\tau} )^\pi $ 来计算 $p_\frt$，而即使在大样本下，该分布也并不匹配 $\HN$ 下 $\hat{\tau} $ 的真实分布。因此，使用 $\hat\tau$ 的 FRT 即使在大样本下也可能无法控制 $\HN$ 下的第一类错误率。
+ 
+ 
+幸运的是，如果把 test statistic $\hat{\tau} $ 替换为其 studentized version $t$，使用 $\hat\tau$ 的 FRT 中上述不理想性质就会消失。在 $\HN$ 下，有
+$$
+t \asim \textsc{N}(0,  C^2)
+$$ 
+其中 $C^2 \leq 1$；当所有单元 $i=1, \ldots, n$ 都满足 $Y_i(1) - Y_i(0) = \tau$ 时取等号。FRT 假装对所有 $i$ 都有 $Y_i(1) = Y_i(0) = Y_i$，并生成如下 permutation distribution：
+$$
+t^\pi \asim \textsc{N}(0,  1)
+$$
+其中方差等于 $1$，因为 FRT 使用的 Science Table 中个体因果效应均为零。在 $\HN$ 下，由于 $t$ 的真实分布比相应的 permutation distribution 更分散，基于 $t$ 的 $p_\frt$ 是渐近保守的。
+
+%Whether $\HF$ or $\HN$ makes more sense? This is a famous controversy between Neyman and Fisher in a meeting at the Royal Statistical Society, UK \citep{neyman1935statistical, sabbaghi2014comments, Ding:2014}.  
+%Recently, \citet{ding2017randomization} advocated using $\hat{\tau} /  \sqrt{  \hat{V}    } $, i.e., the studentized statistic $t$ in Example \ref{eg::studentized-statistic} of Chapter \ref{ch::frt-cre}, in the FRT so that the $p$-value is finite sample exact for $\HF$ and asymptotically valid for $\HN$.  In contrast, using the difference-in-means in the FRT does not have these guarantees. 
+
+ 
+ 
+\section{Covariate-adjusted FRTs in the CRE}
+ \label{sec::xfrt-cre}
+ 
+把 Section \ref{sec::strong-weak-cre-frt} 的讨论推广到含有 covariates 的情形，\citet{zhao2020caFRT} 建议使用基于 studentized \citet{lin2013} estimator 的 FRT：
+$$
+t_\textsc{L}   =  \frac{  \hat{\tau}_\textsc{L} }{  \sqrt{\hat{V}_\textsc{L}}  },
+$$ 
+它是在把 $Y_i$ 对 $( 1, Z_i, X_i, Z_i X_i) $ 做 OLS 拟合时，$Z_i$ 系数对应的 robust $t$-statistic。他们证明，使用 $t_\textsc{L} $ 的 FRT 具有多重保证：
+ \begin{enumerate}
+\item
+ 在 $\HF$ 下，$p_\frt$ 是有限样本精确的；
+\item
+ 在 $\HN$ 下，$p_\frt$ 是渐近保守的；
+\item
+ 当 $\HN$ 不成立且 covariates 对 outcomes 有预测力时，$p_\frt$ 渐近上比使用 $t$ 的 FRT 更有 power；
+\item
+ 即使 linear outcome model 设定错误，上述性质仍然成立。
+\end{enumerate}
+类似地，这是 studentized statistic $t_\textsc{L} $ 的一个特性。\citet{zhao2020caFRT} 说明，Section \ref{sec::covariate-adjusted-frt-intro} 中回顾的其他 covariate-adjusted FRTs，要么可能在 $\HN$ 下反保守，要么在 $\HN$ 不成立时比使用 $t_\textsc{L} $ 的 FRT power 更低。
+
+\section{General recommendations}
+如果同时关心 strong null hypothesis 和 weak null hypothesis，那么针对 SRE 的建议与针对 CRE 的建议平行。
+回顾 Chapters \ref{chapter::stratification-poststratification} 和 \ref{sec::covariate-SRE} 中的估计量。
+在没有额外 covariates 时，\citet{zhao2020caFRT} 建议使用基于如下统计量的 FRT：
+$$
+t_\textsc{S} =  \frac{  \hat{\tau}_\textsc{S} }{  \sqrt{\hat{V}_\textsc{S}} } ;
+$$ 
+在有额外 covariates 时，他们建议使用基于如下统计量的 FRT：
+$$
+t_\textsc{L,S} =  \frac{  \hat{\tau}_\textsc{L,S} }{  \sqrt{\hat{V}_\textsc{L,S}} } . 
+$$ 
+ReM 的分析更棘手。\citet{zhao2020caFRT} 证明，使用 $t$ 的 FRT 不具备 Section \ref{sec::strong-weak-cre-frt} 中的双重保证，但使用 $t_\textsc{L}$ 的 FRT 仍然具有 Section \ref{sec::xfrt-cre} 中的保证。这凸显了 covariate adjustment 和 studentization 在 ReM 中的重要性。
+类似结果也适用于 MPE。没有 covariates 时，我们建议使用如下 FRT：其 test statistic 是把 $\hat\tau_i$ 对 $1$ 做 OLS 拟合时截距对应的 $t$-statistic；有 covariates 时，我们建议使用如下 FRT：其 test statistic 是把 $\hat\tau_i$ 对 $1$ 和 $\hat\tau_{X,i}$ 做 OLS 拟合时截距对应的 $t$-statistic。Chapter \ref{chapter::mpe} 中的 Figure \ref{fig::frt-television-mpe} 就是基于这些推荐的 FRTs 得到的。
+
+总体而言，使用 studentized statistics 的 FRTs 是更稳妥的选择。当 studentized statistics 的大样本 Normal 近似准确时，$p_\frt$ 与基于 Normal 近似得到的 $p$-values 几乎相同。当大样本近似不准确时，FRTs 至少能保证在 strong null hypotheses 下给出有效的 $p$-values。这就是本书的建议。
+
+\section{A case study}
+\label{sec::case-study-chong}
+
+ 
+
+回顾 Chapter \ref{sec::ps-chong} 中分析过的 \citet{chong2016iron} 的 SRE。
+我比较 ``soccer'' 组与 ``control'' 组，也比较 ``physician'' 组与 ``control'' 组。我们还比较是否使用表示 baseline anemia status 的 covariate 时得到的 FRTs。我们用他们的数据集说明 CRE 和 SRE 中的 FRTs。在相同 class levels 内进行的十个 subgroup analyses 使用 CRE 下基于 $t$ 和 $t_\textsc{L}$ 的 FRTs；对所有 class levels 取平均的两个 overall analyses 则使用 SRE 下基于 $t_\textsc{S}$ 和 $t_\textsc{L,S}$ 的 FRTs。
+
+Table \ref{tb::pv-values-chong} 展示了点估计量、标准误、基于 robust $t$-statistics 的 Normal 近似得到的 $p$-value，以及基于 FRTs 得到的 $p$-value。在多数 strata 中，covariate adjustment 会降低标准误，因为 baseline anemia status 对 outcome 有预测力。Table \ref{tb::pv-values-chong} 也显示出两个例外：在 class 2 内，比较 ``soccer'' 和 ``control'' 时，covariate adjustment 增大了标准误；在 class 4 内，比较 ``physician'' 和 ``control'' 时，covariate adjustment 增大了标准误。这是因为这些 strata 内的组大小较小，导致渐近近似不准确。不过，在这两个情形中，标准误的差异只出现在第三位小数。Normal 近似和 FRT 得到的 $p$-values 很接近，且多数情况下后者略大。根据理论，应当信任基于 FRT 的 $p$-values，因为它在 sharp null hypothesis 下还具有有限样本精确这一额外保证。由于本例中 strata 内的组大小相当小，这一点尤其重要。
+
+\begin{table}
+\centering
+\caption{重新分析 \citet{chong2016iron} 的数据。``\textsc{N}'' 对应 \citet{Neyman:1923} 的未调整估计量和检验，``\textsc{L}'' 对应 \citet{lin2013} 的 covariate-adjusted 估计量和检验。}\label{tb::pv-values-chong}
+\begin{subtable}[h]{0.45\textwidth}
+\caption{soccer versus control}
+    \begin{tabular}{rrrrr}
+    \hline 
+   &    est & s.e. &$p_\text{Normal}$ & $p_\frt$ \\
+       class 1& &&&\\
+\textsc{N}  &  0.051 &0.502 &     0.919  & 0.924 \\
+\textsc{L}   &    0.050 & 0.489 &     0.919 &  0.929 \\
+       class 2& &&&\\
+\textsc{N}  &  -0.158 &0.451  &    0.726  & 0.722\\
+\textsc{L}   &  -0.176 & 0.452   &   0.698  & 0.700 \\
+       class 3& &&&\\
+\textsc{N}  &  0.005 &0.403  &    0.990 &  0.989 \\
+\textsc{L}   &   -0.096& 0.385 &     0.803&   0.806 \\
+       class 4& &&&\\
+\textsc{N}  &  -0.492& 0.447  &    0.271 &  0.288 \\
+\textsc{L}   &    -0.511& 0.447  &    0.253 &  0.283 \\
+       class 5& &&&\\
+\textsc{N}  &  0.390& 0.369 &     0.291 &  0.314 \\
+\textsc{L}   &   0.443 &0.318  &    0.164  & 0.186 \\
+       all& &&&\\
+\textsc{N}  &  -0.051 & 0.204  &    0.802 &  0.800 \\
+\textsc{L}   &    -0.074& 0.200   &   0.712  & 0.712\\
+\hline 
+    \end{tabular}
+\end{subtable}
+
+\begin{subtable}[h]{0.45\textwidth} 
+\caption{physician versus control}
+    \begin{tabular}{rrrrr}
+    \hline 
+   &    est & s.e. &$p_\text{Normal}$ & $p_\frt$ \\
+       class 1& &&&\\
+\textsc{N}  &  0.567 &0.426  &    0.183 &  0.192 \\
+\textsc{L}   &   0.588& 0.418  &   0.160  & 0.174 \\
+       class 2& &&&\\
+\textsc{N}  &   0.193& 0.438 &     0.659 &  0.666 \\
+\textsc{L}   &  0.265& 0.409   &   0.517  & 0.523 \\
+       class 3& &&&\\
+\textsc{N}  &  1.305& 0.494  &    0.008 &  0.012\\
+\textsc{L}   &  1.501& 0.462   &   0.001  & 0.003 \\
+       class 4& &&&\\
+\textsc{N}  &  -0.273& 0.413  &    0.508 &  0.515 \\
+\textsc{L}   &  -0.313& 0.417   &   0.454  & 0.462\\
+       class 5& &&&\\
+\textsc{N}  & -0.050 &0.379  &    0.895 &  0.912 \\
+\textsc{L}   &  -0.067& 0.279  &    0.811 &  0.816 \\
+       all& &&&\\
+\textsc{N}  &  0.406 & 0.202   &   0.045 &  0.047\\
+\textsc{L}   &    0.463 & 0.190   &   0.015  & 0.017 \\
+\hline 
+    \end{tabular}
+\end{subtable}
+\end{table}
+
+Figure \ref{fig::randomization-distributions-chong} 比较了 robust $t$-statistics 的 randomization distributions 直方图与其渐近近似。在 subgroup analysis 中，我们可以观察到 randomization distributions 与 $\textsc{N}(0,1)$ 之间的差异；对所有 class levels 取平均后，这种差异变得不明显。总体而言，在这个应用中，基于 Normal 近似得到的 $p$-values 与基于 FRTs 得到的 $p$-values 并没有实质差别。两种方法给出一致的结论：由 physician 讲述 iron supplements 好处的视频提升了 academic performance，且该效应在 class 3 的学生中最显著；相比之下，由著名 soccer player 讲述 iron supplements 好处的视频没有任何显著效应。
+
+\begin{sidewaysfigure}
+\centering
+\includegraphics[width = \textwidth]{figures/frt_dist_chong.pdf}
+\caption{重新分析 \citet{chong2016iron} 的数据：基于 $5\times 10^4$ 次 Monte Carlo 抽样的 randomization distributions 以及 $\N01$ 近似}
+\label{fig::randomization-distributions-chong}
+\end{sidewaysfigure}
+ \section{Homework Problems}
+\homeworksolutionref{08}
+\paragraph{Re-analyzing \citet{angrist2009effects}'s data}\label{para::AL-mpe-fisher}
+
+这是 Problem \ref{para::AL-mpe-neyman} 的 Fisherian 对应版本。
+报告使用 studentized statistics 的 FRTs 得到的 $p_\frt$。
+\paragraph{Replication of \citet{zhao2020caFRT}'s Figure 1}\label{para::zhaoding-xfrt}
+
+\citet{zhao2020caFRT} 使用模拟评估了采用不同 test statistics 的 FRTs 所得 $p_\frt$ 的有限样本性质。基于他们的 Figure 1，他们建议使用带有 $t_\textsc{L,S} $ 的 FRT 来分析 SRE。复现他们的 Figure 1。
+\paragraph{Recommended readings}
+
+在 permutation tests 中使用 studentized statistics 并不是新想法；见 \citet{Janssen97} 和 \citet{Romano13}。在 design-based framework 下，\citet{ding2017randomization} 和 \citet{wu2018randomization} 对 multiarmed experiments 提出了这一建议，而 \citet{zhao2020caFRT} 将该建议推广到 covariate adjustment。

@@ -1,0 +1,535 @@
+\chapter{Observational Studies, Selection Bias, and Nonparametric Identification of Causal Effects}\label{chapter::observational-studies}
+ \chaptermark{Observational Studies}
+
+ 
+\citet{cochran1965planning} 总结了 observational studies 的两个共同特征：
+\begin{enumerate}
+\item
+目标是阐明 cause-and-effect relationships；
+\item 
+无法使用 controlled experimentation。 
+\end{enumerate}
+
+第一个特征与本书 Part \ref{part::rcts} 中讨论的 randomized experiments 相同，但第二个特征与 randomized experiments 有根本区别。 
+
+
+\citet{dorn1953philosophy} 建议，observational study 的设计者应当始终追问下面这个问题：
+\begin{quote}
+How would the study be conducted if it were possible to do
+it by controlled experimentation?
+\end{quote}
+遵循 \citet{dorn1953philosophy} 的建议总是有帮助的，因为 potential outcomes framework 与实验有内在联系，无论这个实验是真实实验还是思想实验。本书 Part \ref{part::observational-studies} 将讨论 observational studies 中的 causal inference。它会澄清 observational studies 与 randomized experiments 之间的根本差异。不过，observational studies 中 causal inference 的许多思想仍与 randomized experiments 中的思想有深刻联系。 
+
+ 
+
+
+\section{Motivating Examples}
+ 
+ \begin{example}
+ [job training program]\label{eg::job-training-obs}
+ \citet{lalonde1986evaluating} 关注 job training program 对收入的 causal effect。他比较了基于 randomized experiment 的结果和基于 observational studies 的结果。我们以前已经使用过实验数据，也就是 \ri{Matching} package 中的 \ri{lalonde} dataset。我们还在 Chapter \ref{section:correlatioandregressionintro} 和 Problem \ref{hw::lalonde-obs-reg} 中使用过一个 observational counterpart \ri{cps1re74.csv}。\citet{lalonde1986evaluating} 发现，许多用于 observational studies 的传统统计或计量经济学方法，给出的估计与基于实验数据的估计相当不同。\cite{dehejia1999causal} 用由 causal inference 启发的方法重新分析了这些数据，并发现这些方法能够很好地恢复 experimental gold standard。自那以后，这个例子就成了 observational studies 中 causal inference 的经典案例。 
+ \end{example}
+ 
+ 
+  \begin{example}
+ [smoking and homocysteine]\label{eg::nhanes2005-2006}
+ \citet{bazzano2003relationship} 基于 National Health and Nutrition Examination Survey (NHANES) 2005--2006 的数据，比较了 daily smokers 与 non-smokers 的 homocysteine\footnote{Homocysteine 是一种 amino acid。血液中较高水平的 homocysteine 被视为 cardiovascular disease 的 marker。} 水平。\citet{rosenbaum2018sensitivity} 将这些数据整理为 package \ri{senstrat} 中的 \ri{homocyst}。该 dataset 包含如下重要 covariates：
+ 
+\begin{tabular}{ll}
+\hline 
+\texttt{female} &
+1=female, 0=male
+\\
+\texttt{age3} &
+three age categories: 20--39, 40--50, $\geq $60
+\\
+\texttt{ed3} &
+three education categories: $<$ high school, high school, some college
+\\
+\texttt{bmi3}&
+three BMI categories: $<$30, $[30,35)$, $\geq $ 35
+\\
+\texttt{pov2}&
+TRUE=income at least twice the poverty level, FALSE otherwise\\
+\hline 
+\end{tabular} 
+
+ \end{example}
+ 
+ 
+ 
+ 
+   \begin{example} 
+ [school meal program and body mass index]\label{eg::chan-bmi-ATE}
+ \citet{chan2016globally} 使用 NHANES 2007--2008 数据的一个 subsample，研究参加 school meal programs 是否会导致学龄儿童的 BMI 增加。他们将这些数据整理为 package \ri{ATE} 中的 \ri{nhanes_bmi}。该 dataset 包含如下重要 covariates：
+ 
+\begin{tabular}{ll}
+\hline 
+\texttt{age}&
+Age  
+\\
+\texttt{ChildSex}&
+Sex (1: male, 0: female)
+\\
+\texttt{black}&
+Race (1: black, 0: otherwise) 
+\\
+\texttt{mexam}&
+Race (1: Hispanic: 0 otherwise)
+\\
+\texttt{pir200\_plus}&
+Family above 200\% of the federal poverty level  \\
+\texttt{WIC}&
+Participation in the special supplemental nutrition program \\
+\texttt{Food\_Stamp}&
+Participation in food stamp program   \\
+\texttt{fsdchbi}&
+Childhood food security  \\
+\texttt{AnyIns}&
+Any insurance \\
+\texttt{RefSex}&
+Sex of the adult respondent (1: male, 0: female) \\
+\texttt{RefAge}&
+Age of the adult respondent\\
+\hline 
+\end{tabular} 
+
+ \end{example}
+ 
+Examples \ref{eg::job-training-obs}--\ref{eg::chan-bmi-ATE} 的共同特征是，我们都关心估计一个 nonrandomized treatment 对 outcome 的 causal effect。它们都来自 observational studies。 
+ 
+ 
+\section{Causal effects and selection bias under the potential outcomes framework} 
+ \label{sec::selection-bias-randomization}
+
+ 
+ 
+对 unit $i$ $(i=1,\ldots, n)$，我们有 pretreatment covariates $X_i$、二元 treatment indicator $Z_i$，以及 observed outcome $Y_i$；在 treatment 与 control 下分别有两个 potential outcomes $Y_i(1)$ 和 $Y_i(0)$。为简单起见，我们假设   
+$$
+\{X_i, Z_i, Y_i(1),  Y_i(0)  \}_{i=1}^n \iidsim \{  X, Z, Y(1),  Y(0) \} .
+$$ 
+因此，对这个 population 中的量，我们可以省略下标 $i$。  
+我们关心的 causal effects 是 average causal effect
+$$
+\tau = E\{  Y(1) - Y(0)  \},
+$$
+treated units 上的 average causal effect
+$$
+\tau_\textsc{T} =  E\{  Y(1) - Y(0)  \mid Z = 1 \},
+$$
+以及 control units 上的 average causal effect：
+$$
+\tau_\textsc{C} =  E\{  Y(1) - Y(0)  \mid Z = 0 \}. 
+$$ 
+
+由 expectation 的线性性，我们有
+\begin{eqnarray*}
+\tau_\textsc{T} &=&  E\{  Y(1)    \mid Z = 1 \} - E\{   Y(0)  \mid Z = 1 \}  \\
+&=&  E(  Y    \mid Z = 1 ) - E\{   Y(0)  \mid Z = 1 \}
+\end{eqnarray*}
+以及
+\begin{eqnarray*}
+ \tau_\textsc{C} &=&  E\{  Y(1)    \mid Z = 0 \} - E\{   Y(0)  \mid Z = 0 \} \\
+ &=&  E\{  Y(1)    \mid Z = 0 \} - E(  Y   \mid Z = 0 ).
+\end{eqnarray*}
+ 在上面 $\tau_\textsc{T} $ 和 $\tau_\textsc{C} $ 的两个公式中，$E(Y    \mid Z = 1 ) $ 和 $E(   Y   \mid Z = 0 ) $ 可以直接从数据估计，但 $E\{   Y(0)  \mid Z = 1 \}$ 和 $E\{  Y(1)    \mid Z = 0 \}$ 不可以。后两个量是 {\it counterfactuals}，因为它们是与实际接受的 treatment 相反的 treatment level 所对应的 potential outcomes 的均值。 
+ 
+
+简单均值差，也称为 {\it prima facie}\footnote{这是一个拉丁短语，意思是 ``based on the first impression'' 或 ``accepted as correct until proved otherwise.'' 
+\citet{holland1986statistics} 使用了这个短语。 
+} causal effect，
+\begin{eqnarray*}
+\tau_\textsc{PF} &=& E(  Y    \mid Z = 1 )  - E(   Y   \mid Z = 0 )   \\
+&=& E\{  Y(1)    \mid Z = 1 \}  - E\{   Y(0)  \mid Z = 0 \} 
+\end{eqnarray*}
+通常会对上面定义的 causal effects 有偏。比如，
+ $$
+ \tau_\textsc{PF} - \tau_\textsc{T} = E\{   Y(0)  \mid Z = 1 \} - E\{   Y(0)  \mid Z = 0 \} 
+ $$
+以及
+ $$
+  \tau_\textsc{PF} - \tau_\textsc{C} =  E\{   Y(1)  \mid Z = 1 \} - E\{   Y(1)  \mid Z = 0 \} 
+ $$
+一般不为零，它们刻画了 {\it selection bias}。它们衡量 treatment group 与 control group 之间 potential outcomes 均值的差异。 
+ 
+ 
+ 
+ 
+ randomization 为什么如此重要？\citet{rubin1978bayesian} 首先使用 potential outcomes 来量化 randomization 的好处。我们在 Chapter \ref{chapter::bridging} 中已经用过这样一个事实：在 CRE 中，
+\begin{equation}\label{eq::rubinrandomization}
+ Z  \ind \{ Y (1) , Y (0) \}
+\end{equation}
+这意味着两个 selection bias 项都为零：
+ $$
+  \tau_\textsc{PF} - \tau_\textsc{T}  = 
+ E\{   Y(0)  \mid Z = 1 \} - E\{   Y(0)  \mid Z = 0 \}  = 0
+ $$
+以及
+ $$
+   \tau_\textsc{PF} - \tau_\textsc{C} =
+ E\{   Y(1)  \mid Z = 1 \} - E\{   Y(1)  \mid Z = 0 \}  = 0. 
+ $$
+ 因此，在 \eqref{eq::rubinrandomization} 中的 CRE 下，我们有 
+\begin{equation}
+\label{eq::no-selection-bias-all-equal}
+ \tau = \tau_\textsc{T} = \tau_\textsc{C} = \tau_\textsc{PF}.
+\end{equation}
+从上面的讨论可见，randomization 的根本好处在于平衡 treatment group 与 control group 中 potential outcomes 的分布。这比平衡 observed covariates 的分布强得多。 
+ 
+
+没有 randomization，selection bias 项可以任意大，尤其是对 unbounded outcomes 而言。这凸显了 observational studies 中 causal inference 的根本困难。 
+
+
+\section{Sufficient conditions for nonparametric identification of causal effects} 
+ 
+ 
+ 
+\subsection{Identification}\label{sec::identification-ignorability}
+ 
+ 
+ observational studies 中的 causal inference 很有挑战，因为它依赖强假设。一种策略是利用 pretreatment covariates 中的信息，并假设以 observed covariates $X$ 为条件时，selection bias 项为零，也就是说，
+\begin{eqnarray}
+\label{eq::meanind0} E\{   Y(0)  \mid Z = 1, X \} &=& E\{   Y(0)  \mid Z = 0, X \}  ,\\
+\label{eq::meanind1} E\{   Y(1)  \mid Z = 1 , X\} &=& E\{   Y(1)  \mid Z = 0, X \}   . 
+\end{eqnarray}
+\eqref{eq::meanind0} 和 \eqref{eq::meanind1} 中的假设说明，treatment group 与 control group 之间 potential outcomes 均值的差异，完全来自 observed covariates 的差异。因此，给定相同的 covariate 值，treatment group 与 control group 中的 potential outcomes 有相同均值。在数学上，\eqref{eq::meanind0} 和 \eqref{eq::meanind1} 保证 \eqref{eq::no-selection-bias-all-equal} 中各效应的 conditional 版本相同： 
+ $$
+ \tau(X) = \tau_\textsc{T}(X) =  \tau_\textsc{C}(X) = \tau_\textsc{PF}(X),
+ $$
+其中
+\begin{eqnarray*}
+ \tau(X)  &=& E\{ Y(1) - Y(0) \mid X  \}, \\
+ \tau_\textsc{T}(X) &=&  E\{ Y(1) - Y(0) \mid Z=1,  X  \},\\
+  \tau_\textsc{C}(X) &=& E\{ Y(1) - Y(0) \mid Z=0,  X  \},\\
+   \tau_\textsc{PF}(X) &=& E(Y\mid Z=1, X) - E(Y\mid Z=0, X).
+\end{eqnarray*}
+特别地，$ \tau(X) $ 常被称为 {\it conditional average causal effect} (CATE)。 
+
+
+
+本章的一个关键结果是，在 \eqref{eq::meanind0} 和 \eqref{eq::meanind1} 下，average causal effect $\tau$ 是 {\it nonparametrically identifiable} 的。nonparametrically identifiable 这个概念在 classic statistics 中并不常出现，但它是 observational studies 中 causal inference 的关键。下面我先给出一个抽象定义。 
+
+\begin{definition}[identification]
+\label{def::nonparametric-identification}
+如果在某些 model assumptions 下，一个 parameter $\theta$ 可以写成 observed data 分布的函数，那么它是 identifiable 的。 
+如果不需要任何 parametric model assumptions，一个 parameter $\theta$ 就可以写成 observed data 分布的函数，那么它是 nonparametrically identifiable 的。 
+\end{definition}
+
+
+
+Definition \ref{def::nonparametric-identification} 目前还过于抽象。我会在后续章节中用更具体的例子说明它的含义。在 classic statistics 问题中，它常常被忽略。例如，如果我们有 $Y_i$ 的 IID 抽样，那么均值 $\theta = E(Y)$ 是 nonparametrically identifiable 的；如果我们有成对变量 $(X_i, Y_i)$ 的 IID 抽样，那么 Pearson correlation coefficient $\theta = \rho_{YX}$ 是 nonparametrically identifiable 的。在这些例子中，parameters 自动就是 nonparametrically identifiable 的。然而，Definition \ref{def::nonparametric-identification} 在 observational studies 的 causal inference 中是基础性的。特别是，我们关心的 parameter $\tau = E\{ Y(1)  - Y(0)\}$ 依赖一些未观测的 random variables，因此并不清楚它能否基于 observed data nonparametrically identifiable。在 \eqref{eq::meanind0} 和 \eqref{eq::meanind1} 中的假设下，它是 nonparametrically identifiable 的，细节如下。 
+
+
+ 因为 $   \tau_\textsc{PF}(X)$ 只依赖 observables，所以按定义它是 nonparametrically identified 的。此外，\eqref{eq::meanind0} 和 \eqref{eq::meanind1} 保证三个 causal effects 都等于 $   \tau_\textsc{PF}(X)$，所以 $\tau(X) $、$\tau_\textsc{T}(X) $ 和 $  \tau_\textsc{C}(X)$ 都是 nonparametrically identified 的。因此，由 total expectation law，unconditional 版本在 \eqref{eq::meanind0} 和 \eqref{eq::meanind1} 下也都是 nonparametrically identified 的：
+ $$
+ \tau = E\{ \tau(X)\},\quad
+ \tau_\textsc{T} = E\{  \tau_\textsc{T}(X) \mid Z=1  \}, \quad
+   \tau_\textsc{C} = E\{   \tau_\textsc{C}(X) \mid Z=0 \}.
+ $$
+ 从现在开始，除非另有说明，我将重点讨论 $\tau$（Chapter \ref{chapter::ATT-and-other} 将是一个例外）。下面的 theorem 总结了 $\tau$ 的 identification formulas。 
+ 
+\begin{theorem}
+\label{thm::identification-formula}
+在 \eqref{eq::meanind0} 和 \eqref{eq::meanind1} 下，average causal effect $\tau$ 可由下式识别：
+ \begin{eqnarray} 
+ \tau &=& E\{ \tau(X)\} \\
+ &=& E\{  E(Y\mid Z=1, X) - E(Y\mid Z=0, X) \} \label{eq::nonparametric-identification-tau} \\
+ &=&  \int \{  E(Y\mid Z=1, X=x) - E(Y\mid Z=0, X=x)\} f(x) \diff x.
+ \end{eqnarray}
+\end{theorem} 
+ 
+公式 \eqref{eq::nonparametric-identification-tau} 由 \citet{rosenbaum1983central} 正式建立，Robins 也称其为 g-formula \citep[see][]{hernan2020causal}。
+ 
+ 
+ 当 covariate 是离散的时，我们可以把 Theorem \ref{thm::identification-formula} 中的 identification formula 写成 
+\begin{eqnarray}
+ \tau  &=&  \sum_x  E(Y\mid Z=1, X=x)  \pr(X=x)  \nonumber \\
+ &&  - \sum_x E(Y\mid Z=0, X=x) \pr(X=x), \label{eq::nonparametric-identification-tau-discrete}
+\end{eqnarray}
+ 也可以由 total probability law 将简单均值差写成
+  \begin{eqnarray}  
+ \tau_\textsc{PF} &=& \sum_x   E(Y\mid Z=1, X=x) \pr(X=x\mid Z=1) \nonumber  \\
+ &&- \sum_x   E(Y\mid Z=0, X=x) \pr(X=x\mid Z=0)  \label{eq::difference-in-means-discrete-x}
+  \end{eqnarray} 
+ 比较 \eqref{eq::nonparametric-identification-tau-discrete} 和 \eqref{eq::difference-in-means-discrete-x} 可以看到，虽然两个公式都比较 conditional expectations $ E(Y\mid Z=1, X=x) $ 和 $ E(Y\mid Z=0, X=x)$，但它们对不同的 covariate 分布取平均。causal parameter $\tau$ 是在 covariates 的共同分布上对 conditional expectations 取平均，而均值差 $ \tau_\textsc{PF} $ 则是在 treated group 与 control group 中 covariates 的两个不同分布上对 conditional expectations 取平均。 
+ 
+ 
+ 
+ 通常，我们会施加一个更强的假设。
+ 
+ \begin{assumption}[ignorability]
+ \label{assume:weak-ignorability} 
+ 我们有
+ \begin{eqnarray}
+ Y(z) \ind Z \mid X \quad (z=0,1) .
+ \label{eq::ignorability}
+\end{eqnarray}
+ \end{assumption}
+ 
+ 
+Assumption \ref{assume:weak-ignorability} 有许多名称：
+\begin{enumerate}
+\item
+{\it ignorability}，这是 \citet{rubin1978bayesian} 的称法\footnote{仅基于本书的讨论，这个名称的由来并不清楚。事实上，它来自 causal inference 的 Bayesian perspective。这超出了本书范围。}；
+
+\item
+{\it unconfoundedness}，这个名称在 epidemiologists 中很流行；
+
+\item
+{\it selection on observables}，这个名称在 social scientists 中很流行；
+
+\item
+{\it conditional independence}，这只是对假设中符号 $\ind$ 的描述。
+\end{enumerate}
+
+
+有时，我们会施加一个更强的假设。
+
+\begin{assumption}[strong ignorability]
+\label{assume:strong-ignorability}
+我们有 
+\begin{eqnarray}
+ \{  Y(1), Y(0)  \} \ind Z \mid X .
+  \label{eq::strong-ignorability}
+\end{eqnarray}
+\end{assumption}
+
+
+Assumption \ref{assume:strong-ignorability} 称为 {\it strong ignorability} \citep{rubin1978bayesian, rosenbaum1983central}。如果感兴趣的 parameter 是 $\tau$，那么较强的 Assumptions \ref{assume:weak-ignorability} 和 \ref{assume:strong-ignorability} 只是由于 conditional independence 符号 $\ind$ 带来的记号简便而施加的。它们对识别 $\tau$ 并非必要。不过，如果感兴趣的 parameter 是其他尺度上的 causal effects（例如 distribution、quantile 或 outcome 的某种 transformation），它们就不能放松。
+{\it strong ignorability} 假设要求 potential outcomes vector 在给定 covariates 后与 treatment 独立，而 {\it ignorability} 假设只要求每个 potential outcome 在给定 covariates 后与 treatment 独立。前者强于后者。不过，它们之间的差异相当技术性，且纯属理论兴趣；见 Problem \ref{hw::ignorability-difference}。在大多数合理的 statistical models 中，二者都会成立；见下面 Section \ref{sec::plausibility-ignorability}。本书不会区分它们，而会简单地用 {\it ignorability} 同时指代二者。 
+ 
+ 
+ 
+ 
+ 
+ \subsection{Plausibility of the ignorability assumption} \label{sec::plausibility-ignorability}
+
+
+
+observational studies 中 causal inference 的一个根本问题是 ignorability assumption 是否 plausible。Chapter \ref{sec::identification-ignorability} 中的讨论可能显得过于数学化，因为 ignorability assumption 被当作保证 average causal effect nonparametric identification 的 sufficient condition。它的科学含义是什么？直观地说，它排除了所有同时影响 treatment 和 outcome 的 unmeasured covariates。那些 treatment 与 outcome 的 ``common causes'' 被称为 confounders。这就是为什么 ignorability assumption 也称为 unconfoundedness assumption。更透明地说，我们可以基于 outcome data-generating process 来解释 ignorability assumption。如果
+\begin{eqnarray*}
+Y(1) &=& g_1(X, V_1),\\
+Y(0) &=& g_0(X, V_0), \\
+Z &=& 1\{ g(X,V)  \geq 0 \}
+\end{eqnarray*} 
+且 $(V_1, V_0)\ind V$，那么 Assumptions \ref{assume:weak-ignorability} 和 \ref{assume:strong-ignorability} 都成立。在上面的 data-generating process 中，treatment 与 outcome 的 ``common causes'' $X$ 都被观测到，剩余的 random components 相互独立。如果 data-generating process 变为
+\begin{eqnarray*}
+Y(1) &=& g_1(X, U, V_1),\\
+Y(0) &=& g_0(X, U, V_0), \\
+Z &=& 1\{ g(X, U, V)  \geq 0 \}
+\end{eqnarray*} 
+且 $(V_1, V_0)\ind V$，那么 Assumptions \ref{assume:weak-ignorability} 和 \ref{assume:strong-ignorability} 一般不成立。未观测的 ``common cause'' $U$ 会在以 observed covariates $X$ 为条件后，仍然诱导 treatment 与 potential outcomes 之间的依赖。如果我们不能获得 $U$，而只基于 $(Z,X,Y)$ 分析数据，那么最终 estimator 一般会对 causal parameter 有偏。这类 bias 在 econometrics 中称为 {\it omitted variable bias}；见后续章节中的 Problem \ref{hw::cochran+ovb}。 
+
+
+
+如果我们观测到一组丰富的 covariates $X$，并且它们同时影响 treatment 与 outcome，那么 ignorability assumption 可以是合理的。在本书 Part \ref{part::observational-studies} 中，我从这个假设出发讨论 identification 与 estimation strategies。不过，它从根本上是不可检验的。我们可以基于 scientific background knowledge 为它辩护，但常常不能确定它到底是否成立。本书 Parts \ref{part::challenges-os} 和 \ref{part::instrumentalvariables} 会讨论当 ignorability assumption 不 plausible 时的其他策略。 
+
+
+
+
+\section{Two simple estimation strategies and their limitations}
+
+
+\subsection{Stratification or standardization based on discrete covariates}
+
+如果 covariate $X_i \in \{1, \ldots, K \}$ 是离散的，那么 ignorability \eqref{eq::ignorability} 可写为 
+ $$
+ Y(z) \ind Z \mid X = k \quad (z=0,1; k=1,\ldots, K),
+ $$
+这本质上假设该 observational study 是 Chapter \ref{chapter::bridging} 中 superpopulation framework 下的一个 SRE。因此，我们可以使用 estimator
+$$
+\hat{\tau} = \sum_{k=1}^K \pi_{[k]} \left\{   \hat{\bar{Y}}_{[k]}(1) - \hat{\bar{Y}}_{[k]}(0)   \right\},
+$$
+它与 Chapter \ref{chapter::stratification-poststratification} 中讨论的 stratified 或 post-stratified estimator 相同。 
+
+
+这种方法在实践中仍被广泛使用。Example \ref{eg::nhanes2005-2006} 包含离散 covariates，我把分析留到 Problem \ref{hw::stratification-example-rosenbaum}。不过，实施这种方法有几个明显困难。第一，它适合 $K$ 较小的情形。当 $K$ 很大时，很可能许多 strata 有 $n_{[k]1}  = 0$ 或 $n_{[k]0} = 0$，导致这些 strata 的 $\hat{\tau}_{[k]}$ 定义很差。这与 overlap 问题有关，后续 Chapter \ref{chapter::overlap} 将讨论这一点。第二，如何将这种 stratification method 应用于多维 continuous 或 mixed covariates $X$ 并不明显。一个标准方法是基于初始 covariates 构造 strata，然后再应用 stratification method。这可能会使分析带有任意性。 
+
+
+\subsection{Outcome regression}\label{sec::outcome-regression}
+
+
+基于 outcome regression 的最常用方法，是用 observed outcome 对 treatment indicator 与 covariates 运行一个 additive model 的 OLS，即假设
+$$
+E(Y\mid Z, X) = \beta_0 + \beta_z Z  + \beta_x \tran X .
+$$
+如果上面的 linear model 正确，那么我们有
+\begin{eqnarray*}
+\tau(X) &=&  E(Y\mid Z=1, X) - E(Y\mid Z=0, X) \\
+&=& (\beta_0 + \beta_z   + \beta_x\tran  X ) - ( \beta_0    + \beta_x\tran  X )  \\
+&=& \beta_z,
+\end{eqnarray*}
+这意味着 causal effect 相对于 covariates 是 homogeneous 的。再结合 ignorability，就推出
+$$
+\tau = E\{ \tau(X)  \} = \beta_z.
+$$
+因此，如果 ignorability 成立且 outcome model 是 linear 的，那么 average causal effect 等于 $Z$ 的 coefficient。这是 linear model 最重要的应用之一。不过，对 $Z$ 的 coefficient 作 causal interpretation，只有在两个强假设下才有效：ignorability 和 linear model。 
+ 
+ 
+ 
+我们在 Chapter \ref{chapter:rerandomization-regression} 中已经讨论过，即使在 CRE 中，上述程序也不是最优的，因为它忽略了由 covariates 诱导的 treatment effect heterogeneity。
+如果我们假设
+$$
+E(Y\mid Z, X) = \beta_0 + \beta_z Z  + \beta_x\tran  X  + \beta_{zx}\tran  X Z,
+$$
+则有
+\begin{eqnarray*}
+\tau(X) &=& 
+E(Y\mid Z=1, X) - E(Y\mid Z=0, X)  \\
+&=& (\beta_0 + \beta_z   + \beta_x\tran  X +\beta_{zx}\tran  X ) - ( \beta_0    + \beta_x\tran  X ) \\
+&=& \beta_z+  \beta_{zx}\tran  X,
+\end{eqnarray*}
+结合 ignorability，这意味着
+$$
+\tau = E\{ \tau(X)  \} =E(\beta_z+  \beta_{zx}\tran  X) = \beta_z + \beta_{zx}\tran E(X). 
+$$
+因此，$\tau$ 的 estimator 是 $ \hat{\beta}_z + \hat{\beta}_{zx}\tran  \bar{X}$，其中 $\hat{\beta}_z$ 是 $Z$ 的 regression coefficient，$\bar{X}$ 是 $X$ 的 sample mean。如果我们对 covariates 做中心化以保证 $\bar{X}=0$，那么 estimator 就只是 $Z$ 的 regression coefficient。为了简化程序，我们通常一开始就将 covariates 中心化；也回忆 \citet{lin2013} 在 Chapter \ref{chapter:rerandomization-regression} 中介绍的 estimator。\citet{rosenbaum1983central} 和 \citet{hirano2001estimation} 讨论过这个 estimator。 
+
+
+
+一般而言，我们也可以使用其他更复杂的模型来估计 causal effects。例如，如果我们分别基于 treated data 与 control data 构造两个 predictors $\hat{\mu}_1(X)$ 和 $\hat{\mu}_0(X)$，那么我们就得到 conditional average causal effect 的一个 estimator
+$$
+\hat\tau(X) = \hat{\mu}_1(X) - \hat{\mu}_0(X)
+$$
+以及 average causal effect 的一个 estimator：
+$$
+\hat{\tau}^{\text{reg}} = n^{-1} \sumn \{ \hat{\mu}_1(X_i) - \hat{\mu}_0(X_i) \}  . 
+$$
+上面的 estimator $\hat{\tau} $ 与 Chapter \ref{chapter:rerandomization-regression} 中讨论的 projective estimator 形式相同。它有时称为 {\it outcome regression} estimator。上面基于 OLS 的 estimators 是特殊情形。我们可以使用 nonparametric bootstrap（见 Chapter \ref{sec::bootstrap}）来估计 outcome regression estimator 的 standard error。 
+
+
+下面我再给出一个 binary outcomes 的例子。 
+
+ \begin{example}
+ [outcome regression estimator for binary outcomes]\label{eg::reg-binary}
+ 对 binary outcome，我们可以用 logistic model 对 $Y$ 建模：
+$$
+E(Y\mid Z, X) = \pr(Y =1\mid Z, X) = \frac{   e^{\beta_0 + \beta_z Z + \beta_x \tran X}  }
+{ 1+ e^{\beta_0 + \beta_z Z + \beta_x \tran X} } ,
+$$
+于是基于 coefficients 的 estimators $ \hat \beta_0, \hat \beta_z, \hat{\beta}_x $，我们得到 average causal effect 的如下 estimator：
+$$
+\hat{\tau} = n^{-1} \sumn \left\{  
+\frac{   e^{\hat\beta_0 +\hat \beta_z + \hat\beta_x \tran X_i}  }
+{ 1+ e^{\hat\beta_0 +\hat \beta_z  + \hat\beta_x \tran X_i} }  
+- \frac{   e^{\hat\beta_0 + \hat\beta_x \tran X_i}  }
+{ 1+ e^{\hat\beta_0   + \hat\beta_x \tran X_i} } 
+\right \}  . 
+$$
+这个 estimator 不只是 logistic model 中 treatment 的 coefficient。\footnote{如果 logistic outcome model 正确，那么 $\hat\beta_z$ 估计的是给定 covariates 后 treatment 对 outcome 的 conditional odds ratio，它不等于 $\tau$。
+\citet{freedman2008randomization} 曾警示不要在 CRE 中用 logistic regression coefficient 估计 $\tau$。
+关于 logistic regression 的更多细节，见 Chapter \ref{appendix::basic-linear-regression}。} 它是所有 coefficients 以及 covariates 经验分布的 nonlinear function。在 econometrics 中，这个 estimator 称为 logistic model 中 treatment 的 ``average partial effect'' 或 ``average marginal effect''。许多 econometric software packages 可以报告这个 estimator 及其 standard error。类似地，我们也可以基于 fully interacted logistic model 推导相应 estimator；见 Problem \ref{hw::outcome-two-logit}。 
+ \end{example}
+
+
+
+
+
+ 
+
+上面对 outcome conditional means 的 predictors 也可以来自其他 machine learning tools。特别地，\citet{hill2011bayesian} 倡导使用 tree methods 估计 $\tau$，而 \citet{wager2018estimation} 提出也用它们来估计 $\tau(X) $。\citet{wager2018estimation} 还将 tree methods 与下一章中的 {\it propensity score} 思想结合起来。自那以后，machine learning 与 causal inference 的交叉就成为一个活跃研究领域 \citep[e.g.,][]{hahn2020bayesian, kunzel2019metalearners}。 
+
+
+上述基于 outcome regressions 的方法最大的问题，是它对 outcome model 的 specification 很敏感。Problem \ref{hw::lalonde-obs-reg} 给出了这样一个例子。取决于 empirical research 与 publication 的激励，人们可能会在搜索一大组 candidate models 后，报告对自己有利的 causal effects estimates，却不承认这个 model searching process。这是 causal inference 中 $p$-hacking 的一个主要来源。Problem \ref{hw::lalonde-obs-reg} 已经暗示了这个问题。\citet{leamer1978specification} 批评了 empirical research 中的这种做法。  
+
+ 
+
+
+\section{Homework Problems}
+
+
+\homeworksolutionref{10}
+\paragraph{A simple identity}\label{hw::simple-identity-taus}
+
+证明 $\tau = \pr(Z=1) \tau_\textsc{T} + \pr(Z=0)\tau_\textsc{C}$。 
+
+
+\paragraph{Nonparametric identification of other causal effects}\label{hw::nonparametric-identification-dce-qce}
+
+在 ignorability 下，证明：
+\begin{enumerate}
+\item
+ distributional causal effect
+ $$
+\textsc{DCE}_y = \pr\{  Y(1) > y  \} - \pr\{ Y(0) > y \} 
+$$
+对所有 $y$ 都是 nonparametrically identifiable 的；
+\item
+quantile causal effect 
+$$
+\textsc{QCE}_q = \text{quantile}_q\{ Y(1) \} - \text{quantile}_q\{ Y(0) \},
+$$
+对所有 $q$ 都是 nonparametrically identifiable 的，其中 $\text{quantile}_q\{ \cdot \} $ 是 random variable 的第 $q$ 个 quantile。 
+\end{enumerate}
+
+
+
+Remark:
+在 probability theory 中，$\pr\{  Y(z) \leq y \}$ 是 cumulative distribution function，而 $\pr\{  Y(z) > y \}$ 是 potential outcome $Y(z)$ 的 survival function。
+distributional causal effect 比较 treatment 与 control 下 potential outcomes 的 survival functions。 
+ 
+quantile causal effect 比较 potential outcomes 的 marginal quantiles，这不同于 individual causal effect 的 quantile
+$$
+\tau_q =  \text{quantile}_q\{ Y(1)  - Y(0)\} .
+$$
+事实上，$\tau_q$ 不可识别；其含义是 marginal distributions $\pr\{  Y(1) \leq  y  \} $ 和 $ \pr\{ Y(0) \leq  y \} $ 不能唯一决定 $\tau_q$。 
+
+
+\paragraph{Outcome imputation estimator in the fully interacted logistic model}\label{hw::outcome-two-logit}
+
+本题扩展 Example \ref{eg::reg-binary}。 
+
+假设 binary outcome 服从 logistic model
+$$
+E(Y\mid Z, X) = \pr(Y =1\mid Z, X) = \frac{   e^{\beta_0 + \beta_z Z + \beta_x \tran X + \beta_{xz}  \tran X Z }  }
+{ 1+ e^{\beta_0 + \beta_z Z + \beta_x \tran X + \beta_{xz}  \tran X Z} } .
+$$
+average causal effect 对应的 outcome regression estimator 是什么？
+
+\paragraph{Data analysis: stratification and regression}\label{hw::stratification-example-rosenbaum}
+
+使用 package \ri{senstrat} 中的 dataset \ri{homocyst}。
+outcome 是 \ri{homocysteine}，即 homocysteine level；treatment 是 \ri{z}，其中 $z=1$ 表示 daily smoker，$z=0$ 表示 never smoker。Covariates 为 \ri{female, age3, ed3, bmi3, pov2}，其详细解释见 package；\ri{st} 是 stratum indicator，由所有离散 covariates 的组合定义。
+
+
+\begin{enumerate}
+[(1)]
+\item
+有多少 strata 只含 treated units 或只含 control units？这些 strata 中的 units 占比是多少？删去这些 strata，并对 observational study 进行 stratified analysis。报告 average causal effect 的 point estimator、variance estimator 和 95\% confidence interval。
+
+\item
+运行 outcome 对 treatment indicator 和 covariates 且不含 interactions 的 OLS。报告 treatment 的 coefficient 和 robust standard error。
+
+删去只含 treated units 或只含 control units 的 strata。重新运行 OLS 并报告结果。 
+
+
+\item
+应用 \citet{lin2013} 的 average causal effect estimator。报告 treatment 的 coefficient 和 robust standard error。
+
+如果不删去只含 treated units 或只含 control units 的 strata，会发生什么？
+
+
+\item
+比较上述三个分析的结果。哪一个更可信？
+
+\end{enumerate} 
+
+
+
+\paragraph{Ignorability versus strong ignorability}\label{hw::ignorability-difference}
+
+
+给出一个例子，使得 ignorability 成立，但 strong ignorability 不成立。 
+
+
+Remark: 这与一个经典 probability problem 有关：寻找三个 random variables $A,B,C$，使得
+$$
+A\ind C \text{ and } B\ind C \text{ but } (A,B) \nind C.
+$$
+
+
+\paragraph{Recommended reading}
+
+
+\citet{cochran1965planning} 是 observational studies 的经典参考文献。它包含许多有用洞见，但没有使用 formal potential outcomes framework。
+Dylan Small 于 2015 年创办了一本新期刊，名为 {\it Observational Studies} \citep{small2015introduction}，并将 W. G. Cochran 的旧文 ``Observational Studies'' 重印为 \citet{cochran2015}。许多 leading researchers 也对 \citet{cochran2015} 作出了富有洞见的评论。 

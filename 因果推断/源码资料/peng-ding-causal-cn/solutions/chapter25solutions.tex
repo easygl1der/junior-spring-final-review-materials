@@ -1,0 +1,186 @@
+\chapter{Solutions to Chapter 25: Application of the Instrumental Variable Method: Mendelian Randomization}
+\label{sol:chapter25}
+
+\begin{exercisesolution}{Data analysis}{\ri{mr.raps} package 中 \ri{bmi.bmi} 数据的 MR 分析}
+\cref{para::data-bmi-bmi} 要求分析 \ri{mr.raps} package 中的 \ri{bmi.bmi} data。这是一个很有用的 sanity check：exposure 是 BMI，outcome 也是 BMI。因此，在量纲对齐并且 MR assumptions 近似成立时，目标 slope 应当接近 $1$。换句话说，这个数据不是为了发现一个新因果效应，而是为了检验 \cref{chapter::iv-mr} 中 summary-statistics MR 方法在一个 positive-control problem 上的行为。
+
+本题沿用 \cref{assume::MR-summary} 的记号。对第 $j$ 个 genetic variant，令
+\[
+\hat{\gamma}_j=\text{estimated association with exposure BMI},
+\qquad
+\hat{\Gamma}_j=\text{estimated association with outcome BMI}.
+\]
+若所有 variants 都满足 \cref{def::linear-iv-model-mr} 中的 exclusion restriction，那么 population level 上有
+\[
+\Gamma_j=\beta\gamma_j,\qquad j=1,\ldots,p.
+\]
+若允许 direct genetic effects，则 \cref{def::linear-model-invalid-iv-mr} 给出
+\[
+\Gamma_j=\alpha_j+\beta\gamma_j.
+\]
+因此，数据分析至少应报告三类结果：固定效应 IVW/Fisher weighting、带 intercept 的 Egger regression，以及对许多弱工具和 possible pleiotropy 更稳健的 MR-RAPS。
+
+\paragraph{Reproducible code.}
+截至本次运行，\ri{mr.raps} 已不在当前 CRAN 主仓库中，因此我从 CRAN archive 安装版本 \ri{0.2} 到临时 library 后读取数据。下面代码同时给出数据清理、\cref{sec::mr-fixed-effect} 中的 Fisher weighting、\cref{sec::mr-examples} 中的 Egger regression，以及 package 自带的 MR-RAPS 分析。
+
+\begin{lstlisting}
+## A temporary library avoids modifying the project library.
+tmp_lib <- tempfile("mr_raps_lib_")
+dir.create(tmp_lib, recursive = TRUE)
+.libPaths(c(tmp_lib, .libPaths()))
+
+install.packages("nortest", repos = "https://cloud.r-project.org")
+install.packages(
+  "https://cran.r-project.org/src/contrib/Archive/mr.raps/mr.raps_0.2.tar.gz",
+  repos = NULL,
+  type = "source"
+)
+
+library(mr.raps)
+data("bmi.bmi")
+
+## Keep only harmonized variants recommended by the data object.
+bmi0 <- bmi.bmi
+bmi  <- subset(bmi0, mr_keep)
+
+fisher.weight <- function(est, se) {
+  num <- sum(est / se^2)
+  den <- sum(1 / se^2)
+  est0 <- num / den
+  se0  <- sqrt(1 / den)
+  c(est = est0,
+    se = se0,
+    z = est0 / se0,
+    p = 2 * pnorm(-abs(est0 / se0)))
+}
+
+bmi$iv <- with(bmi, beta.outcome / beta.exposure)
+
+## Chapter 25 uses two ratio standard errors.  The first ignores
+## uncertainty in beta.exposure; the second includes it by delta method.
+bmi$se.iv  <- with(bmi, se.outcome / abs(beta.exposure))
+bmi$se.iv1 <- with(bmi,
+  sqrt(se.outcome^2 + iv^2 * se.exposure^2) / abs(beta.exposure))
+
+fisher_ignore_exposure_se <- fisher.weight(bmi$iv, bmi$se.iv)
+fisher_delta_se           <- fisher.weight(bmi$iv, bmi$se.iv1)
+
+egger0 <- lm(beta.outcome ~ 0 + beta.exposure,
+             data = bmi,
+             weights = 1 / se.outcome^2)
+egger1 <- lm(beta.outcome ~ beta.exposure,
+             data = bmi,
+             weights = 1 / se.outcome^2)
+
+raps_simple <- mr.raps(bmi$beta.exposure,
+                       bmi$beta.outcome,
+                       bmi$se.exposure,
+                       bmi$se.outcome)
+
+raps_over <- mr.raps(bmi$beta.exposure,
+                     bmi$beta.outcome,
+                     bmi$se.exposure,
+                     bmi$se.outcome,
+                     over.dispersion = TRUE,
+                     loss.function = "l2")
+
+raps_robust <- mr.raps(bmi$beta.exposure,
+                       bmi$beta.outcome,
+                       bmi$se.exposure,
+                       bmi$se.outcome,
+                       over.dispersion = TRUE,
+                       loss.function = "huber")
+\end{lstlisting}
+
+\paragraph{Data summary.}
+The data contain $812$ SNPs and $28$ columns. The flag \ri{mr_keep} removes $19$ ambiguous variants, leaving
+\[
+p=793
+\]
+harmonized genetic variants. The exposure associations are small:
+\[
+\min_j\hat{\gamma}_j=-0.07804,\qquad
+\max_j\hat{\gamma}_j=0.05705,
+\]
+and $256$ of the $793$ retained variants have $|\hat{\gamma}_j|<0.005$. This already warns us that simple ratio estimates
+\[
+\hat{\beta}_j=\frac{\hat{\Gamma}_j}{\hat{\gamma}_j}
+\]
+can be unstable for weak variants. This is the summary-statistics analogue of the weak-IV issue discussed earlier in the IV chapters.
+
+\paragraph{Fixed-effect and Egger estimates.}
+Using the retained $793$ variants, the fixed-effect estimator that ignores uncertainty in $\hat{\gamma}_j$ gives
+\[
+\hat{\beta}_{\text{fisher}1}=0.9284,\qquad
+\widehat{\se}=0.0099.
+\]
+Including the delta-method uncertainty from $\hat{\gamma}_j$ in the ratio standard error gives
+\[
+\hat{\beta}_{\text{fisher}0}=0.8328,\qquad
+\widehat{\se}=0.0133.
+\]
+Both standard errors are small because the data contain many variants, but the two point estimates differ noticeably. The difference is a symptom that weak variants and ratio instability are not negligible here.
+
+The WLS regression without intercept,
+\[
+\hat{\Gamma}_j=\beta\hat{\gamma}_j+\text{error}_j,
+\qquad
+w_j=\frac{1}{\se_{Yj}^2},
+\]
+is algebraically the same as $\hat{\beta}_{\text{fisher}1}$. It gives
+\[
+\hat{\beta}_{\text{egger,no-int}}=0.9284,
+\qquad
+\widehat{\se}_{\text{OLS}}=0.0140.
+\]
+The OLS standard error is larger than the simple Fisher standard error because the residual standard error from the weighted regression is about $1.416$, indicating more dispersion than the ideal fixed-effect model would predict.
+
+For the Egger regression with intercept,
+\[
+\hat{\Gamma}_j=a+\beta\hat{\gamma}_j+\text{error}_j,
+\]
+the fitted coefficients are
+\[
+\hat a=-0.000173,\qquad
+\widehat{\se}(\hat a)=0.000168,\qquad
+\text{p}_{}=0.303,
+\]
+and
+\[
+\hat{\beta}_{\text{egger}}=0.9279,\qquad
+\widehat{\se}=0.0141.
+\]
+The intercept is not statistically distinguishable from zero, so this particular diagnostic does not show strong evidence of directional pleiotropy. In the language of \cref{def::linear-model-invalid-iv-mr}, the weighted average direct effect is small relative to its standard error. This does not prove all $\alpha_j$'s are zero; it only says that the Egger intercept test does not detect a systematic nonzero average direct effect.
+
+\paragraph{MR-RAPS estimates.}
+The package \ri{mr.raps} is designed for many weak instruments and possible idiosyncratic pleiotropy. On the same retained variants, the simple MR-RAPS fit gives
+\[
+\hat{\beta}_{\text{RAPS}}=1.0098,\qquad
+\widehat{\se}=0.0150.
+\]
+Allowing overdispersion with squared-error loss gives
+\[
+\hat{\beta}_{\text{RAPS,over}}=1.0070,\qquad
+\widehat{\se}=0.0158,
+\]
+and the robust Huber version gives
+\[
+\hat{\beta}_{\text{RAPS,robust}}=1.0048,\qquad
+\widehat{\se}=0.0162.
+\]
+The estimated overdispersion parameters are very small, and the package warns that the simple model without overdispersion is adequate. These RAPS estimates are close to the positive-control target value $1$, unlike the simpler IVW estimates near $0.93$.
+
+\paragraph{Interpretation.}
+这个例子的重点不只是说 BMI causes BMI；这一点本来就是 positive-control design 的一部分。更有用的是方法论层面的教训：
+\begin{enumerate}
+\item
+The raw fixed-effect IVW estimator is sensitive to weak genetic associations, because many ratios $\hat{\Gamma}_j/\hat{\gamma}_j$ divide by small $\hat{\gamma}_j$'s.
+\item
+The Egger intercept diagnostic does not detect clear directional pleiotropy in this dataset, but the slope remains close to the simple IVW slope, not to $1$.
+\item
+MR-RAPS moves the estimate close to $1$, which is the scientifically expected answer for a BMI-on-BMI positive control. This supports the point made in \cref{chapter::iv-mr}: summary-statistics MR needs methods that account for weak instruments and pleiotropic noise, not only the clean linear IV identity $\Gamma_j=\beta\gamma_j$.
+\end{enumerate}
+
+\paragraph{Remark.}
+This exercise is a useful stress test for MR practice. If a method does poorly when the exposure and outcome are essentially the same trait, then we should be cautious when applying it to genuinely biological questions where treatment definition, exclusion restriction, sample overlap, measurement error, and pleiotropy are all harder to defend. In this sense, \ri{bmi.bmi} is less a substantive causal discovery exercise than a calibration exercise for the tools introduced in \cref{sec::mr-fixed-effect,sec::mr-examples}.
+\end{exercisesolution}

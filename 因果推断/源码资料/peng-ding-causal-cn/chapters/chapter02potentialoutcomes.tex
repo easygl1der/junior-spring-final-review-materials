@@ -1,0 +1,332 @@
+\chapter{Potential Outcomes}
+ \label{chapter::potential-outcomes}
+
+
+\section{Experimentalists' view of causal inference}
+
+
+
+
+
+
+\citet{rubin1975bayesian} 和 \citet{holland1986statistics} 提出了这句格言：
+\begin{quote}
+``no causation without manipulation.''
+\end{quote}
+并不是所有人都同意这个观点。不过，在思考 causal relationships 时，它很有助于澄清其中的含混之处。本书遵循这一观点，并用 potential outcomes framework 来定义 causal effects \citep{Neyman:1923, Rubin:1974}。在这个框架中，一个实验，或者至少一个思想实验，有一个 treatment，而我们关心的是这个 treatment 对一个 outcome 或多个 outcomes 的 effect。有时，{\it treatment} 也称为 {\it intervention} 或 {\it manipulation}。
+
+
+\begin{example}\label{eg::aspirin}
+如果我们关心服用 aspirin 与否对缓解头痛的 effect，那么 intervention 就是服用 aspirin 与否。
+\end{example}
+
+
+
+\begin{example}\label{eg::jobtraining}
+如果我们关心参加 job training program 与否对就业和工资的 effect，那么 intervention 就是参加这个 job training program 与否。
+\end{example}
+
+
+\begin{example}\label{eg::classroom}
+如果我们关心在 small classroom 或 large classroom 学习对 standardized test scores 的 effect，那么 intervention 就是在 small classroom 学习与否。
+\end{example} 
+
+\begin{example}\label{eg::gotv}
+\citet{gerber2008social} 关心不同 get-out-to-vote messages 对 voting behavior 的 effect。这里的 intervention 是不同的 get-out-to-vote messages。
+\end{example} 
+
+
+\begin{example}\label{eg::bmi}
+\citet{pearl2018does} 声称我们可以推断 obesity 对 life span 的 effect。
+衡量 obesity 的一个常用指标是 body mass index (BMI)，定义为 body mass 除以 body height 的平方，单位为 kg/m$^2$。因此，intervention 可以是不同水平的 BMI。
+\end{example} 
+
+
+不过，上面这些 interventions 的含混程度并不相同。Examples \ref{eg::aspirin}--\ref{eg::gotv} 中 interventions 的含义相对清楚，但 Example \ref{eg::bmi} 中针对 BMI 的 intervention 含义就不那么清楚。具体来说，我们可以设想降低 BMI 的不同版本：更健康的饮食、更多体育锻炼、bariatric surgery 等等。这些不同版本的 intervention 对 outcome 可能有相当不同的 effects。在本书中，如果没有进一步说明，我们会把 Example \ref{eg::bmi} 中的 intervention 看作 ill-defined。
+
+ 
+
+另一个 ill-defined intervention 是 race。Racial discrimination 是 labor market 中的一个重要问题，但并不容易想象一个实验去改变任何 experimental unit 的 race。\citet{bertrand2004emily} 给出了一个有趣的实验，它部分回答了这个问题。
+
+\begin{example}\label{eg::race}
+回顾 Example \ref{eg::bertrand2004emily-chapter1}。
+\citet{bertrand2004emily} 随机改变 resumes 上的姓名，并比较带有 African-American-sounding names 或 White-sounding names 的 resumes 的 callback rates。对于每一份 resume，intervention 是 Black-sounding name 或 White-sounding name 的 binary indicator，而 outcome 是 callback 的 binary indicator。我在 Section \ref{sec::twobytwotables-withresume} 中分析过下面这个 two-by-two table：
+
+\begin{center} 
+\begin{tabular}{ccc}
+\hline 
+ &   callback & no  callback \\
+ \hline 
+Black  & 157 & 2278\\
+White   & 235 & 2200\\
+\hline 
+\end{tabular}
+\end{center}
+
+由上表，我们可以比较 Black-sounding names 和 White-sounding names 获得 callback 的 probabilities：
+$$
+\frac{157}{2278 + 157} - \frac{235}{  2200 + 235 } = 6.45\% - 9.65\% = - 3.20\% < 0
+$$
+对应 Fisher exact test 的 $p$-value 远小于 $0.001$。
+\end{example}
+
+在 \citet{bertrand2004emily} 的实验中，treatment 是 experimenters 可以操纵的 {\it perceived race}。他们设计了一个实验来回答一个 well-defined causal question。不过，批评者可能会提出这样的担忧：perceived race 的 causal effect 可能不同于 actual race 的 causal effect。
+
+
+
+\section{Formal notation of potential outcomes}
+\label{sec::po-sciencetable}
+
+考虑一项包含 $n$ 个 experimental units 的研究，用 $i= 1, \ldots, n$ 编号。作为起点，我们关注一个有两个水平的 treatment：$1$ 表示 treatment，$0$ 表示 control。对于每个 unit $i$，我们关心的 outcome $Y$ 有两个版本：
+$$
+Y_i(1)  \text{ and } Y_i(0),
+$$ 
+它们是在假想 interventions 1 和 0 下的 potential outcomes。
+%The founding father of the Statistics Department at the University of California Berkeley, Professor Jerzy Neyman, first used this notation in his thesis written in Polish \citep{Neyman:1923}. 
+\citet{Neyman:1923} 最早使用了这一记号。它看起来直观，但包含一些隐含假设。\citet{Rubin:1980} 对这些隐含假设作了如下澄清。
+
+\begin{assumption}
+[no interference]
+\label{sutva1}
+Unit $i$ 的 potential outcomes 不依赖于其他 units 的 treatments。这有时称为 {\it no-interference} assumption。
+\end{assumption}
+
+
+\begin{assumption}
+[consistency]
+\label{sutva2}
+不存在 treatment 的其他版本。等价地说，我们要求 treatment levels 是 well-defined 的，或者至少对所关心的 outcome 没有含混之处。这有时称为 {\it consistency} assumption。\footnote{这里的 consistency 概念与 Chapter \ref{chapter::basic-prob-append} 中 Definition \ref{def::consistency} 的 consistency 完全不同。}
+\end{assumption}
+
+
+%\begin{enumerate}
+%[(1)]
+%\item\label{sutva1}
+%Unit $i$'s potential outcomes do not depend on other units' treatments. This is sometimes called the {\it no-interference} assumption. 
+%
+%\item\label{sutva2}
+%There are no other versions of the treatment. Equivalently, we require that the treatment level be well-defined, or have no ambiguity at least for the outcome of interest. This is sometimes called the {\it consistency} assumption. 
+%
+%\end{enumerate}
+
+Assumption \ref{sutva1} 在 infectious diseases 或 network experiments 中可能被违反。例如，如果我的一些朋友接种了 flu shots，那么即使我没有接种 flu shot，我感染 flu 的机会也会下降；如果我的朋友在 Facebook 上看到了某个广告，那么即使我没有直接看到这个广告，我购买该产品的机会也会增加。在现代 causal inference 文献中，研究存在 interfering units 的情形是一个活跃的研究方向 \citep[e.g.,][]{hudgens2008toward}。
+
+
+对于包含复杂组成部分的 treatments，Assumption \ref{sutva2} 可能被违反。例如，在研究 cigarette smoking 对 lung cancer 的 effect 时，cigarettes 的类型可能很重要；在研究 college education 对 income 的 effect 时，college education 的类型和专业可能很重要。
+
+
+\citet{Rubin:1980} 将上面的 Assumptions \ref{sutva1} 和 \ref{sutva2} 合称为 Stable Unit Treatment Value Assumption (SUTVA)。
+
+
+\begin{assumption}
+[SUTVA]
+\label{sutva-complete}
+Assumptions \ref{sutva1} 和 \ref{sutva2} 都成立。
+\end{assumption}
+
+
+在 SUTVA 下，\citet{Rubin:2005} 将 potential outcomes 构成的 $n\times 2$ 矩阵称为 Science Table：
+\begin{center}
+\begin{tabular}{ccc}
+\hline 
+$i$ & $Y_i(1)$ &  $Y_i(0)$ \\
+ \hline 
+$1$ & $Y_1(1)$ &  $Y_1(0)$ \\
+$2$ & $Y_2(1)$ &  $Y_2(0)$ \\
+\vdots  &\vdots & \vdots   \\
+$n$ & $Y_n(1)$ &  $Y_n(0)$ \\
+\hline 
+\end{tabular}
+\end{center}  
+
+
+由于 Neyman 和 Rubin 对 statistical causal inference 作出了基础性贡献，potential outcomes framework 有时也称为 Neyman Model、Neyman--Rubin Model 或 Rubin Causal Model。在本书和我的其他科学写作中，我更偏好使用 ``the potential outcomes framework'' 这个说法。
+ 
+ 
+Causal effects 是 Science Table 的函数。推断 individual causal effects
+$$
+\tau_i =  Y_i(1) - Y_i(0) ,\quad (i=1, \ldots, n)
+$$ 
+本质上很有挑战，因为对于每个 unit $i$，我们只能观测到 $Y_i(1)$ 或 $Y_i(0)$ 其中之一，也就是说，我们只能观测到 Science Table 的一半。作为起点，本书的大部分内容聚焦于 average causal effect (ACE)：
+\begin{eqnarray*}
+\tau  &=&  n^{-1} \sumn \{  Y_i(1) - Y_i(0) \}  \\
+&=&  n^{-1} \sumn  Y_i(1) -  n^{-1} \sumn  Y_i(0).
+\end{eqnarray*} 
+但我们也可以把讨论扩展到许多其他参数（也称为 {\it estimands}）。Problem \ref{hw::nonlinear-causal-estimands} 给出了一些例子。
+
+
+\subsection{Causal effects, subgroups, and the non-existence of Yule--Simpson Paradox}
+
+
+如果有两个由 binary variable $X_i $ 定义的 subgroups，我们可以将 subgroup causal effects 定义为
+$$
+\tau_x = \frac{  \sumn  I(X_i = x) \{  Y_i(1) - Y_i(0) \}    }{   \sumn  I(X_i = x)    },\quad (x=0,1) 
+$$
+其中 $I(\cdot)$ 是 indicator function。
+一个简单恒等式是
+$$
+\tau =  \pi_1 \tau_1  +  \pi_0 \tau_0
+$$
+其中 $\pi_x =  \sumn  I(X_i = x)  / n$ 是满足 $X_i = x$ 的 units 所占比例 $(x=0,1)$。因此，如果 $\tau_1  > 0$ 且 $ \tau_0 > 0$，则必有 $\tau > 0$。所以 Yule--Simpson Paradox 不可能发生在 causal effects 上。
+
+
+
+\subsection{Subtlety of the definition of the experimental unit}
+
+现在讨论一个与 experimental unit 定义有关的细微之处。简单地说，experimental unit 可以不同于 physical unit。例如，如果我之前没有服用 aspirin，头痛没有消失，而现在服用 aspirin 后头痛消失了，那么你可能会认为，我们同时观测到了我在 control 和 treatment 下的 potential outcomes。令 $i$ 表示我自己，并令 $Y=1$ 表示没有头痛的 indicator。那么，上述启发式想法会给出 $Y_i(0) = 0$ 且 $Y_i(1) = 1$，于是看起来 aspirin 治好了我的头痛。但这个逻辑非常错误，因为它误解了 experimental unit 的定义。在不同时间点，同一个 physical person 的我会成为两个不同的 experimental units，分别编号为 ``$i,\textup{before}$'' 和 ``$i,\textup{after}$''。因此，我们有四个 potential outcomes
+$$
+Y_{i,\textup{before}}(0)=0, \quad  Y_{i,\textup{before}}(1)=?,\quad
+Y_{i,\textup{after}}(0)=?, \quad  Y_{i,\textup{after}}(1)=1,
+$$ 
+其中两个被观测到，另外两个缺失。Individual causal effects
+$$
+Y_{i,\textup{before}}(1) -  Y_{i,\textup{before}}(0) = ? - 0 \text{ and } Y_{i,\textup{after}}(1)  - Y_{i,\textup{after}}(0) = 1 - ?
+$$ 
+是未知的。即使我不服用 aspirin，头痛也可能会消失：
+$$
+Y_{i,\textup{after}}(0)=1, \quad  Y_{i,\textup{after}}(1)=1
+$$
+这意味着 zero effect；也有可能如果我不服用 aspirin，头痛就不会消失：
+$$
+Y_{i,\textup{after}}(0)=0, \quad  Y_{i,\textup{after}}(1)=1
+$$
+这意味着 aspirin 有 positive effect。
+
+如果 before 和 after 两个时期的 control potential outcomes 是稳定的，那么这个错误的启发式论证也许会得到正确答案：
+$$
+Y_{i,\textup{before}}(0) = Y_{i,\textup{after}}(0) = 0 .
+$$ 
+但这个假设相当强，而且从根本上不可检验。\citet{rubin2001comment} 在 self-experimentation for causal effects 的语境中给出了相关讨论。
+
+
+
+\section{Treatment assignment mechanism}\label{sec::Treatment-ScienceTable}
+
+令 $Z_i$ 为 unit $i$ 的 binary treatment indicator，并将其向量化为 $\boldsymbol{Z} = (Z_1, \ldots, Z_n)$。Unit $i$ 的 observed outcome 是 potential outcomes 和 treatment indicator 的函数：
+\begin{eqnarray} 
+Y_i &=& \begin{cases}
+   Y_i(1),& \text{if } Z_i = 1\\
+   Y_i(0), & \text{if } Z_i = 0
+\end{cases} \label{eq::yobsdef} \\
+&=& Z_i Y_i(1) + (1-Z_i)Y_i(0) \label{eq::fundamentalbridge} \\
+&=& Y_i(0)  + Z_i\{  Y_i(1) - Y_i(0)  \} \label{eq::teh} \\
+&=&Y_i(0)  + Z_i\tau_i . \label{eq::teh2} 
+\end{eqnarray}  
+Equation \eqref{eq::yobsdef} 是 observed outcome 的定义。Equation \eqref{eq::fundamentalbridge} 与 \eqref{eq::yobsdef} 等价。这是一个平凡事实，但 \citet{pearl2010brief} 将其视为连接 potential outcomes 和 observed outcome 的 fundamental bridge。Equations \eqref{eq::teh} 和 \eqref{eq::teh2} 突出了这样一个事实：individual causal effect $\tau_i =  Y_i(1) - Y_i(0)  $ 可以随 units 而异，即存在 heterogeneity。
+
+
+实验只揭示 unit $i$ 的两个 potential outcomes 之一，另一个则缺失：
+\begin{eqnarray*} 
+Y_i^\textup{mis} &=& \begin{cases}
+   Y_i(0),& \text{if } Z_i = 1\\
+   Y_i(1), & \text{if } Z_i = 0
+\end{cases}  \\
+&=& Z_i Y_i(0) + (1-Z_i)Y_i(1) .
+\end{eqnarray*}  
+缺失的 potential outcome 对应于 unit $i$ 的相反 treatment level。由于这个原因，potential outcomes framework 也称为 {\it counterfactual} framework。\footnote{术语 ``counterfactual'' 在哲学中更流行，这可能是因为 \citet{lewis1973causation}。}
+这个名称可能造成困惑，因为在实验之前，两个 potential outcomes 都可能被观测到。只有在实验之后，一个 potential outcome 被观测到，而另一个 potential outcome 才成为 counterfactual。
+
+
+Treatment assignment mechanism，也就是 $\boldsymbol{Z} $ 的 probability distribution，在推断 causal effects 时起着重要作用。下面几个简单的数值例子说明了这一点。我们先从 Normal distributions 生成 potential outcomes，使 average causal effect 接近 $-0.5$。
+\begin{lstlisting}
+> n  = 500
+> Y0 = rnorm(n)
+> tau = - 0.5 + Y0
+> Y1 = Y0 + tau
+\end{lstlisting} 
+如果一位 perfect doctor 知道 individual causal effect 非负，就会把 treatment 分配给该 patient。这会导致 observed outcomes 的 difference in means 为正：
+\begin{lstlisting}
+> Z = (tau >= 0)
+> Y = Z*Y1 + (1 - Z)*Y0
+> mean(Y[Z==1]) - mean(Y[Z==0])
+[1] 2.166509
+\end{lstlisting} 
+%Another perfect doctor ranks the individual causal effects and assigns the treatment to the patient if the rank is larger than or equal to $n/2$. This again results in a positive difference in means of the observed outcomes: 
+%\begin{lstlisting}
+%> Z = (rank(tau) >= n/2)
+%> Y = Z*Y1 + (1 - Z)*Y0
+%> mean(Y[Z==1]) - mean(Y[Z==0])
+%[1] 1.851417
+% \end{lstlisting} 
+一位 clueless doctor 不知道任何关于 individual causal effects 的信息，只是通过抛一枚 fair coin 来给 patients 分配 treatment。这会导致 observed outcomes 的 difference in means 接近真实的 average causal effect：
+\begin{lstlisting}
+> Z = rbinom(n, 1, 0.5)
+> Y = Z*Y1 + (1 - Z)*Y0
+> mean(Y[Z==1]) - mean(Y[Z==0])
+[1] -0.552064 
+  \end{lstlisting} 
+  
+ 上面的例子是假想的，因为没有医生能完美知道 individual causal effects。不过，这些例子确实展示了 treatment assignment mechanism 的关键作用。本书将围绕 treatment assignment mechanism 来组织各个主题。
+
+
+
+
+ 
+\section{Homework Problems}
+
+
+
+\homeworksolutionref{02}
+\paragraph{A perfect doctor}
+\label{hw::perfect-doctor}
+
+沿用 Section \ref{sec::Treatment-ScienceTable} 中第一个 perfect doctor 例子，假设 potential outcomes 是由如下方式生成的 random variables：
+$$
+Y(0) \sim \textsc{N}(0,1), \quad \tau = -0.5 + Y(0),\quad Y(1)  = Y(0) + \tau .
+$$
+Binary treatment 由 treatment effect 决定，即 $Z = 1(\tau \geq 0)$；observed outcome 由 potential outcomes 和 treatment 决定，即 $Y = ZY(1) + (1-Z) Y(0)$。计算 difference in means
+$$
+E(Y\mid Z=1) - E(Y\mid Z=0).
+$$
+
+
+Remark: truncated Normal random variable 的均值等于
+$$
+E(X\mid   a < X < b ) = \mu - \sigma \frac{   \phi \left(  \frac{b-\mu}{\sigma} \right )   -  \phi \left(  \frac{a-\mu}{\sigma} \right )   }
+{   \Phi \left(  \frac{b-\mu}{\sigma} \right )   -  \Phi \left(  \frac{a-\mu}{\sigma} \right )   } , 
+$$
+其中 $X \sim \textsc{N}(\mu, \sigma^2)$，$\phi(\cdot)$ 和 $\Phi(\cdot)$ 分别是 standard Normal random variable $\textsc{N}(0,1)$ 的 probability density function 和 cumulative distribution function。
+
+
+
+\paragraph{Nonlinear causal estimands}
+\label{hw::nonlinear-causal-estimands}
+
+
+
+给定 $n$ 个 units 在 treatment 和 control 下的 potential outcomes $\{  (Y_i(1), Y_i(0) \}_{i=1}^n$，difference in means 等于 individual treatment effects 的均值：
+$$
+\bar{Y}(1) - \bar{Y}(0) = n^{-1} \sum_{i=1}^n  \{ Y_i(1) - Y_i(0) \}.
+$$
+因此，average treatment effect 是一个 {\it linear} causal estimand，其含义是：average potential outcomes 的差等于 individual potential outcomes 差值的平均。
+
+
+其他 estimands 可能不是 linear 的。例如，我们可以将 median treatment effect 定义为
+$$
+\delta_1 = \text{median}\{  (Y_i(1) \}_{i=1}^n - \text{median}\{  (Y_i(0) \}_{i=1}^n,
+$$
+它一般不同于 individual treatment effect 的 median
+$$
+\delta_2 = \text{median}\{  (Y_i(1) - Y_i(0) \}_{i=1}^n .
+$$
+
+\begin{enumerate}
+\item
+分别给出满足 $\delta_1 = \delta_2$、$\delta_1 > \delta_2$ 和 $\delta_1 < \delta_2$ 的数值例子。
+
+
+\item
+哪个 estimand 更合理，$\delta_1$ 还是 $\delta_2$？为什么？用例子来说明你的结论。如果你觉得 $\delta_1$ 和 $\delta_2$ 在不同应用中都可能合理，也可以给出例子来分别说明这两个 estimands。
+\end{enumerate}
+
+
+
+
+\paragraph{Average and individual effects}
+
+给出一个数值例子，使得 $\tau = n^{-1} \sum_{i=1}^n  \{ Y_i(1) - Y_i(0) \}  >0$，但满足 $Y_i(1) > Y_i(0)$ 的 units 比例小于 $0.5$。也就是说，average causal effect 为正，但 treatment 使少于一半的 units 受益。
+
+
+\paragraph{Recommended reading}
+
+\citet{holland1986statistics} 是一篇关于 statistical causal inference 的经典综述文章。它让 potential outcomes framework 的名称 ``Rubin Causal Model'' 流行起来。在 University of California Berkeley，出于显而易见的原因，我们称其为 ``Neyman Model''。

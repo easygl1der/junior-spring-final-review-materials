@@ -1,0 +1,745 @@
+
+\chapter{Stratification and Post-Stratification in Randomized Experiments}
+ \chaptermark{Stratification and Post-Stratification}
+\label{chapter::stratification-poststratification}
+
+\begin{quotation}
+Block what you can and randomize what you cannot.  
+
+--- \citet[][page 103]{box1978statistics}
+\end{quotation}
+
+这是 George Box 第二著名的引语\footnote{他最著名的引语是 ``all models are wrong but some are useful'' \citep[][page 202]{box1979robustness}.}。本章将解释它的含义。
+
+
+
+\section{Stratification}
+
+
+
+A CRE 可能会偶然产生不理想的 treatment allocation。我们先从带有离散 covariate $X_i   \in \{ 1, \ldots, K \}$ 的 CRE 出发，并定义 $n_{[k]} = \#\{ i: X_i    =k  \}$ 和 $\pi_{[k]} = n_{[k]} / n$ 分别为 stratum $k$ $(k=1, \ldots, K)$ 中 units 的数量与比例。CRE 将 $n_1$ 个 units 分配到 treatment group，将 $n_0$ 个 units 分配到 control group，于是在 stratum $k$ 内得到
+$$
+n_{[k]1} = \#\{ i: X_i   = k, Z_i = 1 \},\quad
+n_{[k]0} = \#\{ i: X_i   = k, Z_i = 0 \}
+$$
+个分别位于 treatment group 和 control group 的 units。以正概率，某些 $k$ 的 $n_{[k]1}$ 或 $n_{[k]0}$ 会等于零；也就是说，某些 strata 可能只含有 treated units 或 control units。即使所有 $n_{[k]1}$ 和 $n_{[k]0}$ 都不为零，也有很高概率出现
+\begin{equation}
+\frac{  n_{[k]1} }{n_1}  -  \frac{  n_{[k]0} }{n_0} \neq 0 ,
+\label{eq::covarianceimbK}
+\end{equation} 
+而且其幅度可能相当大。因此，尽管平均而言二者的差为零（见 Problem \ref{hw::balance-discrete-CRE}），stratum $k$ 中 units 的比例在 treatment group 和 control group 之间会有所不同：
+\begin{equation}\label{eq::balance-discrete-CRE}
+E\left(  \frac{  n_{[k]1} }{n_1}  -  \frac{  n_{[k]0} }{n_0} \right) = 0.
+\end{equation}
+当某些 strata $k$ 的 $n_{[k]1}  / n_1  -  n_{[k]0} / n_0$ 很大时，treatment group 与 control group 存在不理想的 covariate imbalance。这种 covariate imbalance 会降低实验质量，使实验结果难以解释，因为 outcomes 的差异既可能归因于 treatment，也可能归因于 covariate imbalance。
+
+
+
+我们怎样在实验中主动避免 covariate imbalance？可以进行 stratified randomized experiments (SRE)。
+
+\begin{definition}[SRE]
+\label{def::SRE}
+固定各个 $n_{[k]1}$ 或 $n_{[k]0}$。
+在离散 covariate $X$ 的 $K$ 个 strata 内，分别进行 $K$ 个相互独立的 CRE。
+\end{definition}
+
+在农业实验中，SRE 也称为 {\it randomized block design}，其中 strata 称为 blocks。类似地，{\it stratified randomization} 也称为 {\it block randomization}。\footnote{
+Chapter \ref{sec::fisherian-principles-experiments} 提到实验的两个 Fisherian principles：{\it randomization} 和 {\it replication}。{\it Blocking} 是第三个 Fisherian principle。
+} SRE 中 randomizations 的总数等于
+$$
+\prod_{k=1}^K  \binom{  n_{[k]} }{  n_{[k]1} } ,
+$$
+并且每个 feasible randomization 具有相等概率。在 stratum $k$ 内，接受 treatment 的 units 比例为
+$$
+e_{[k]} = \frac{n_{[k]1}}{n_{[k]}},
+$$
+这也称为 {\it propensity score}，这一概念将在本书 Part \ref{part::observational-studies} 中发挥核心作用（见 Definition \ref{def::pscore}）。
+SRE 不同于 CRE：第一，SRE 中所有 feasible randomizations 构成 CRE 中所有 feasible randomizations 的一个子集，因此
+$$
+\prod_{k=1}^K  \binom{  n_{[k]} }{  n_{[k]1} } < 
+\binom{n}{n_1} ;
+$$
+第二，$e_{[k]} $ 在 SRE 中是固定的，而在 CRE 中是随机的。
+
+
+对每个 unit $i$，我们有 potential outcomes $Y_i(1)$ 和 $Y_i(0)$，以及 individual causal effect $\tau_i = Y_i(1) - Y_i(0) . $
+对 stratum $k$，有 stratum-specific average causal effect
+$$
+\tau_{[k]} = n_{[k]}^{-1} \sum_{X_i   = k} \tau_i .
+$$
+average causal effect 为
+$$
+\tau = n^{-1} \sumn \tau_i = n^{-1} \sum_{k=1}^K \sum_{X_i   = k} \tau_i =  \sum_{k=1}^K  \pi_{[k]}  \tau_{[k]},
+$$
+它是 stratum-specific average causal effects 的加权平均。
+
+
+如果我们感兴趣的是 $\tau_{[k]} $，则可以对 stratum $k$ 内的 CRE 使用 Chapters \ref{ch::frt-cre} 和 \ref{chapter::neyman-cr} 中的方法。下面我将讨论关于 $\tau$ 的 statistical inference。
+
+
+\section{FRT}
+\label{sec::sre-frt}
+
+
+\subsection{Theory}
+与对 CRE 的讨论平行，我将从 SRE 中的 FRT 开始。sharp null hypothesis 仍然是
+$$
+\HF: Y_i(1) = Y_i(0) \text{ for all units } i=1, \ldots, n.
+$$
+FRT 的基本思想适用于任何 randomized experiment：我们可以使用任意 test statistic $T = T(\boldsymbol{Z}, \boldsymbol{Y}, \boldsymbol{X})$，其中 $\boldsymbol{Z}, \boldsymbol{Y}$ 和 $\boldsymbol{X}$ 分别是 treatment vector、observed outcome vector 和 covariate matrix。在 SRE 和 $\HF$ 下，test statistic $T$ 有已知分布，因为 $\boldsymbol{Z}$ 在 SRE 下有已知分布。不过，有两个细微问题需要小心。第一，当我们模拟 treatment vector 时，必须按照 Definition \ref{def::SRE} 在 $X$ 的 strata 内置换 treatment indicators。由此得到的 FRT 有时称为 {\it conditional randomization test} 或 {\it  conditional permutation test}。第二，我们应当选择能够反映 SRE 特性的 test statistics。下面给出一些 canonical 的 test statistic 选择。
+
+\begin{example}[Stratified estimator]
+\label{eg::stratifiedestimator}
+受估计 $\tau$ 的动机启发（见下文 Chapter \ref{sec::sre-neyman}），我们可以在 FRT 中使用如下 stratified estimator：
+$$
+\hat{\tau}_\textsc{S} = \sum_{k=1}^K  \pi_{[k]} \hat{\tau}_{[k]},
+$$
+其中
+$$
+\hat{\tau}_{[k]} = n_{[k]1}^{-1} \sumn I(X_i  =k, Z_i=1) Y_i - n_{[k]0}^{-1} \sumn I(X_i  =k, Z_i=0) Y_i 
+$$
+是在 stratum $k$ 内的 stratum-specific difference-in-means。
+\end{example}
+
+
+
+
+\begin{example}[Studentized stratified estimator]
+\label{eg::student-stratifiedestimator}
+受简单 two-sample problem 中 studentized statistic 的启发，我们可以在 FRT 中对 stratified estimator 使用如下 studentized statistic：
+$$
+t_\textsc{S} = 
+\frac{ \hat{\tau}_\textsc{S}  }{  \sqrt{\hat{V}_\textsc{S}  }},
+$$
+with 
+$$
+\hat{V}_\textsc{S} = \sum_{k=1}^K  \pi_{[k]}^2 \left(  \frac{\hat{S}_{[k]}^2(1)}{ n_{[k]1} } +  \frac{ \hat{S}_{[k]}^2(0)}{ n_{[k]0} } \right)
+$$
+其中 $\hat{S}_{[k]}^2(1)$ 和 $\hat{S}_{[k]}^2(0)$ 分别是 treatment 与 control 下 outcomes 的 stratum-specific sample variances。该 statistic 的具体形式来自下文 Section \ref{sec::sre-neyman} 中讨论的 Neymanian perspective。
+\end{example}
+
+
+
+
+\begin{example}[Combining Wilcoxon rank-sum statistics]
+\label{eg::vanelteren}
+我们首先在 stratum $k$ 内计算 Wilcoxon rank sum statistic $W_{[k]}$（回顾 Example \ref{example::wilcoxon-cre}），然后将它们组合为
+$$
+W_\textsc{S} = \sum_{k=1}^K   c_{[k]}  W_{[k]}   . 
+$$
+基于不同的 asymptotic schemes 和 optimality criteria，\citet{van1960combination} 提出了两种 weighting methods，一种取
+$$
+c_{[k]}  = \frac{1}{  n_{[k]1}  n_{[k]0} },
+$$
+另一种取
+$$ 
+c_{[k]}  = \frac{1}{  n_{[k]}  +1 } .
+$$
+这些 weights 的动机相当技术化，其他 weights 的选择也可能是合理的。
+\end{example}
+
+
+ 
+
+
+\begin{example}[\citet{hodges1962rank}'s aligned rank statistic]
+\label{eg::hodgeslehmann}
+\citet{van1960combination} 的 statistic 在少数大 strata 的情形下效果很好。不过，在许多小 strata 的情形下效果并不好，因为它没有进行足够多的比较，可能会损失数据中的信息。\citet{hodges1962rank} 提出一种 test statistic：先将 outcomes 标准化，然后跨 strata 进行更多比较。他们建议先将 outcomes 中心化为
+$$
+\tilde{Y}_i = Y_i  - \bar{Y}_{[k]}
+$$
+其中 stratum-specific mean 为
+$
+\bar{Y}_{[k]} = n_{[k]}^{-1} \sum_{X_i   = k} Y_i
+$
+如果 $X_i = k$，然后得到 pooled outcomes $(\tilde{Y}_1, \ldots, \tilde{Y}_n)$ 的 ranks $(\tilde{R}_1, \ldots, \tilde{R}_n)$，最后构造 test statistic
+$$
+\tilde{W} = \sumn Z_i \tilde{R}_i.
+$$
+\end{example}
+
+
+我们可以在 SRE 下模拟上述 test statistics 的 exact distributions。也可以计算它们的均值和方差，并基于 Normal approximations 得到 $p$-values。
+
+
+查找一番之后，我没有找到关于 SRE 中 Kolmogorov--Smirnov statistic 的详细讨论。下面是我的建议。
+
+
+ \begin{example}[Kolmogorov--Smirnov statistic]
+\label{eg::ks-stratified}
+我们计算 $D_{[k]}$，即 stratum $k$ 内 treatment 与 control 下 outcomes 的 empirical distributions 之间的最大差异。最终的 test statistic 可以是
+$$
+D_\textsc{S}  = \sum_{k=1}^K    c_{[k]}    D_{[k]}
+$$
+or 
+$$
+D_{\max} = \max_{1\leq k \leq K}  c_{[k]}   D_{[k]},
+$$ 
+其中 $ c_{[k]}   = \sqrt{   n_{[k]1}  n_{[k]0} /  n_{[k]}  }$ 的动机来自当 $n_{[k]1} $ 和 $ n_{[k]0} $ 趋于无穷时 $D_{[k]}$ 的 limiting distribution（见 Example \ref{eg::ks-CRE}）。当所有 strata 的 sample sizes 都很大时，statistics $D_\textsc{S} $ 和 $D_{\max} $ 更合适。
+另一个合理选择是
+$$
+D =  \max_y \Big |  \sum_{k=1}^K  \pi_{[k]}  \{  \hat{F}_{[k]1}(y)  - \hat{F}_{[k]0}(y) \}   \Big | ,
+$$
+其中 $\hat{F}_{[k]1}(y)  $ 和 $ \hat{F}_{[k]0}(y)$ 分别是 treatment 与 control 下 outcomes 的 stratum-specific empirical distribution functions。statistic $D$ 既适用于 large strata 的情形，也适用于 many small strata 的情形。
+\end{example}
+ 
+ 
+ 
+ \subsection{An application}
+ \label{sec::frt-pennbonus}
+ 
+ 
+ 
+Penn Bonus experiment 是说明 SRE 中 FRT 的一个例子。\citet{koenker2002inference} 使用的数据集来自一个按 \ri{quarter} 分层的 job training program，其 outcome 是就业前的持续时间。
+
+\begin{lstlisting}
+> penndata = read.table("Penn46_ascii.txt")
+> z = penndata$treatment
+> y = log(penndata$duration)
+> block = penndata$quarter
+> table(penndata$treatment, penndata$quarter)
+   
+      0   1   2   3   4   5
+  0 234  41 687 794 738 860
+  1  87  48 757 866 811 461
+\end{lstlisting} 
+
+
+我将重点讨论 $\hat{\tau}_\textsc{S}$ 和 $W_\textsc{S}$，并把使用其他 statistics 的 FRT 留作 Problem \ref{hw::FRT-SRE-more}。
+下面的函数计算 $\hat{\tau}_\textsc{S}$ 和 $W_\textsc{S}$：
+
+\begin{lstlisting}
+stat_SRE = function(z, y, x)
+{
+       xlevels = unique(x)
+       K       = length(xlevels)
+       PiK     = rep(0, K)
+       TauK    = rep(0, K)
+       WK      = rep(0, K)
+       for(k in 1:K)
+       {
+             xk         = xlevels[k]
+             zk         = z[x == xk]
+             yk         = y[x == xk]
+             PiK[k]     = length(zk)/length(z)
+             TauK[k]    = mean(yk[zk==1]) - mean(yk[zk==0])
+             WK[k]      = wilcox.test(yk[zk==1], yk[zk==0])$statistic
+       }
+       
+       return(c(sum(PiK*TauK), sum(WK/PiK)))
+}
+\end{lstlisting} 
+
+
+下面的函数基于 observed data 生成 SRE 中的一个 random treatment assignment：
+
+\begin{lstlisting}
+zRandomSRE = function(z, x)
+{
+         xlevels = unique(x)
+         K       = length(xlevels)
+         zrandom = z
+         for(k in 1:K)
+         {
+              xk = xlevels[k]   
+              zrandom[x == xk] = sample(z[x == xk])
+         }
+         
+         return(zrandom)
+}
+\end{lstlisting} 
+
+
+基于上述数据和函数，我们可以模拟 test statistics 的 randomization distributions，并计算 $p$-values。
+\begin{lstlisting}
+> stat.obs = stat_SRE(z, y, block)
+> MC = 10^3
+> statSREMC = matrix(0, MC, 2)
+> for(mc in 1:MC)
++ {
++     zrandom         = zRandomSRE(z, block) 
++     statSREMC[mc, ] = stat_SRE(zrandom, y, block)     
++ }
+> mean(statSREMC[, 1] <= stat.obs[1])
+[1] 0.002
+> mean(statSREMC[, 2] <= stat.obs[2])
+[1] 0.001
+\end{lstlisting} 
+上面我基于左尾概率计算 $p$-values，因为 treatment 对 outcome 有负效应。
+关于 observed test statistics 和 randomization distributions 的更多细节，见 Figure \ref{fig::frt_sre_penn}。
+ 
+
+ 
+\begin{figure}
+\centering
+\includegraphics[width = \textwidth]{figures/FRT_SRE_histograms.pdf}
+\caption{基于 Penn Bonus experiment 数据得到的 $\hat{\tau}_\textsc{S}$ 和 $W_\textsc{S}$ 的 randomization distributions，其中使用 $10^4$ 次 Monte Carlo draws。}\label{fig::frt_sre_penn}
+\end{figure} 
+
+
+
+\section{Neymanian inference}
+\label{sec::sre-neyman}
+\subsection{Point and interval estimation}
+
+SRE 的 statistical inference 建立在这样一个事实之上：它本质上由 $K$ 个相互独立的 CRE 构成。基于这一点，我们可以将 \citet{Neyman:1923} 的结果推广到 SRE。在 stratum $k$ 内，difference-in-means $\hat{\tau}_{[k]}$ 是 $\tau_{[k]}$ 的 unbiased estimator，其方差为
+$$
+\var ( \hat{\tau}_{[k]}) =  \frac{S_{[k]}^2(1)}{ n_{[k]1} } +  \frac{S_{[k]}^2(0)}{ n_{[k]0} }
+- \frac{  S_{[k]}^2(\tau) }{ n_{[k]} },
+$$
+其中 $ S_{[k]}^2(1), S_{[k]}^2(0)$ 和 $S_{[k]}^2(\tau)$ 分别是 potential outcomes 和 individual causal effects 的 stratum-specific variances。
+因此，stratified estimator $\hat{\tau}_\textsc{S} = \sum_{k=1}^K  \pi_{[k]} \hat{\tau}_{[k]}$ 是 $\tau =\sum_{k=1}^K  \pi_{[k]}  \tau_{[k]} $ 的 unbiased estimator，其方差为
+$$
+\var( \hat{\tau}_\textsc{S}   ) = \sum_{k=1}^K  \pi_{[k]}^2   \var ( \hat{\tau}_{[k]}).
+$$
+如果 $n_{[k]1} \geq 2$ 且 $n_{[k]0} \geq 2$，则可以得到 stratum $k$ 内 outcomes 的 sample variances $\hat{S}_{[k]}^2(1)$ 和 $\hat{S}_{[k]}^2(0)$，并构造 conservative variance estimator
+$$
+\hat{V}_\textsc{S}  = \sum_{k=1}^K  \pi_{[k]}^2 \left(  \frac{\hat{S}_{[k]}^2(1)}{ n_{[k]1} } +  \frac{ \hat{S}_{[k]}^2(0)}{ n_{[k]0} } \right), 
+$$  
+其中 $\hat{S}_{[k]}^2(1)$ 和 $\hat{S}_{[k]}^2(0)$ 分别是 treatment 与 control 下 outcomes 的 stratum-specific sample variances。基于 $\hat{\tau}_\textsc{S} $ 的 Normal approximation，我们可以为 $\tau$ 构造 Wald-type $1-\alpha$ confidence interval：
+$$
+\hat{\tau}_\textsc{S} \pm z_{1-\alpha/2} \sqrt{  \hat{V}_\textsc{S}  } . 
+$$
+从 hypothesis testing 的角度看，在 $\HN: \tau=0$ 下，我们可以将 $t_\textsc{S} =   \hat{\tau}_\textsc{S} / \sqrt{  \hat{V}_\textsc{S}  }$ 与 standard Normal quantiles 比较，从而得到 asymptotic $p$-values。statistic $t_\textsc{S} $ 出现在 Example \ref{eg::student-stratifiedestimator} 的 FRT 中。后面的 Chapter \ref{chapter::unification-fisher-neyman} 将说明，在 FRT 中使用 $t_\textsc{S} $ 会在 $\HF$ 下给出 finite-sample exact $p$-value，并在 $\HN$ 下给出 asymptotically valid $p$-value。
+
+
+
+这里我省略 $\hat{\tau}_\textsc{S} $ 的 CLT 的技术细节。证明可见 \citet{liu2020regression}，其中包括少数 large strata 与许多 small strata 这两种 regimes。下文 Chapter \ref{sec::sre-neyman-example} 将用数值例子说明这一理论问题。
+
+
+
+
+
+
+最后，我们用 Penn Bonus Experiment 说明 SRE 中的 Neymanian inference。\label{sec::sre-neyman-example}
+将函数 \ri{Neyman_SRE} 应用于该数据集，得到：
+\begin{lstlisting}
+> penndata = read.table("Penn46_ascii.txt")
+> z = penndata$treatment
+> y = log(penndata$duration)
+> block = penndata$quarter
+> est = Neyman_SRE(z, y, block)
+> est[1]
+[1] -0.08990646
+> sqrt(est[2])
+[1] 0.03079775
+\end{lstlisting} 
+因此，这个 job training program 显著缩短了就业前持续时间的对数。
+
+
+\subsection{Comparing the SRE and the CRE}
+
+与 CRE 相比，SRE 有什么好处？前面我从 covariate balance 的角度给出了 SRE 的动机。此外，我还将说明，更好的 covariate balance 又会带来 average causal effect 的更高 estimation precision。为了公平比较，我假设对所有 $k$ 都有 $e_{[k]} = e$，这保证 difference in means 等于 stratified estimator：
+\begin{equation}
+\label{eq::dim=stratified}
+\hat{\tau} = \hat{\tau}_\textsc{S}.
+\end{equation}
+我将 \eqref{eq::dim=stratified} 的证明留作 Problem \ref{hw::sre-additional-neyman}。
+
+
+
+
+现在比较 sampling variances。经典的 analysis of variance 技术启发我们将 total variance 分解为 within-strata variances 与 between-strata variances 之和，从而得到
+\begin{eqnarray*}
+S^2(1) &=&  (n-1)^{-1} \sumn \{  Y_i(1) - \bar{Y}(1) \}^2 \\
+&=& (n-1)^{-1} \sum_{k=1}^K \sum_{X_i   = k} \{ Y_i(1) - \bar{Y}_{[k]}(1)  + \bar{Y}_{[k]}(1)  -   \bar{Y}(1)  \}^2 \\
+&=& (n-1)^{-1} \sum_{k=1}^K \sum_{X_i   = k} \left[  \{ Y_i(1) - \bar{Y}_{[k]}(1) \}^2 +  \{ \bar{Y}_{[k]}(1)  -   \bar{Y}(1)  \}^2 \right] \\
+&=& \sum_{k=1}^K \left[   \frac{n_{[k]} - 1}{n-1}   S_{[k]}^2(1)  +  \frac{ n_{[k]}}{ n-1} \{ \bar{Y}_{[k]}(1) - \bar{Y}(1) \}^2  \right],
+\end{eqnarray*} 
+类似地，
+\begin{eqnarray*}
+S^2(0) &=& \sum_{k=1}^K \left[   \frac{n_{[k]} - 1}{n-1}   S_{[k]}^2(0)  +  \frac{ n_{[k]}}{ n-1} \{ \bar{Y}_{[k]}(0) - \bar{Y}(0) \}^2  \right],\\
+S^2(\tau) &=& \sum_{k=1}^K \left[   \frac{n_{[k]} - 1}{n-1}   S_{[k]}^2(\tau)  +  \frac{ n_{[k]}}{ n-1} \{ \tau_{[k]} - \tau \}^2  \right] .
+\end{eqnarray*}
+CRE 下 difference-in-means estimator 的方差可分解为
+\begin{eqnarray*}
+&&\var_{\text{CRE}}(  \hat{\tau} )  \\
+&=& \frac{S^2(1)}{ n_{1} } +  \frac{S^2(0)}{ n_{0} }
+- \frac{  S^2(\tau) }{ n }  \\ 
+&=& \sum_{k=1}^K  \left[   \frac{ n_{[k]} - 1}{(n-1)n_1}  S_{[k]}^2(1) + \frac{ n_{[k]} - 1}{ (n-1)n_0}  S_{[k]}^2(0) -  \frac{ n_{[k]} - 1}{(n-1)n}    S_{[k]}^2(\tau) \right] \\
+&&  + \sum_{k=1}^K  \left[    \frac{ n_{[k]} - 1}{ (n-1)n_1}  \{ \bar{Y}_{[k]}(1) - \bar{Y}(1) \}^2 +  \frac{ n_{[k]} - 1}{ (n-1)n_0}  \{ \bar{Y}_{[k]}(0) - \bar{Y}(0) \}^2   \right. \\
+&& \left.  - \frac{ n_{[k]} - 1  }{ (n-1)n} \{ \tau_{[k]} - \tau \}^2  \right] .
+ \end{eqnarray*}
+ 当各个 $n_{[k]}$ 很大时，它近似为
+ \begin{eqnarray*}
+ &&\var_{\text{CRE}}(  \hat{\tau} )  \\
+&\approx & 
+\sum_{k=1}^K  \left[   \frac{ \pi_{[k]}}{n_1}  S_{[k]}^2(1) + \frac{ \pi_{[k]}}{n_0}  S_{[k]}^2(0) -  \frac{ \pi_{[k]}}{n}    S_{[k]}^2(\tau) \right] \\
+&&  + \sum_{k=1}^K  \left[    \frac{ \pi_{[k]}}{n_1}  \{ \bar{Y}_{[k]}(1) - \bar{Y}(1) \}^2 +  \frac{ \pi_{[k]}}{n_0}  \{ \bar{Y}_{[k]}(0) - \bar{Y}(0) \}^2  
+ - \frac{ \pi_{[k]}  }{n} \{ \tau_{[k]} - \tau \}^2  \right] .
+\end{eqnarray*}
+constant propensity scores assumption 保证
+$$ 
+\pi_{[k]} / n_{[k]1}  = 1/(ne), \quad   \pi_{[k]} / n_{[k]0} = 1/\{n(1-e) \},\quad \pi_{[k]} / n_{[k]} = 1/n,
+$$
+这使我们可以将 SRE 下 $\hat{\tau}_\textsc{S}$ 的方差改写为
+\begin{eqnarray*}
+\var_\textsc{SRE}(\hat{\tau}_\textsc{S}) &= & \sum_{k=1}^K  \pi_{[k]}^2 \left[ \frac{S_{[k]}^2(1)}{ n_{[k]1} } +  \frac{S_{[k]}^2(0)}{ n_{[k]0} }
+- \frac{  S_{[k]}^2(\tau) }{ n_{[k]} } \right]\\
+&=&\sum_{k=1}^K  \left[   \frac{ \pi_{[k]}}{n_1}  S_{[k]}^2(1) + \frac{ \pi_{[k]}}{n_0}  S_{[k]}^2(0) -  \frac{ \pi_{[k]}}{n}    S_{[k]}^2(\tau) \right] .
+\end{eqnarray*}
+ 当各个 $n_{[k]}$ 很大时，近似而言，$\var_{\text{CRE}}(  \hat{\tau} )$ 与 $\var_\textsc{SRE}(\hat{\tau}_\textsc{S})$ 之差为
+$$
+\sum_{k=1}^K  \left[    \frac{ \pi_{[k]}}{n_1}  \{ \bar{Y}_{[k]}(1) - \bar{Y}(1) \}^2 +  \frac{ \pi_{[k]}}{n_0}  \{ \bar{Y}_{[k]}(0) - \bar{Y}(0) \}^2  
+ - \frac{  \pi_{[k]}  }{n}  ( \tau_{[k]} - \tau  ) ^2  \right] 
+ $$
+ 它是非负的，因为它等于（见 Problem \ref{hw::compare-CRE-SRE}）
+ \begin{eqnarray}
+\label{eq::difference}
+\sum_{k=1}^K\frac{ \pi_{[k]}}{n} 
+ \left\{
+\sqrt{ \frac{n_0}{n_1} } \{ \bar{Y}_{[k]}(1) - \bar{Y}(1) \} +  \sqrt{ \frac{n_1}{n_0} } \{ \bar{Y}_{[k]}(0) - \bar{Y}(0) \}
+ \right\}^2 \geq 0,
+\end{eqnarray} 
+\eqref{eq::difference} 中的差仅在如下极端情形下为零：
+$$
+\sqrt{ \frac{n_0}{n_1} } \{ \bar{Y}_{[k]}(1) - \bar{Y}(1) \} +  \sqrt{ \frac{n_1}{n_0} } \{ \bar{Y}_{[k]}(0) - \bar{Y}(0) \}
+= 0 
+$$
+对 $k=1,\ldots, K$ 成立。当 covariate 能够预测 potential outcomes 时，上述量通常不会全为零，这就保证了 SRE 相对于 CRE 的 efficiency gain。只有在 covariate 完全没有预测能力的极端情形下，large-sample efficiency gain 才为零。在这些情形下，SRE 甚至可能在 finite samples 中导致效率更低的 estimators。以上讨论印证了本章开头 George Box 的引语。
+
+ 
+
+
+本节最后给出几点 remarks。第一，上述比较基于 sampling variance；我们也可以比较 SRE 与 CRE 下的 estimated variances，结果类似。第二，增大 $K$ 可以提高效率，但这一论断依赖于 large strata assumption。因此实践中会面临一个 trade-off。我们不能任意增大 $K$，最极端的情形是 $n_{[k]1} = n_{[k]0} = 1$，这称为 matched-pairs experiment，将在 Chapter \ref{chapter::mpe} 中讨论。
+
+ 
+
+
+
+
+\section{Post-stratification in a CRE}\label{sec::poststra-cre}
+
+在带有离散 covariate $X$ 的 CRE 中，stratum $k$ 内接受 treatment 和 control 的 units 数量是随机的。在 SRE 中，这些数量是固定的。但如果在给定 $\boldsymbol{n} = \{  n_{[k]1} , n_{[k]0} \}_{k=1}^K$ 的条件下进行 conditional inference，那么 CRE 就变成了 SRE。数学上，如果 $\boldsymbol{n}$ 的各个分量都不为零，则
+\begin{equation}\label{eq::condition-to-SRE}
+\pr_\textsc{CRE}(\boldsymbol{Z} = \boldsymbol{z} \mid\boldsymbol{n} )
+= \frac{ \pr_\textsc{CRE}( \boldsymbol{Z} = \boldsymbol{z},  \boldsymbol{n})   }{ \pr_\textsc{CRE}(   \boldsymbol{n})   }
+=  \frac{1}{  \prod_{k=1}^K  \binom{  n_{[k]} }{  n_{[k]1} } }  ,
+\end{equation}
+也就是说，给定 $\boldsymbol{n}$ 时，CRE 中 $\boldsymbol{Z}$ 的 conditional distribution 与 SRE 中 $\boldsymbol{Z}$ 的分布完全相同。
+我将 \eqref{eq::condition-to-SRE} 的证明留作 Problem \ref{hw::CRE-SRE}。
+因此，在条件于 $\boldsymbol{n}$ 时，我们可以像分析 SRE 一样分析带有离散 covariate $X$ 的 CRE。
+特别地，FRT 变成 {\it conditional FRT}，Neymanian analysis 变成 {\it post-stratification}：
+$$
+\hat{\tau}_\textsc{PS} = \sum_{k=1}^K \pi_{[k]} \hat{\tau}_{[k]},
+$$
+它与 $\hat{\tau}_\textsc{S}$ 具有完全相同的形式。在条件于 $\boldsymbol{n}$ 时，$\hat{\tau}_\textsc{PS} $ 的方差与 SRE 下 $\hat{\tau}_\textsc{S}$ 的方差相同。
+
+
+\citet{hennessy2016conditional} 用模拟说明 conditional FRT 通常比 unconditional FRT 更有 power。\citet{miratrix:2013} 用理论说明，在许多情形下，post-stratification 相比 $\hat{\tau}$ 可以提高效率。只要 $X$ 能够预测 outcome，这两个结果就成立。不过，模拟基于有限数量的 data-generating processes，而理论则假设所有 strata 都足够大。我们不能在 conditional FRT 或 post-stratification 中走得太极端，因为 $K$ 越大，某些 $n_{[k]1} $ 或 $ n_{[k]0}$ 变成零的可能性就越高。$n_{[k]1} $ 或 $ n_{[k]0}$ 很小或为零会大大减少 FRT 中 randomizations 的数量，从而可能显著降低 power。对 Neymanian counterpart 而言，这个问题更加突出，因为我们甚至无法定义 $\hat{\tau}_\textsc{PS}$ 及其对应的 variance estimator。
+
+
+Stratification 在 design stage 使用 $X$，而 post-stratification 在 analysis stage 使用 $X$。二者是使用 $X$ 的一对 duals。
+渐近地，在 large strata 下二者差异很小 \citep{miratrix:2013}。
+
+\subsection{\citet{meinert1970study}'s Example}\label{sec::ps-merinert}
+
+我们使用 \citet{meinert1970study} 报告的一个 CRE 数据，该数据也被 \citet{rothman2008modern} 使用。treatment 是 tolbutamide，control 是 placebo。
+\begin{center} 
+\begin{tabular}{ccc}
+\multicolumn{3}{c}{ Age $< 55$} \\
+\hline 
+ & Surviving & Dead \\
+$Z=1$ &    98 & 8 \\
+$Z=0$  & 115 & 5 \\
+\hline 
+\end{tabular}
+%&
+\begin{tabular}{ccc}
+\multicolumn{3}{c}{ Age $\geq  55$} \\
+\hline 
+ & Surviving & Dead \\
+$Z=1$ &    76 & 22 \\
+$Z=0$  &  69 & 16 \\
+\hline 
+\end{tabular}
+%&
+\begin{tabular}{ccc}
+\multicolumn{3}{c}{Total } \\
+\hline 
+ & Surviving & Dead \\
+$Z=1$ &    174 & 30 \\
+$Z=0$  & 184 & 21 \\
+\hline 
+\end{tabular}
+\end{center}
+ 
+
+下表分别给出两个 strata 的 estimates、post-stratified estimator、忽略 binary covariate 的 crude estimator，以及相应的 standard errors。
+\begin{center}
+\begin{tabular}{crrrr}
+\hline 
+    &stratum 1& stratum 2 &post-stratification &  crude \\
+est &    $-0.034$ &   $-0.036$ &  $-0.035$ & $-0.045$ \\
+se   &   $0.031$    & $0.060$   & $0.032$   & $0.033$\\
+\hline 
+\end{tabular}
+\end{center} 
+
+
+crude estimator 与 post-stratification estimator 并没有导致根本不同的结果。
+不过，crude estimator 大于两个 stratum-specific estimators，而 post-stratification estimator 位于二者范围之内。
+
+
+\subsection{\citet{chong2016iron}'s Example}\label{sec::ps-chong}
+
+
+\citet{chong2016iron} 在 2009 学年对 Peru 的 Cajamarca 地区一所农村中学的 219 名学生进行了一个 SRE。他们首先向村诊所提供 iron supplements，并培训当地工作人员向任何亲自索取的青少年免费发放一片 iron pill。随后，他们将学生随机分配到三个 arms，观看三类不同视频：第一个视频中，一位受欢迎的 soccer player 鼓励使用 iron supplements 以最大化精力（``soccer'' arm）；第二个视频中，一位 physician 鼓励使用 iron supplements 以改善整体健康（``physician'' arm）；第三个视频完全没有提到 iron（``control'' arm）。该实验按 class level (1--5) 分层。各班级内 treatment 与 control group sizes 如下：
+
+\begin{lstlisting}
+> library("foreign")
+> dat_chong = read.dta("chong.dta")
+> table(dat_chong$treatment, dat_chong$class_level)
+               
+                 1  2  3  4  5
+  Soccer Player 16 19 15 10 10
+  Physician     17 20 15 11 10
+  Placebo       15 19 16 12 10
+\end{lstlisting}
+
+一个感兴趣的 outcome 是 2009 年第三和第四 quarters 的 average grades，一个重要的 background covariate 是 baseline 的 anemia status。
+本章只使用原始数据的一个子集。
+
+\begin{lstlisting}
+> use.vars = c("treatment", 
++              "gradesq34", 
++              "class_level", 
++              "anemic_base_re")
+> dat_physician = subset(dat_chong,
++                        treatment != "Soccer Player",
++                        select = use.vars)
+> dat_physician$z = (dat_physician$treatment=="Physician")
+> dat_physician$y = dat_physician$gradesq34
+> table(dat_physician$z, 
++       dat_physician$class_level)
+       
+         1  2  3  4  5
+  FALSE 15 19 16 12 10
+  TRUE  17 20 15 11 10
+> table(dat_physician$z, 
++       dat_physician$class_level,
++       dat_physician$anemic_base_re)
+, ,  = No
+
+       
+         1  2  3  4  5
+  FALSE  6 14 12  7  4
+  TRUE   8 12  9  5  6
+
+, ,  = Yes
+
+       
+         1  2  3  4  5
+  FALSE  9  5  4  5  6
+  TRUE   9  8  6  6  4
+\end{lstlisting}
+
+ 
+可以使用前面定义的 \ri{Neyman_SRE} 函数来计算 stratified estimator 及其 estimated variance。
+\begin{lstlisting}
+tauS = with(dat_physician,
+            Neyman_SRE(z, gradesq34, class_level))
+\end{lstlisting}
+
+一个重要的 additional covariate 是 baseline anemic indicator，它对预测 outcome 相当重要。进一步条件于 baseline anemic indicator 后，我们得到一个包含 $5\times 2 =10$ 个 strata 的实验，其 treatment 与 control group sizes 如上所示。
+ 同样，我们可以使用前面定义的 \ri{Neyman_SRE} 函数来计算 post-stratified estimator 及其 estimated variance。
+ \begin{lstlisting}
+> tauSPS = with(dat_physician, {
++   sps = interaction(class_level, anemic_base_re)
++   Neyman_SRE(z, gradesq34, sps)
++ })
+\end{lstlisting}
+
+下表比较这两个 estimators。post-stratified estimator 给出了小得多的 $p$-value。
+\begin{center}
+\begin{tabular}{crrrr}
+                          & est &   se &t.stat& p.value \\
+stratify                & 0.406 &0.202 & 2.005  & 0.045 \\
+stratify and post-stratify & 0.463 &0.190 & 2.434 &  0.015
+\end{tabular}
+\end{center} 
+
+这个例子说明，post-stratification 不仅可以用于 CRE，也可以用于带有 additional discrete covariates 的 SRE。
+
+
+\section{Practical questions}
+
+
+我们如何选择 $X$ 来构造 SRE？理论上，$X$ 应当能够预测 potential outcomes。在某些情形下，experimenter 基于一些 pilot studies 等信息，对 predictive covariates 有足够的 background knowledge。
+此时 $X$ 的选择应当很直接。在另一些情形下，这种 background knowledge 可能不够清楚。Experimenters 转而基于 logistical convenience 来选择 $X$，例如 $X$ 可以是 study areas 的 indicator 或学生的 cohort。
+
+
+$K$ 的选择是一个相关问题。理论上，如果所有 strata 都足够大，更多 stratification 会提高 estimation efficiency。不过，极大的 $K$ 甚至可能降低 estimation efficiency。在 simulation studies 中，我们观察到增大 $K$ 的边际回报递减。经验上，$K = 5$ 通常已经足以获得 efficiency gain（神奇数字 $5$ 还会在 Chapter \ref{chapter::pscore-key} 中再次出现）。有些 experimenter 偏好 SRE 的最极端版本，即 $K=n/2$。这会产生 matched-pairs experiment，稍后将在 Chapter \ref{chapter::mpe} 中讨论。
+
+
+有些实验包含 multidimensional continuous covariates。SRE 还能使用吗？如果有 pilot study，我们可以建立一个在给定这些 covariates 时预测 potential outcome $Y(0)$ 的模型，然后选择 $X$ 为 predictor $\hat{Y}(0)$ 的 discretized version。一般而言，如果没有这样的 pilot study，或者不想进行 ad hoc discretizations，可以使用一种更一般的策略，称为 rerandomization；这将是 Chapter \ref{chapter:rerandomization-regression} 的主题。
+
+ 
+ 
+ \section{Homework Problems}
+ 
+ 
+\homeworksolutionref{05}
+  \paragraph{Covariate balance in the CRE}\label{hw::balance-discrete-CRE}
+  
+ 在 CRE 下，证明 \eqref{eq::balance-discrete-CRE}。
+ 
+ \paragraph{Consequence of the constant propensity score}
+\label{hw::sre-additional-neyman}
+
+证明 \eqref{eq::dim=stratified}。
+
+
+\paragraph{Consquence of constant individual causal effects}
+
+假设对所有 $i=1,\ldots, n$，individual causal effects 都为常数 $\tau_i = \tau$。
+考虑如下用于 $\tau$ 的 weighted estimator 类：
+$$
+\hat{\tau}_w = \sum_{k=1}^K  w_{[k]}  \hat{\tau}_{[k]} ,
+$$
+其中 weights $w_{[k]}  $ 对所有 $k$ 都非负。
+
+找出 $w_{[k]}$ 需要满足什么条件，才能使 $\hat{\tau}_w $ 是 $\tau$ 的 unbiased estimator。在所有 unbiased estimators 中，找出使 $\hat{\tau}_w$ 方差最小的 weights。
+
+
+\paragraph{Compare the CRE and SRE}\label{hw::compare-CRE-SRE}
+
+证明 \eqref{eq::difference}。
+
+
+
+\paragraph{From the CRE to the SRE}\label{hw::CRE-SRE}
+
+
+证明 \eqref{eq::condition-to-SRE}。
+
+
+ 
+ \paragraph{More FRTs for Section \ref{sec::frt-pennbonus}}\label{hw::FRT-SRE-more}
+ 
+ 使用带有其他 test statistics 的 FRT，扩展 Section \ref{sec::frt-pennbonus} 中的分析。
+
+
+ 
+ \paragraph{FRT for an SRE in \citet{imbens2015causal}}
+
+
+\citet{imbens2015causal} 讨论了一个 SRE，来自 1985--1986 年在 Tennessee 进行的 Student/Teacher Achievement Ratio experiment。
+kindergarten 数据如下：
+ \begin{lstlisting}
+treatment = list(c(1,1,0,0), 
+                 c(1,1,0,0), 
+                 c(1,1,1,0,0), 
+                 c(1,1,0,0),
+                 c(1,1,0,0),
+                 c(1,1,0,0),
+                 c(1,1,0,0), 
+                 c(1,1,1,1,0,0),
+                 c(1,1,0,0),
+                 c(1,1,0,0),
+                 c(1,1,0,0),
+                 c(1,1,1,0,0),
+                 c(1,1,0,0),
+                 c(1,1,0,0),
+                 c(1,1,0,0),
+                 c(1,1,0,0))
+outcome = list(c(0.165,0.321,-0.197,0.236), 
+               c(0.918,-0.202,1.19,0.117),
+               c(0.341,0.561,-0.059,-0.496,0.225),
+               c(-0.024,-0.450,-1.104,-0.956), 
+               c(-0.258,-0.083,-0.126,0.106),
+               c(1.151,0.707,0.597,-0.495), 
+               c(0.077,0.371,0.685,0.270), 
+               c(-0.870,-0.496,-0.444,0.392,-0.934,-0.633), 
+               c(-0.568,-1.189,-0.891,-0.856), 
+               c(-0.727,-0.580,-0.473,-0.807), 
+               c(-0.533,0.458,-0.383,0.313), 
+               c(1.001,0.102,0.484,0.474,0.140), 
+               c(0.855,0.509,0.205,0.296), 
+               c(0.618,0.978,0.742,0.175), 
+               c(-0.545,0.234,-0.434,-0.293), 
+               c(-0.240,-0.150,0.355,-0.130))
+\end{lstlisting}
+strata 对应 schools，analysis unit 是 teacher 或 class。对 small classes（每名 teacher 对应 13--17 名 students），treatment 等于 $1$；对 regular classes（每名 teacher 对应 22--25 名 students），treatment 等于 $0$。outcome 是 standardized average mathematics score。
+
+
+使用 FRT 重新分析下面的 Project STAR 数据。在 FRT 中使用 $\hat{\tau}_\textsc{S}$、$W_\textsc{S}$ 和 $\tilde W$。比较 $p$-values。
+
+说明：本书用 $Z$ 表示 treatment indicator，而 \citet{imbens2015causal} 使用 $W.$
+ 
+
+
+
+
+
+
+\paragraph{A multi-center trial}
+
+\citet[][Table 1]{gould1998multi} 报告了如下来自 multi-center trial 的数据：
+
+\begin{lstlisting}
+> multicenter = read.csv("multicenter.csv")
+> multicenter
+   center n0 mean0  sd0 n1 mean1  sd1 n5 mean5  sd5
+1       1  7  0.43 4.58  7 -5.43 5.53  8 -2.63 3.38
+2       2 11  0.10 4.21 11 -2.59 3.95 12 -2.21 4.14
+3       3  6  2.58 4.80  6 -3.94 4.25  7  1.29 7.39
+4       4 10 -2.30 3.86 10 -1.23 5.17 10 -1.40 2.27
+5       5 10  2.08 6.46 10 -6.70 7.45 10 -5.13 3.91
+6       6  6  1.13 3.24  5  3.40 8.17  5 -1.59 3.19
+7       7  5  1.20 7.85  6 -3.67 4.89  5 -1.40 2.61
+8       8 12 -1.21 2.66 13  0.18 3.81 12 -4.08 6.32
+9       9  8  1.13 5.28  8 -2.19 5.17  9 -1.96 5.84
+10     10  9 -0.11 3.62 10 -2.00 5.35 10  0.60 3.53
+11     11 15 -4.37 6.12 14 -2.68 5.34 15 -2.14 4.27
+12     12  8 -1.06 5.27  9  0.44 4.39  9 -2.03 5.76
+13     13 12 -0.08 3.32 12 -4.60 6.16 11 -6.22 5.33
+14     14  9  0.00 5.20  9 -0.25 8.23  7 -3.29 5.12
+15     15  6  1.83 5.85  7 -1.23 4.33  6 -1.00 2.61
+16     16 14 -4.21 7.53 14 -2.10 5.78 12 -5.75 5.63
+17     17 13  0.76 3.82 13  0.55 2.53 13 -0.63 5.41
+18     18 15 -1.05 4.54 13  2.54 4.16 14 -2.80 2.89
+19     19 15  2.07 4.88 15 -1.67 4.95 15 -3.43 4.71
+20     20 11 -1.46 5.48 10 -1.99 5.63 10 -6.77 5.19
+21     21  5  0.80 4.21  5 -3.35 4.73  5 -0.23 4.14
+22     22 11 -2.92 5.42 10 -1.22 5.95 11 -4.45 6.65
+23     23  9 -3.37 4.73  9 -1.38 4.17  7  0.57 2.70
+24     24 12 -1.92 2.91 12 -0.66 3.55 12 -2.39 2.27
+25     25  9 -3.89 4.76  9 -3.22 5.54  8 -1.23 4.91
+26     26 15 -3.48 5.98 15 -2.13 3.25 14 -3.71 5.30
+27     27 11 -1.91 6.49 12 -1.33 4.40 11 -1.52 4.68
+28     28 10 -2.66 3.80 10 -1.29 3.18 10 -4.70 3.43
+29     29 13 -0.77 4.73 13 -2.31 3.88 13 -0.47 4.95
+\end{lstlisting}
+
+
+这是一个以 centers 为 strata 的 SRE。
+该 trial 旨在研究 finasteride 的 efficacy 和 tolerability；finasteride 是一种用于治疗 benign prostatic hyperplasia 的药物。
+在 $29$ 个 centers 中的每一个内，patients 被随机分配到三个 arms：control、finasteride 1mg 和 finasteride 5mg。上面的 dataset
+提供了 outcome 的 summary statistics，该 outcome 是 total symptom score 相对于 baseline 的变化。total symptom score 是关于 urinary ability 受损的各方面症状的九个问题（score $0$ 到 $4$）的 responses 之和。各列含义为：
+
+\begin{enumerate}
+\item
+\texttt{center}: centers 的 ID；
+\item
+\texttt{n0, n1, n5}: 三个 arms 下的 sample sizes；
+\item
+\texttt{mean0, mean1, mean5}: 三个 arms 下 outcomes 的 means；
+\item
+\texttt{sd0, sd1, sd5}: 三个 arms 下 outcomes 的 standard deviations。
+\end{enumerate}
+
+由于 individual-level outcomes 没有报告，所以无法实施 FRT。不过，Neymanian inference 只需要 summary statistics。分别报告将 ``finasteride 1mg'' 和 ``finasteride 5mg'' 与 ``control'' 比较时的 point estimators 和 variance estimators。
+
+
+\paragraph{Data re-analyses}
+ 
+ 
+重新分析 Chapter \ref{sec::example-neyman-formula} 中使用的 LaLonde data。同时进行 Fisherian 和 Neymanian inferences。
+
+原始实验是一个 CRE。现在我们假装原始实验是一个 SRE。
+第一，假设实验按 race（black、Hispanic 或 other）分层，重新分析数据。第二，假设实验按 marital status 分层，重新分析数据。第三，假设实验按 high school diploma 的 indicator 分层，重新分析数据。
+
+与 CRE 下得到的结果进行比较。
+
+ 

@@ -1,0 +1,682 @@
+ 
+\chapter{Disentangle Mixture Distributions and Instrumental Variable Inequalities}
+ \label{chapter::iv-inequalities}
+
+ 
+ \cref{chapter::iv-experiment} 中的 IV model 施加了 \cref{assume::random}--\cref{assume::ER}：
+ \begin{enumerate}
+ \item
+ $Z\ind \{D(1), D(0) ,Y(1), Y(0)   \}$;
+ \item
+ $\pr(U = \df) = 0$;
+ \item 
+ 当 $U=\at$ 或 $\nt$ 时，$Y(1) = Y(0)$。
+ \end{enumerate}
+
+
+\cref{table::obs-latent} 总结了 monotonicity assumption 下的 observed groups 以及相应的 latent groups。
+
+
+\begin{table}[h]
+\centering
+\caption{\cref{assume::Mono} 下的 observed groups 与 latent groups}\label{table::obs-latent}
+\begin{tabular}{cccc}
+\hline 
+$Z$ & $D$ & $D(1)$ & latent groups \\
+\hline 
+$Z=1$ & $D=1$ & $D(1) = 1$ & $U = \cp$ 或 $\at$ \\
+$Z=1$ & $D=0$ & $D(1) = 0$ & $U = \nt$ \\ 
+$Z=0$ & $D=1$ & $D(0) = 1$ & $U = \at$  \\ 
+$Z=0$ & $D=0$ & $D(0) = 0$ & $U = \cp$ 或 $\nt$ \\
+\hline 
+\end{tabular}
+\end{table}
+
+
+有意思的是，\cref{assume::random}--\cref{assume::ER} 合在一起会给出一些可检验的含义。\citet{balke1997bounds} 将它们称为 {\it instrumental variable inequalities}。本章给出这些 inequalities 一个特殊情形的直观推导。证明的核心很直接：先识别由 $U$ 定义的各个 latent groups 中 potential outcomes 的均值。
+
+\section{Disentangle Mixture Distributions}
+\label{sec::disentangle-mixtures}
+
+
+我们先把主要结果总结为下面的 \cref{thm::cace-mixture-components}。定义
+$$
+\pi_u = \pr(U = u) \quad  \quad  (u=\at, \nt, \cp) 
+$$
+为类型 $U=u$ 的比例，并定义
+$$
+\mu_{zu} = E\{  Y(z) \mid U = u\}\quad  \quad (z=0,1;u=\at, \nt, \cp) .
+$$ 
+为类型 $U=u$ 的 potential outcome $Y(z)$ 的均值。Exclusion restriction 意味着 $\mu_{1\nt} = \mu_{0\nt} $ 且 $\mu_{1\at} = \mu_{0\at} $。分别用 $\mu_{\nt}$ 和 $\mu_{\at} $ 表示这两个共同值。
+
+\begin{theorem}
+\label{thm::cace-mixture-components}
+在 \cref{assume::random}--\cref{assume::ER} 下，latent types 的比例可以由下式识别：
+\begin{eqnarray*}
+ \pi_\nt &=& \pr(D=0\mid Z=1)  ,\\
+  \pi_\at &=&\pr(D=1\mid Z=0) , \\
+  \pi_\cp &=& E(D\mid Z=1) - E(D\mid Z=0) ,
+\end{eqnarray*}
+而 potential outcomes 的 type-specific means 可以由下式识别：
+\begin{eqnarray*}
+  \mu_{\nt} &=& E(Y\mid Z=1, D=0) ,\\
+ \mu_{\at} &=& E(Y\mid Z=0, D=1),\\
+ \mu_{1\cp} &=& \pi_\cp^{-1}\left\{   E(DY\mid Z=1 )  -  E(DY\mid Z=0)    \right\}, \\
+  \mu_{0\cp}  &=& \pi_\cp^{-1} \big[   E\{ (1-D)Y\mid Z=0 \}  -  E\{(1-D)Y\mid Z=1 \}    \big]. 
+\end{eqnarray*}
+\end{theorem}
+ 
+ 
+\begin{myproof}{Theorem}{\cref{thm::cace-mixture-components}}
+第一部分：我们先识别 latent compliance types 的比例。
+Never takers 的比例可由下式识别：
+\begin{eqnarray*}
+\pr(D=0\mid Z=1) 
+%&=& \pr\{ D(1) = 0\mid Z=1 \} = \pr\{ D(1) = 0, D(0) = 0 \mid Z=1 \} \\
+&=& \pr(U=\nt \mid Z=1)  \\
+&=& \pr(U=\nt) \\
+&=&  \pi_\nt ,
+\end{eqnarray*}
+Always takers 的比例可由下式识别：
+\begin{eqnarray*}
+\pr(D=1\mid Z=0) 
+%&=& \pr\{  D(0) = 1\mid Z=0 \} =  \pr\{ D(1)=1,  D(0) = 1\mid Z=0 \} \\
+&=& \pr(U=\at \mid Z=0)  \\
+&=& \pr(U=\at) =  \pi_\at . 
+\end{eqnarray*}
+因此，compliers 的比例为
+\begin{eqnarray*}
+\pi_\cp &=& \pr(U=\cp) \\
+&=& 1-  \pi_\nt -  \pi_\at  \\
+&=& 1 - \pr(D=0\mid Z=1)  - \pr(D=1\mid Z=0) \\
+%&=&\pr(D=1\mid Z=1)  - \pr(D=1\mid Z=0) 
+&=& E(D\mid Z=1) - E(D\mid Z=0) \\
+&=& \tau_D,
+\end{eqnarray*}
+这与前面的讨论一致。虽然我们无法知道每个个体的 latent compliance type，但可以识别 never-takers、always-takers 和 compliers 的总体比例。
+
+
+第二部分：接下来识别各 latent compliance type 内 potential outcomes 的均值。
+%Under \cref{assume::ER}, 
+%$$
+%\mu_{1\at} = \mu_{0\at} \equiv \mu_{\at},\quad \mu_{1\nt} = \mu_{0\nt} \equiv \mu_{\nt} .
+%$$
+观测组 $(Z=1,D=0)$ 中只有 never takers，因此
+$$
+E(Y\mid Z=1, D=0) = E\{  Y(1) \mid Z=1, U=\nt \} = E\{  Y(1) \mid   U=\nt \}  =
+\mu_{\nt}  . 
+$$
+观测组 $(Z=0,D=1)$ 中只有 always takers，因此
+$$
+E(Y\mid Z=0, D=1) = E\{  Y(0) \mid Z=0, U=\at \} = E\{  Y(0) \mid   U=\at \}  =
+\mu_{\at} . 
+$$
+观测组 $(Z=1,D=1)$ 同时包含 compliers 和 always takers，因此
+\begin{eqnarray*}
+E(Y\mid Z=1, D=1) &=& E\{ Y(1)\mid Z=1, D(1)=1\} \\
+&=& E\{ Y(1)\mid D(1)=1\}  \\   
+&=& \pr\{  D(0)=1 \mid D(1)=1 \} E\{ Y(1)\mid D(1)=1, D(0)=1\}  \\
+&&+ \pr\{  D(0)=0 \mid D(1)=1 \}E\{ Y(1)\mid D(1)=1, D(0)=0\}   \\
+&=& \frac{\pi_\cp}{\pi_\cp + \pi_\at} \mu_{1\cp} +  \frac{\pi_\at}{\pi_\cp + \pi_\at} \mu_{\at}.
+\end{eqnarray*}
+解上面的线性方程可得
+\begin{eqnarray*}
+\mu_{1\cp} &=& \pi_\cp^{-1} \left\{  (\pi_\cp + \pi_\at)  E(Y\mid Z=1, D=1)  - \pi_\at    E(Y\mid Z=0, D=1)    \right\} \\
+&=& \pi_\cp^{-1} \left\{  \pr(D=1\mid Z=1)  E(Y\mid Z=1, D=1) \right.\\
+&&\left. \qquad  -\pr(D=1\mid Z=0) E(Y\mid Z=0, D=1)    \right\} \\
+&=&  \pi_\cp^{-1}\left\{   E(DY\mid Z=1 )  -  E(DY\mid Z=0)    \right\}.
+\end{eqnarray*}
+观测组 $(Z=0,D=0)$ 同时包含 compliers 和 never takers，因此
+\begin{eqnarray*}
+E(Y\mid Z=0,D=0) &=& E\{ Y(0)\mid Z=0, D(0)=0\} \\
+&=& E\{ Y(0)\mid D(0)=0\} \\ 
+&=& \pr\{  D(1)=1 \mid D(0)=0 \} E\{ Y(0)\mid D(1)=1, D(0)=0\}  \\
+&&+ \pr\{  D(1)=0 \mid D(0)= 0\}E\{ Y(0)\mid D(1)=0, D(0)=0\}   \\
+&=& \frac{\pi_\cp}{\pi_\cp + \pi_\nt} \mu_{0\cp} +  \frac{\pi_\nt}{\pi_\cp + \pi_\nt} \mu_{\nt}.
+\end{eqnarray*}
+解上面的线性方程可得
+\begin{eqnarray*}
+\mu_{0\cp}  &=& \pi_\cp^{-1} \left\{  (\pi_\cp + \pi_\nt)  E(Y\mid Z=0, D=0)  - \pi_\nt    E(Y\mid Z=1, D=0)    \right\} \\
+&=& \pi_\cp^{-1} \left\{ \pr(D=0\mid Z=0)  E(Y\mid Z=0, D=0)  \right.\\
+&&\left. \qquad  -\pr(D=0\mid Z=1)   E(Y\mid Z=1, D=0)    \right\} \\
+&=& \pi_\cp^{-1} \big[   E\{ (1-D)Y\mid Z=0 \}  -  E\{(1-D)Y\mid Z=1 \}    \big]. 
+\end{eqnarray*}
+\end{myproof}
+
+利用 \cref{thm::cace-mixture-components} 中 $\mu_{1\cp} $ 和 $\mu_{0\cp} $ 的公式，可以将 $\tau_\cp = \mu_{1\cp}  - \mu_{0\cp}  $ 简化为
+$$
+\tau_\cp =  \{  E(Y\mid Z=1) - E(Y\mid Z=0) \}/\pi_\cp ,
+$$
+这正是前面 \cref{thm::CACE-identification} 中的公式。
+
+\cref{thm::cace-mixture-components} 关注的是识别 potential outcomes 的均值 $\mu_{zu} $。\citet{imbens1997estimating} 推导了 potential outcomes 分布的更一般 identification formulas；细节留给 \cref{hw::disentangle-mixture-distrubution}。
+
+
+
+\section{Testable implications: Instrumental Variable Inequalities}
+
+
+通过 \cref{thm::cace-mixture-components} 绕一圈来推导 $\tau_\cp$ 的公式，是否还有额外价值？答案是肯定的。对于 binary outcome，下面的 inequalities 必须成立：
+$$
+0\leq \mu_{1\cp} \leq 1, \quad 
+0\leq \mu_{0\cp} \leq 1, 
+$$
+这蕴含四个 inequalities：
+\begin{eqnarray*}
+E(DY\mid Z=1 )  -  E(DY\mid Z=0) &\geq & 0 ,\\
+E(DY\mid Z=1 )  -  E(DY\mid Z=0) &\leq  & E(D\mid Z=1) - E(D\mid Z=0)  ,\\ 
+E\{ (1-D)Y\mid Z=0 \}  -  E\{(1-D)Y\mid Z=1 \}   &\geq & 0,\\
+E\{ (1-D)Y\mid Z=0 \}  -  E\{(1-D)Y\mid Z=1 \}  &\leq & E(D\mid Z=1) - E(D\mid Z=0) . 
+\end{eqnarray*}
+整理各项后，可以得到下面统一形式的 inequalities。
+
+
+\begin{theorem}[Instrumental Variable Inequalities]\label{thm::iv-inequality}
+若 outcome $Y$ 为 binary，则 \cref{assume::random}--\cref{assume::ER} 蕴含
+\begin{eqnarray}\label{eq::iv-inequalities}
+E(Q\mid Z=1) - E(Q\mid Z=0) \geq 0,  
+\end{eqnarray}
+其中 $Q = DY, D(1-Y), (D - 1)Y$ 以及 $D+Y-DY$。
+\end{theorem}
+
+
+在 IV assumptions \cref{assume::random}--\cref{assume::ER} 下，对于 $Q = DY, D(1-Y), (D - 1)Y$ 和 $D+Y-DY$，处理组与对照组的均值差都必须非负。重要的是，这些含义只涉及观测变量的分布。因此，拒绝 IV inequalities 就会拒绝 IV assumptions。
+
+
+\citet{balke1997bounds} 在假设和不假设 monotonicity 的两种情形下推导了更一般的 IV inequalities。上面的证明策略来自 \citet{jiang2020measurement}，他们处理的是稍复杂一些的设定。\cref{thm::iv-inequality} 只陈述了 binary outcome 下的 testable implications。\cref{hw::ivineq-binary} 给出等价形式，\cref{hw::ivineq-general-Y} 给出 general outcome 下的结果。
+
+
+
+\section{Examples}\label{section::binary-y-ivineq}
+
+
+对于 binary outcome，可以用下面的 method of moments 估计所有参数。
+
+
+\begin{lstlisting}
+IVbinary = function(n111, n110, n101, n100, 
+                    n011, n010, n001, n000){
+  
+  n_tr = n111 + n110 + n101 + n100
+  n_co = n011 + n010 + n001 + n000
+  n    = n_tr + n_co
+  
+  ## proportions of the latent strata
+  pi_n = (n101 + n100)/n_tr
+  pi_a = (n011 + n010)/n_co
+  pi_c = 1 - pi_n - pi_a
+  
+  ## four observed means of the outcomes (Z=z,D=d)
+  mean_y_11 = n111/(n111 + n110)
+  mean_y_10 = n101/(n101 + n100)
+  mean_y_01 = n011/(n011 + n010)
+  mean_y_00 = n001/(n001 + n000)
+  
+  ## means of the outcomes of two strata
+  mu_n1 = mean_y_10
+  mu_a0 = mean_y_01
+  ## ER implies the following two means
+  mu_n0 = mu_n1
+  mu_a1 = mu_a0
+  ## stratum (Z=1,D=1) is a mixture of c and a
+  mu_c1 = ((pi_c + pi_a)*mean_y_11 - pi_a*mu_a1)/pi_c
+  ## stratum (Z=0,D=0) is a mixture of c and n
+  mu_c0 = ((pi_c + pi_n)*mean_y_00 - pi_n*mu_n0)/pi_c
+  
+  ## identifiable quantities from the observed data
+  list(pi_c = pi_c, 
+       pi_n = pi_n, 
+       pi_a = pi_a, 
+       mu_c1= mu_c1,
+       mu_c0= mu_c0,
+       mu_n1= mu_n1,
+       mu_n0= mu_n0,
+       mu_a1= mu_a1,
+       mu_a0= mu_a0,
+       tau_c= mu_c1 - mu_c0)
+}
+\end{lstlisting}
+
+
+下面重新考察两个 binary data 的经典例子。
+
+\begin{example}\label{eg::1-iv-inequalities}
+\citet{improve2014endovascular} 评估急诊腔内修复（emergency endovascular）与开放手术修复（open surgical repair）两种策略对临床诊断为破裂性主动脉瘤（ruptured aortic aneurism）患者的有效性。患者被随机分配到 endovascular strategy 或 open repair strategy。主要结局（primary outcome）是 30 天后的生存状态（survival status）。令 $Z$ 表示 treatment assigned，其中 $Z=1$ 对应 endovascular strategy，$Z=0$ 对应 open repair。令 $D$ 表示 treatment received。
+令 $Y$ 表示 survival status，其中 $Y=1$ 表示死亡，$Y=0$ 表示存活。\cref{tab::data1} 总结了 observed data。
+%The estimate of $\tau_\cp $ is $0.131$ with 95\% confidence interval $(-0.036, 0.298)$ including $0$.
+使用上面的 \ri{IVbinary} 函数，可以得到如下估计：
+\begin{lstlisting}
+> investigators_analysis = IVbinary(n111 = 107,
++                                   n110 = 42,
++                                   n101 = 68,
++                                   n100 = 42,
++                                   n011 = 24,
++                                   n010 = 8,
++                                   n001 = 131,
++                                   n000 = 79)
+>                         
+> investigators_analysis
+$pi_c
+[1] 0.4430582
+
+$pi_n
+[1] 0.4247104
+
+$pi_a
+[1] 0.1322314
+
+$mu_c1
+[1] 0.7086064
+
+$mu_c0
+[1] 0.6292042
+
+$mu_n1
+[1] 0.6181818
+
+$mu_n0
+[1] 0.6181818
+
+$mu_a1
+[1] 0.75
+
+$mu_a0
+[1] 0.75
+
+$tau_c
+[1] 0.07940223
+\end{lstlisting}
+没有证据表明 IV assumptions 被违反。
+\end{example}
+
+
+\begin{example}\label{eg::2-iv-inequalities}
+在 \citet{hirano2000assessing} 中，医生（physicians）被随机抽取，并收到一封鼓励其为 flu 高风险患者接种疫苗的信。实际接种 flu shot 是 treatment，outcome 是 flu-related hospital visits 的指示变量。不过，有些患者并不遵从其 assignment。令 $Z_i$ 表示是否受到接种 flu shot 的 encouragement：若 physician 收到 encouragement letter，则 $Z=1$，否则 $Z=0$。令 $D$ 表示 treatment received。
+令 $Y$ 表示 outcome，其中若冬季发生 flu-related hospitalization 则 $Y=0$，否则 $Y=1$。数据的更多细节见 \cref{problem::flushot}。\cref{tab::data2} 总结了 observed data。
+%The estimate of $\tau_\cp $ is $0.116$ with 95\% confidence interval $(-0.061, 0.293)$ including $0$.
+使用上面的 \ri{IVbinary} 函数，可以得到如下估计：
+\begin{lstlisting}
+> flu_analysis = IVbinary(n111 = 31,
++                         n110 = 422,
++                         n101 = 84,
++                         n100 = 935,
++                         n011 = 30,
++                         n010 = 233,
++                         n001 = 99,
++                         n000 = 1027)
+> flu_analysis
+$pi_c
+[1] 0.1183997
+
+$pi_n
+[1] 0.6922554
+
+$pi_a
+[1] 0.1893449
+
+$mu_c1
+[1] -0.004548064
+
+$mu_c0
+[1] 0.1200094
+
+$mu_n1
+[1] 0.08243376
+
+$mu_n0
+[1] 0.08243376
+
+$mu_a1
+[1] 0.1140684
+
+$mu_a0
+[1] 0.1140684
+
+$tau_c
+[1] -0.1245575
+\end{lstlisting}
+由于 $\hat\mu_{1\cp} < 0$，这里有证据表明 IV assumptions 被违反。
+\end{example} 
+
+
+
+
+ \begin{table}[t]
+\caption{Binary data 与 IV inequalities}
+\begin{center}
+\begin{subtable}{0.5\textwidth}
+\caption{\citet{improve2014endovascular} 的研究}
+\begin{tabular}{cccccc} 
+\hline 
+      &   \multicolumn{2}{c}{$Z=1$}  &  &  \multicolumn{2}{c}{$Z=0$}  \\  \cline{2-3} \cline{5-6} 
+      & $D=1$  &  $D=0$           &       &  $D=1$  &  $D=0$\\
+ $Y=1$ &   107    &      68         &      &    24       &    131        \\
+ $Y=0$ &   42    &     42            &      &     8         &     79           \\  
+ \hline
+\end{tabular}
+\label{tab::data1}
+\end{subtable}% 
+\vspace{0.1in}
+\begin{subtable}{0.5\textwidth}
+\caption{\citet{hirano2000assessing} 的研究}
+\begin{tabular}{cccccc}
+\hline 
+      &   \multicolumn{2}{c}{$Z=1$}  &  &  \multicolumn{2}{c}{$Z=0$}  \\  \cline{2-3} \cline{5-6} 
+      & $D=1$  &  $D=0$           &       &  $D=1$  &  $D=0$\\
+ $Y=1$ &   31    &     85         &      &     30       &    99       \\
+ $Y=0$ &   424   &     944            &      &     237         &    1041           \\  
+ \hline
+\end{tabular}
+\label{tab::data2}
+\end{subtable}
+\end{center}
+\end{table}%
+
+ 
+ 
+\section{Homework problems}
+
+\homeworksolutionref{22}
+\paragraph{More detailed data analysis}\label{hw::more-data-binary}
+
+\cref{eg::1-iv-inequalities,eg::2-iv-inequalities} 忽略了估计中的 uncertainty。请计算真参数的 confidence intervals。
+ 
+
+
+
+\paragraph{Risk ratio for compliers}\label{hw::rr-compliers}
+
+
+对于 binary outcome，可以将 compliers 的 risk ratio 定义为
+$$
+\textsc{rr}_\cp = \frac{  \pr\{  Y(1) = 1\mid U = \cp \}  }{ \pr\{  Y(0) = 1\mid U = \cp \}   } .
+$$
+
+证明：在 \cref{assume::random}--\cref{assume::ER} 下，它可以由下式识别：
+$$
+\textsc{rr}_\cp =  \frac{  E(DY\mid Z=1)  - E(DY\mid Z=0)  }{  E\{  (D-1)Y\mid Z=1 \}   - E\{ (D-1)Y\mid Z=0 \} }.
+$$
+
+
+
+注：利用 \cref{thm::cace-mixture-components}，可以识别 $E\{  Y(1) \mid U = \cp \} $ 与 $E\{  Y(0) \mid U = \cp \} $ 之间的任意比较。
+
+
+\paragraph{Disentangle the mixtures: distributional results}\label{hw::disentangle-mixture-distrubution}
+
+
+本题推广 \cref{thm::cace-mixture-components}。定义
+$$
+f_{zu}(y) = \pr\{  Y(z) = y  \mid U=u \},  \quad  (z=0,1;u=\at, \nt, \cp)
+$$
+为 latent stratum $U=u$ 中 $Y(z)$ 的 density，并定义
+$$
+g_{zd}(y) = \pr(Y = y\mid Z=z, D=d)
+$$
+为 observed group $(Z=z, D=d)$ 内 outcome 的 density。Exclusion restriction 意味着 $f_{1\nt}(y) = f_{0\nt} (y) $ 且 $f_{1\at}(y) = f_{0\at}(y) $。分别用 $f_{\nt}(y)$ 和 $ f_{\at} (y) $ 表示这两个共同 density。
+
+
+
+证明下面的 \cref{thm::cace-mixture-components-distribution}。
+
+
+ 
+\begin{theorem}
+\label{thm::cace-mixture-components-distribution}
+在 \cref{assume::random}--\cref{assume::ER} 下，potential outcomes 的 type-specific densities 可以由下式识别：
+\begin{eqnarray*}
+  f_{\nt}(y) &=& g_{10}(y) ,\\
+  f_{\at} (y) &=& g_{01}(y),\\
+f_{1\cp}(y) &=& \pi_\cp^{-1} \{   \pr(D=1\mid Z=1 )g_{11}(y)  -  \pr(D=1\mid Z=0) g_{01}(y)   \} , \\
+f_{0\cp} (y) &=& \pi_\cp^{-1} \{  \pr(D=0\mid Z=0)  g_{00}(y)  -  \pr(D=0\mid Z=1)  g_{10}(y)    \} . 
+\end{eqnarray*}
+\end{theorem}
+
+
+
+ 
+
+
+
+
+
+\paragraph{Alternative form of \cref{thm::iv-inequality}}
+\label{hw::ivineq-binary}
+
+\cref{eq::iv-inequalities} 中的 inequalities 可以改写为
+\begin{eqnarray*}
+\pr(D=1, Y=y\mid Z=1) &\geq & \pr(D=1, Y=y\mid Z=0), \\
+\pr(D=0, Y=y\mid Z=0) &\geq & \pr(D=0, Y=y\mid Z=1)
+\end{eqnarray*}
+对 $y=0,1$ 都成立。
+
+
+
+\paragraph{IV inequalities for a general outcome}
+\label{hw::ivineq-general-Y}
+
+对于 general outcome $Y$，证明 \cref{assume::random}--\cref{assume::ER} 蕴含
+\begin{eqnarray*}
+\pr(D=1, Y\geq y\mid Z=1) &\geq & \pr(D=1, Y\geq y\mid Z=0), \\
+\pr(D=1, Y <  y\mid Z=1) &\geq & \pr(D=1, Y <  y\mid Z=0), \\
+\pr(D=0, Y\geq y\mid Z=0) &\geq & \pr(D=0, Y\geq y\mid Z=1),\\
+\pr(D=0, Y <  y\mid Z=0) &\geq & \pr(D=0, Y <  y\mid Z=1)
+\end{eqnarray*}
+对所有 $y$ 都成立。
+ 
+注：\citet{imbens1997estimating} 和 \citet{kitagawa2015test} 讨论了类似结果。可以基于 Kolmogorov--Smirnov statistic 的类似量检验第一条 inequality：
+$$
+\text{KS}_1 = \max_{y} \Big |
+\frac{  \sumn Z_i D_i  1(Y_i \leq y)  }{ \sumn Z_i D_i  } - \frac{  \sumn (1-Z_i) D_i  1(Y_i \leq y)  }{ \sumn (1-Z_i) D_i  }
+\Big |.
+$$
+
+
+
+\paragraph{Example for the IV inequalities}
+
+给出一个所有 IV inequalities 都成立的例子，再给出一个并非所有 IV inequalities 都成立的例子。需要指定 binary variables $(Z,D,Y)$ 的 joint distribution。
+
+ 
+ 
+ \paragraph{Violations of the key assumptions}\label{eq::violations-of-IV}
+
+\cref{thm::CACE-identification} 依赖 randomization、monotonicity 和 exclusion restriction。后两个假设即使在 randomized experiments 中也不可检验。当它们被违反时，IV estimator 不再识别 CACE。本题给出下面两个情形，它们是 \citet{angrist1996identification} 中 Propositions 2 and 3 的重述。回忆 $\pi_u = \pr(U=u)$ 且 $\tau_u = E\{  Y(1) - Y(0) \mid U=u \}$，其中 $u=\at, \nt, \cp, \df$。
+
+
+\begin{theorem}
+\label{theorem::wald-violation-assumptions}
+(a) 
+在 \cref{assume::random} 和 \cref{assume::Mono} 下，但不要求 exclusion restriction，有
+$$
+\frac{ E(Y\mid Z=1) - E(Y\mid Z=0) }{ E(D\mid Z=1) - E(D \mid Z=0) } - \tau_\cp 
+= \frac{  \pi_\at \tau_\at + \pi_\nt \tau_\nt  }{  \pi_\cp } .
+$$
+ 
+
+(b)
+在 \cref{assume::random} 和 \cref{assume::ER} 下，但不要求 monotonicity，有
+$$
+\frac{ E(Y\mid Z=1) - E(Y\mid Z=0) }{ E(D\mid Z=1) - E(D \mid Z=0) } - \tau_\cp 
+= \frac{  \pi_\df (\tau_\cp + \tau_\df )  }{   \pi_\cp - \pi_\df   }.
+$$
+\end{theorem}
+ 
+证明 \cref{theorem::wald-violation-assumptions}。
+
+ 
+ \paragraph{Problems of other analyses}\label{problem::as-treated-analysis}
+
+在 \cref{sec::disentangle-mixtures} 推导 IV inequalities 的过程中，我们通过识别 latent strata 的比例以及它们 potential outcomes 的 conditional means 来 disentangle mixture distributions。这些结果有助于理解其他看似合理的 analyses 的缺陷。下面回顾三个 estimators，并假设 \cref{assume::random}--\cref{assume::ER} 成立。
+
+
+\begin{enumerate}
+\item 
+{\it As-treated analysis} 比较实际接受 treatment 与 control 的 units 的 outcome 均值，得到
+$$
+\tau_\textsc{at} = E(Y\mid D=1) - E(Y\mid D=0).
+$$
+证明
+$$
+\tau_\textsc{at} = \frac{  \pi_\at \mu_\at + \pr(Z=1)\pi_\cp \mu_{1\cp}   }{   \pr(D=1) } 
+- \frac{  \pi_\nt \mu_\nt + \pr(Z=0) \pi_\cp \mu_{0\cp}   }{   \pr(D=0) } .
+$$
+
+
+\item 
+{\it Per-protocol analysis} 比较 treatment group 与 control group 中遵从所分配 treatment 的 units，得到
+$$
+\tau_\textsc{pp} = E(Y\mid Z=1, D=1) - E(Y\mid Z=0, D=0).
+$$
+证明
+$$
+\tau_\textsc{pp} =\frac{  \pi_\at \mu_\at + \pi_\cp \mu_{1\cp} }{  \pi_\at   + \pi_\cp }
+- \frac{  \pi_\nt \mu_\nt + \pi_\cp \mu_{0\cp} }{  \pi_\nt   + \pi_\cp }.
+$$
+
+
+\item 
+我们也可能希望在给定 treatment assignment 的条件下，比较接受 treatment 与 control 的 units 的 outcomes，从而得到
+\begin{eqnarray*}
+\tau_{Z=1} &=& E(Y\mid Z=1, D=1) - E(Y\mid Z=1, D=0),\\ 
+\tau_{Z=0} &=& E(Y\mid Z=0, D=1) - E(Y\mid Z=0, D=0).
+\end{eqnarray*}
+证明它们可化简为
+$$
+\tau_{Z=1}  = \frac{  \pi_\at \mu_\at + \pi_\cp \mu_{1\cp} }{  \pi_\at   + \pi_\cp } - \mu_\nt,\quad
+\tau_{Z=0} = \mu_\at - \frac{  \pi_\nt \mu_\nt + \pi_\cp \mu_{0\cp} }{  \pi_\nt   + \pi_\cp }.
+$$
+\end{enumerate}
+ 
+ 
+\paragraph{Bounds on the average causal effect on the whole population}\label{para::bounds-ACE}
+
+
+基于 \cref{eq::interpret-iv-double} 中的记号，扩展 \cref{sec::disentangle-mixtures} 的讨论。对于 potential outcome $Y(d)$，将 treatment received 对 outcome 的 average causal effect 定义为
+$$
+\delta = E\{  Y(d=1) - Y(d=0) \},
+$$
+并由于记号变化，将 $\mu_{zu} $ 的定义改为
+$$
+m_{du} = E\{  Y(d) \mid U = u\},\quad  (z=0,1;u=\at, \nt, \cp) 
+$$  
+它们满足
+$$
+\delta = \sum_{u = \at, \nt, \cp}  \pi_u  (m_{1u} - m_{0u}).
+$$
+
+\cref{sec::disentangle-mixtures} 识别了 $\pi_\at$、$\pi_\nt$、$\pi_\cp$、$m_{1\at} = \mu_{1 \at}$、$m_{0\nt} = \mu_{0\nt }$、$m_{1\cp} = \mu_{1\cp}$ 和 $m_{0\cp} = \mu_{0\cp}$。但是，数据不包含关于 $m_{0 \at}$ 和 $m_{1\nt }$ 的任何信息。因此无法识别 $\delta$。当 outcome 有界时，可以给出 $\delta$ 的 bounds。
+
+\begin{theorem}
+\label{thm::bound-on-ACE}
+在 \cref{assume::Mono}--\cref{assume::ER-double-index} 下，若 outcome 有界于 $[\underline{y}, \overline{y}]$，则有 $\underline{\delta} \leq  \delta  \leq \overline{\delta}$，其中
+$$
+\underline{\delta} =  \delta'  - \overline{y} \pr(D=1\mid Z=0) + \underline{y} \pr(D=0\mid Z=1)
+$$
+以及
+$$
+\overline{\delta} = \delta'  -   \underline{y} \pr(D=1\mid Z=0) +  \overline{y}  \pr(D=0\mid Z=1) 
+$$
+且 $\delta' = E(DY\mid Z=1) - E(Y-DY\mid Z=0) .$
+\end{theorem}
+
+证明 \cref{thm::bound-on-ACE}。
+ 
+ 
+注：在 binary outcome 的特殊情形下，bounds 可简化为
+ $$
+\underline{\delta} =   E(DY\mid Z=1) - E( D+Y-DY\mid Z=0)  
+$$
+以及
+$$
+\overline{\delta} =  E(DY+1-D\mid Z=1) - E(Y-DY\mid Z=0) .
+ $$
+ 
+ 
+ \paragraph{One-sided noncompliance and statistical inference}\label{para::15-onesidednoncompliance}
+ 
+考虑一个 randomized encouragement design，其中被分配到 control 的 units 无法获得 treatment。对 unit $i$，令 $Z_i$ 为 binary treatment assigned，$D_i$ 为 binary treatment received，$Y_i$ 为感兴趣的 outcome。One-sided noncompliance 指的是
+$$
+Z_i=0 \Longrightarrow  D_i = 0 \quad (i=1,\ldots, n). 
+$$
+假设 \cref{assume::random} 成立。
+ 
+ 
+\begin{enumerate}
+[(1)]
+\item 
+\cref{assume::Mono} 在这个情形下是否成立？
+本题中由 $\{ D_i(1), D_i(0)  \}$ 定义的 latent strata 有多少个？如何用 observed data distribution 识别它们的比例？
+
+\item 
+陈述 exclusion restriction 的假设。在 exclusion restriction 下，证明 $E\{  Y(z) \mid U = u \}$ 可以由 observed data distributions 识别。
+给出所有可能的 $z$ 和 $u$ 取值下的公式。在这个情形中如何识别 CACE？
+
+ 
+
+\item
+如果对所有 units $i$ 都观测到 pretreatment covariates $X_i$，如何利用 covariate information 提高 CACE 的 estimation efficiency？
+ 
+ 
+ \item 
+ 在 \cref{assume::random} 下，exclusion restriction \cref{assume::ER} 有 testable implications，即 one-sided noncompliance 下的 IV inequalities。请陈述这些 IV inequalities。
+ 
+\item
+\citet{sommer1991estimating} 给出了如下数据集：
+ 
+ \begin{center}
+\begin{tabular}{cccccc} 
+\hline 
+      &   \multicolumn{2}{c}{$Z=1$}  &  &  \multicolumn{2}{c}{$Z=0$}  \\  \cline{2-3} \cline{5-6} 
+      & $D=1$  &  $D=0$           &       &  $D=1$  &  $D=0$\\
+ $Y=1$ &   9663    &     2385         &      &     0       &    11514       \\
+ $Y=0$ &   12   &     34            &      &     0         &    74           \\  
+ \hline 
+\end{tabular}
+ \end{center}
+ 
+Treatment assigned $Z$ 表示儿童是否被分配到 vitamin A supplement，treatment received indicator $D$ 表示儿童是否实际接受 vitamin A supplement，binary outcome $Y$ 是生存指示变量（survival indicator）。原始 RCT 在 Indonesia 进行。
+请重新分析这组数据。
+ \end{enumerate}
+ 
+ 
+注：\citet{bloom1984accounting} 最早讨论 one-sided noncompliance，并提出 estimator $\hat\tau_\cp = \hat\tau_Y / \hat\tau_D$；它有时称为 Bloom estimator。\citet{bloom1984accounting} 的记号与本章不同。
+
+ 
+ 
+ 
+ 
+  \paragraph{One-sided noncompliance with partial adherence}
+\label{para::one-sided-partial-adherence}
+ 
+\citet[][Table 3]{sanders2021incorporating} 报告了如下 RCT 数据；该 RCT 旨在估计戒烟干预（smoking cessation interventions）在 psychotic disorders 个体中的有效性（efficacy）。
+
+\begin{center}
+\begin{tabular}{cccc}
+\hline  
+分配组 & treatment received & 样本量 & \# positive outcomes \\
+\hline  
+Control & None& 151 &25 \\
+Treatment& None& 35 & 7 \\
+Treatment& Partial& 42& 17 \\
+Treatment& Full& 70& 40\\
+\hline 
+\end{tabular}
+\end{center}
+
+Treatment received 有三个层级：``full'' treatment 对应参加全部 $8$ 次 treatment sessions，``partial'' 对应参加 $5$ 到 $7$ 次 sessions，``none'' 对应参加少于 $5$ 次 sessions。Outcome 定义为三个月时相对于 baseline 的 smoking reduction 是否达到 $50\%$ 或以上的 binary indicator。
+
+
+在本题中，treatment assignment $Z$ 是 binary，但 treatment received $D$ 对 ``none''、``partial'' 和 ``full'' 分别取三个值 $0, 0.5, 1$。三水平的 $D$ 会带来复杂性，但在 control assignment 下它只能为 $0$。本题中有多少个 latent strata $U = \{ D(1), D(0) \} $？能否识别它们的比例？
+
+如何将 exclusion restriction 推广到本题？哪些 causal effects 可以作为感兴趣的对象？它们能否被识别？
+
+请基于上述问题分析这组数据。
+
+
+
+  
+
+ \paragraph{Recommended reading}
+
+\citet{balke1997bounds} 推导了更一般的 IV inequalities。

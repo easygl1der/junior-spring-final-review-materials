@@ -1,0 +1,477 @@
+\chapter{Correlation, Association, and the Yule--Simpson Paradox}
+\label{chapter::correlationassociation}
+
+\section{Some commonly-used measures of association}
+
+\subsection{Correlation and regression}
+\label{section:correlatioandregressionintro}
+
+两个随机变量 $Z$ 与 $Y$ 之间的 \term{Pearson 相关系数}{Pearson correlation coefficient} 定义为
+\[
+\rho_{ZY}
+= \frac{\cov(Z,Y)}{\sqrt{\var(Z)\var(Y)}} ,
+\]
+它度量 $Z$ 与 $Y$ 的\term{线性依赖}{linear dependence}。
+
+把 $Y$ 对 $Z$ 作\term{线性回归}{linear regression}，得到模型
+\begin{equation}
+Y = \alpha + \beta Z + \varepsilon ,
+\label{eq::short-regression}
+\end{equation}
+其中 $E(\varepsilon)=0$ 且 $E(\varepsilon Z)=0$。可以证明，\term{回归系数}{regression coefficient} $\beta$ 满足
+\[
+\beta
+= \frac{\cov(Z,Y)}{\var(Z)}
+= \rho_{ZY}\sqrt{\frac{\var(Y)}{\var(Z)}} .
+\]
+因此 $\beta$ 与 $\rho_{ZY}$ 总是同号。
+
+我们也可以定义 $Y$ 对 $Z$ 与 $X$ 的\term{多元回归}{multiple regression}：
+\begin{equation}
+Y = \alpha + \beta Z + \gamma X + \varepsilon ,
+\label{eq::long-regression}
+\end{equation}
+其中 $E(\varepsilon)=0$，$E(\varepsilon Z)=0$ 且 $E(\varepsilon X)=0$。通常我们会把 $\beta$ 解释为 $Z$ 对 $Y$ 的“效应”：在保持 $X$ 不变、以 $X$ 为条件，或者控制 $X$ 后，$Z$ 与 $Y$ 的关系。线性回归的基础知识见 \cref{appendix::basic-linear-regression}。
+
+更有意思的是，\cref{eq::short-regression,eq::long-regression} 中的两个 $\beta$ 可以不同，甚至可以符号相反。下面的 R 代码重新分析了 \citet{hainmueller2012entropy} 使用的 LaLonde 观测数据。我们关心的主要问题是职业培训项目对收入的“因果效应”。控制所有协变量时，\ri{treat} 的回归系数为 \ri{1067.5461}；不控制任何协变量时，\ri{treat} 的回归系数为 \ri{-8506.4954}。
+
+\begin{lstlisting}
+> dat <- read.table("cps1re74.csv", header = TRUE)
+> dat$u74 <- as.numeric(dat$re74==0)
+> dat$u75 <- as.numeric(dat$re75==0)
+>
+> ## linear regression on the outcome
+> ## . means regression on all other variable in dat
+> lmoutcome = lm(re78 ~ ., data = dat)
+> round(summary(lmoutcome)$coef[2, ], 3)
+  Estimate Std. Error    t value   Pr(>|t|)
+  1067.546    554.060      1.927      0.054
+>
+> lmoutcome = lm(re78 ~ treat, data = dat)
+> round(summary(lmoutcome)$coef[2, ], 3)
+  Estimate Std. Error    t value   Pr(>|t|)
+ -8506.495    712.766    -11.934      0.000
+\end{lstlisting}
+
+\subsection{Contingency tables}
+\label{sec::twobytwotables-withresume}
+
+两个\term{二元变量}{binary variables} $Z$ 与 $Y$ 的联合分布可以用一个二乘二\term{列联表}{contingency table} 表示。令 $p_{zy}=\pr(Z=z,Y=y)$，则联合分布可以写成
+\[
+\begin{array}{lcc}
+\hline
+        & Y=1 & Y=0 \\\hline
+Z=1 & p_{11} & p_{10}\\
+Z=0 & p_{01} & p_{00}\\
+\hline
+\end{array}
+\]
+
+如果把 $Z$ 看作\term{处理}{treatment}或\term{暴露}{exposure}，把 $Y$ 看作\term{结果}{outcome}，则可以定义\term{风险差}{risk difference, RD}：
+\begin{align*}
+\RD
+&= \pr(Y=1\mid Z=1)-\pr(Y=1\mid Z=0)\\
+&= \frac{p_{11}}{p_{11}+p_{10}}
+-\frac{p_{01}}{p_{01}+p_{00}},
+\end{align*}
+\term{风险比}{risk ratio, RR}：
+\begin{align*}
+\RR
+&= \frac{\pr(Y=1\mid Z=1)}{\pr(Y=1\mid Z=0)}\\
+&=
+\frac{p_{11}}{p_{11}+p_{10}}
+\Big/
+\frac{p_{01}}{p_{01}+p_{00}},
+\end{align*}
+以及\term{优势比}{odds ratio, OR}\footnote{在概率论中，一个事件的优势（odds）定义为该事件发生的概率除以该事件不发生的概率。}：
+\begin{align*}
+\OR
+&=
+\frac{\pr(Y=1\mid Z=1)/\pr(Y=0\mid Z=1)}
+{\pr(Y=1\mid Z=0)/\pr(Y=0\mid Z=0)}\\
+&=
+\frac{\frac{p_{11}}{p_{11}+p_{10}}/\frac{p_{10}}{p_{11}+p_{10}}}
+{\frac{p_{01}}{p_{01}+p_{00}}/\frac{p_{00}}{p_{01}+p_{00}}}\\
+&= \frac{p_{11}p_{00}}{p_{10}p_{01}} .
+\end{align*}
+
+“风险差”“风险比”和“优势比”这些术语来自\term{流行病学}{epidemiology}。因为流行病学中的结果常常是疾病，所以用“风险”来表示患病概率是自然的。
+
+关于这些度量，有如下简单事实。
+\begin{proposition}\label{prop::2x2-independence}
+(1) 以下陈述等价\footnote{本书用记号 $\ind$ 表示随机变量的独立或条件独立。这个记号来自 \citet{dawid1979conditional}。}：$Z\ind Y$，$\RD=0$，$\RR=1$，以及 $\OR=1$。
+
+(2) 如果所有 $p_{zy}$ 都为正，则 $\RD>0$ 等价于 $\RR>1$，也等价于 $\OR>1$。
+
+(3) 如果 $\pr(Y=1\mid Z=1)$ 和 $\pr(Y=1\mid Z=0)$ 都很小，则 $\OR\approx \RR$。
+\end{proposition}
+
+\cref{prop::2x2-independence} 中 (1) 与 (2) 的证明留作习题 \cref{hw::2x2-equivalence}。(3) 是一个非形式化陈述。近似成立的原因是：当罕见疾病满足 $p\approx 0$ 时，优势 $p/(1-p)$ 接近概率 $p$；由 Taylor 展开，
+\[
+\frac{p}{1-p}=p+p^2+\cdots\approx p .
+\]
+在流行病学中，如果结果表示某种罕见疾病的发生，那么假设 $\pr(Y=1\mid X=1)$ 与 $\pr(Y=1\mid X=0)$ 都很小通常是合理的。
+
+如果把概率替换为给定另一个变量 $X$ 后的条件概率，例如 $\pr(Y=1\mid Z=1,X=x)$ 和 $\pr(Y=1\mid Z=0,X=x)$，也可以定义 $\RD$、$\RR$ 和 $\OR$ 的条件版本。
+
+给定计数 $n_{zy}=\#\{i:Z_i=z,Y_i=y\}$，观测数据可以总结为如下二乘二列联表：
+\[
+\begin{array}{lcc}
+\hline
+        & Y=1 & Y=0 \\\hline
+Z=1 & n_{11} & n_{10}\\
+Z=0 & n_{01} & n_{00}\\
+\hline
+\end{array}
+\]
+用样本比例 $\hat p_{zy}=n_{zy}/n$ 替换真实概率即可估计 $\RD$、$\RR$ 和 $\OR$，其中 $n$ 是总样本量；二乘二表的渐近推断见 \cref{section::asymptotic-inference-2x2}。在 R 中，\ri{fisher.test} 基于观测数据的二乘二表对 $Z\ind Y$ 作精确检验，\ri{chisq.test} 则作渐近检验。
+
+\begin{example}\label{eg::bertrand2004emily-chapter1}
+\citet{bertrand2004emily} 做了一个关于简历的随机实验，研究感知种族对面试回电的影响。他们把听起来像黑人或白人的名字随机分配给虚构简历，再投递给 Boston 和 Chicago 报纸上的招聘广告。下面的二乘二表总结了感知种族与回电结果：
+
+\begin{lstlisting}
+> resume = read.csv("resume.csv")
+> Alltable = table(resume$race, resume$call)
+> Alltable
+
+           0    1
+  black 2278  157
+  white 2200  235
+\end{lstlisting}
+
+两行的总数相同，所以很明显，白人化名字获得了更多回电。下面的 Fisher 精确检验表明，这个差异在统计上显著。
+\begin{lstlisting}
+> fisher.test(Alltable)
+
+	Fisher's Exact Test for Count Data
+
+data:  Alltable
+p-value = 4.759e-05
+alternative hypothesis: true odds ratio is not equal to 1
+95 percent confidence interval:
+ 1.249828 1.925573
+sample estimates:
+odds ratio
+  1.549732
+\end{lstlisting}
+\end{example}
+
+\section{An example of the Yule--Simpson Paradox}
+
+\subsection{Data}
+
+经典的肾结石例子来自 \citet{charig1986comparison}。其中 $Z$ 是处理变量，$Z=1$ 表示开放手术，$Z=0$ 表示小切口手术；$Y$ 是结果变量，$Y=1$ 表示成功，$Y=0$ 表示失败。处理与结果数据可以总结为如下二乘二表：
+\[
+\begin{array}{lcc}
+\hline
+        & Y=1 & Y=0 \\\hline
+Z=1 & 273 & 77\\
+Z=0 & 289 & 61\\
+\hline
+\end{array}
+\]
+
+估计得到的风险差为
+\[
+\widehat{\RD}
+= \frac{273}{273+77}-\frac{289}{289+61}
+=78\%-83\%=-5\%<0 .
+\]
+看起来处理 0 更好；也就是说，相比开放手术，小切口手术有更高的成功率。
+
+不过，这些数据并不是来自\term{随机对照试验}{randomized controlled trial, RCT}\footnote{在 RCT 中，病人被随机分配到不同处理组。本书 \cref{part::rcts} 将集中讨论 RCT。}。接受处理 1 的病人可能和接受处理 0 的病人很不一样。这个研究中有一个\term{潜伏变量}{lurking variable}，即病情严重程度：有些病人的结石较小，有些病人的结石较大。我们可以按结石大小拆分数据。
+
+对结石较小的病人，处理与结果数据为
+\[
+\begin{array}{lcc}
+\hline
+        & Y=1 & Y=0 \\\hline
+Z=1 & 81 & 6\\
+Z=0 & 234 & 36\\
+\hline
+\end{array}
+\]
+对结石较大的病人，处理与结果数据为
+\[
+\begin{array}{lcc}
+\hline
+        & Y=1 & Y=0 \\\hline
+Z=1 & 192 & 71\\
+Z=0 & 55 & 25\\
+\hline
+\end{array}
+\]
+
+后两个表相加必须得到第一个表：
+\[
+81+192=273,\quad
+6+71=77,\quad
+234+55=289,\quad
+36+25=61 .
+\]
+对结石较小的病人，估计风险差为
+\[
+\widehat{\RD}_{\text{smaller}}
+= \frac{81}{81+6}-\frac{234}{234+36}
+=93\%-87\%=6\%>0,
+\]
+这表明处理 1 更好。对结石较大的病人，估计风险差为
+\[
+\widehat{\RD}_{\text{larger}}
+= \frac{192}{192+71}-\frac{55}{55+25}
+=73\%-69\%=4\%>0,
+\]
+同样表明处理 1 更好。
+
+上面的数据分析得到
+\[
+\widehat{\RD}<0,\quad
+\widehat{\RD}_{\text{smaller}}>0,\quad
+\widehat{\RD}_{\text{larger}}>0 .
+\]
+非正式地说，处理 1 对结石较小和较大的病人都更好，但对总体而言却更差。如果目标是推断处理效应，这个解释就相当令人困惑。在统计学中，这叫作 \term{Yule--Simpson 悖论}{Yule--Simpson Paradox} 或 \term{Simpson 悖论}{Simpson's Paradox}：边际关联的符号与所有层内的条件关联符号相反。
+
+\subsection{Explanation}
+
+令 $X$ 是一个二元指示变量，$X=1$ 表示结石较小，$X=0$ 表示结石较大。先看 $X$ 与 $Z$ 的关系，比较小结石病人与大结石病人接受处理 1 的概率：
+\begin{align*}
+&\widehat{\pr}(Z=1\mid X=1)-\widehat{\pr}(Z=1\mid X=0)\\
+&=
+\frac{81+6}{81+6+234+36}
+-\frac{192+71}{192+71+55+25}\\
+&= 24\%-77\%\\
+&= -53\%<0 .
+\end{align*}
+因此，大结石病人更经常接受处理 1。从统计上说，$X$ 与 $Z$ 存在负关联。
+
+再看 $X$ 与 $Y$ 的关系，比较小结石病人与大结石病人的成功概率。在处理 1 下，
+\begin{align*}
+&\widehat{\pr}(Y=1\mid Z=1,X=1)
+-\widehat{\pr}(Y=1\mid Z=1,X=0)\\
+&= \frac{81}{81+6}-\frac{192}{192+71}\\
+&= 93\%-73\%\\
+&=20\%>0;
+\end{align*}
+在处理 0 下，
+\begin{align*}
+&\widehat{\pr}(Y=1\mid Z=0,X=1)
+-\widehat{\pr}(Y=1\mid Z=0,X=0)\\
+&= \frac{234}{234+36}-\frac{55}{55+25}\\
+&= 87\%-69\%\\
+&=18\%>0 .
+\end{align*}
+因此，在两个处理水平下，小结石病人的成功概率都更高。从统计上说，在两个处理水平内，$X$ 与 $Y$ 都存在正关联。
+
+\begin{figure}[H]
+\[
+\xymatrix{
+ & X\ar_{-}[ld]\ar^{+}[rd] \\
+Z \ar_{+}[rr] &&Y
+}
+\]
+\caption{肾结石例子的示意图。符号表示两个变量之间的关联方向，其中会以所有指向下游变量的其他变量为条件。}
+\label{fig::kidney-stone}
+\end{figure}
+
+我们可以用 \cref{fig::kidney-stone} 总结这些定性关联。用技术语言说，处理到结果有一条正路径 $(Z\rightarrow Y)$，同时还有一条更强的负路径 $(Z\leftarrow X\rightarrow Y)$，所以处理与结果之间的总体关联为负。用普通语言说，当效果较差的处理 0 更常用于病情较轻的病例时，它可能看起来像是更有效的处理。
+
+一般来说，因为 $X$ 与 $Z$ 之间有关联，且 $X$ 与 $Y$ 之间也有关联，$Z$ 与 $Y$ 的关联可能在边际上和给定 $X$ 后的条件层内呈现不同的定性方向。当 Yule--Simpson 悖论发生时，我们说 $X$ 是 $Z$ 与 $Y$ 关系中的\term{混杂变量}{confounding variable}或\term{混杂因子}{confounder}，也可以说 $Z$ 与 $Y$ 的关系被 $X$ \term{混杂}{confounded}。更深入的讨论见 \cref{chapter::observational-studies,chapter::evalue}。
+
+\subsection{Geometry of the Yule--Simpson Paradox}
+
+假设基于汇总数据的二乘二表有如下计数：
+\[
+\begin{array}{lcc}
+\hline
+\text{总体} & Y=1 & Y=0\\\hline
+Z=1 & n_{11} & n_{10}\\
+Z=0 & n_{01} & n_{00}\\
+\hline
+\end{array}
+\]
+
+基于亚组的两个二乘二表分别为
+\[
+\begin{array}{lcc}
+\hline
+\text{子总体 } X=1 & Y=1 & Y=0\\\hline
+Z=1 & n_{11|1} & n_{10|1}\\
+Z=0 & n_{01|1} & n_{00|1}\\
+\hline
+\end{array}
+\]
+以及
+\[
+\begin{array}{lcc}
+\hline
+\text{子总体 } X=0 & Y=1 & Y=0\\\hline
+Z=1 & n_{11|0} & n_{10|0}\\
+Z=0 & n_{01|0} & n_{00|0}\\
+\hline
+\end{array}
+\]
+
+\cref{fig::geomtry-simpson} 展示了 Yule--Simpson 悖论的几何图像。纵轴表示 $Y=1$ 的成功次数，横轴表示 $Y=0$ 的失败次数。两个平行四边形对应于在两个处理水平下汇总成功和失败的计数。$OA_1$ 的斜率大于 $OB_1$ 的斜率，$OA_0$ 的斜率也大于 $OB_0$ 的斜率，所以在 $X$ 的两个水平内，处理看起来都对结果有益。然而，$OA$ 的斜率小于 $OB$ 的斜率，所以对总体而言，处理看起来反而有害。Yule--Simpson 悖论由此产生。
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{figures/simpson_geometry2.pdf}
+\caption{Yule--Simpson 悖论的几何图像}
+\label{fig::geomtry-simpson}
+\end{figure}
+
+\section{The Berkeley graduate school admission data}
+\label{sec::berkeleydata}
+
+\citet{bickel1975sex} 研究了 Berkeley 研究生院男女学生的录取率。R 的 \ri{datasets} 包含原始数据 \ri{UCBAdmissions}。六个最大院系的原始数据如下：
+\begin{lstlisting}
+> library(datasets)
+> UCBAdmissions = aperm(UCBAdmissions, c(2, 1, 3))
+> UCBAdmissions
+, , Dept = A
+
+        Admit
+Gender   Admitted Rejected
+  Male        512      313
+  Female       89       19
+
+, , Dept = B
+
+        Admit
+Gender   Admitted Rejected
+  Male        353      207
+  Female       17        8
+
+, , Dept = C
+
+        Admit
+Gender   Admitted Rejected
+  Male        120      205
+  Female      202      391
+
+, , Dept = D
+
+        Admit
+Gender   Admitted Rejected
+  Male        138      279
+  Female      131      244
+
+, , Dept = E
+
+        Admit
+Gender   Admitted Rejected
+  Male         53      138
+  Female       94      299
+
+, , Dept = F
+
+        Admit
+Gender   Admitted Rejected
+  Male         22      351
+  Female       24      317
+\end{lstlisting}
+
+把数据按院系汇总后，得到一个简单的二乘二表：
+\begin{lstlisting}
+> UCBAdmissions.sum = apply(UCBAdmissions, c(1, 2), sum)
+> UCBAdmissions.sum
+        Admit
+Gender   Admitted Rejected
+  Male       1198     1493
+  Female      557     1278
+\end{lstlisting}
+
+下面这个函数基于 \ri{chisq.test}，输入一个二乘二表，输出估计的风险差和 $p$ 值：
+\begin{lstlisting}
+> risk.difference = function(tb2)
++ {
++   p1      = tb2[1, 1]/(tb2[1, 1] + tb2[1, 2])
++   p2      = tb2[2, 1]/(tb2[2, 1] + tb2[2, 2])
++   testp   = chisq.test(tb2)
++
++   return(list(p.diff = p1 - p2,
++               pv = testp$p.value))
++ }
+\end{lstlisting}
+利用这个函数，可以发现男女学生录取率之间存在很大且显著的差异：
+\begin{lstlisting}
+> risk.difference(UCBAdmissions.sum)
+$p.diff
+[1] 0.1416454
+
+$pv
+[1] 1.055797e-21
+\end{lstlisting}
+
+按院系分层后，男女学生录取率的差异变得更小且不显著。在 A 院系中，差异显著但为负。
+\begin{lstlisting}
+> P.diff = rep(0, 6)
+> PV     = rep(0, 6)
+> for(dd in 1:6)
++ {
++ 	 department = risk.difference(UCBAdmissions[, , dd])
++ 	 P.diff[dd] = department$p.diff
++ 	 PV[dd]     = department$pv
++ }
+>
+> round(P.diff, 2)
+[1] -0.20 -0.05  0.03 -0.02  0.04 -0.01
+> round(PV, 2)
+[1] 0.00 0.77 0.43 0.64 0.37 0.64
+\end{lstlisting}
+
+\section{Homework Problems}
+
+\homeworksolutionref{01}
+\paragraph{Independence in two-by-two tables}\label{hw::2x2-equivalence}
+
+证明 \cref{prop::2x2-independence} 中的 (1) 与 (2)。
+
+\paragraph{More examples of the Yule--Simpson Paradox}
+
+给出一个数值例子，构造一个会产生 Yule--Simpson 悖论的二乘二乘二表。
+
+找一个现实生活中出现 Yule--Simpson 悖论的例子。
+
+\paragraph{Correlation and partial correlation}\label{hw::partial-correlation}
+
+考虑一个三维正态随机向量：
+\[
+\begin{pmatrix}
+X\\
+Y\\
+Z
+\end{pmatrix}
+\sim
+\textsc{N}
+\left(
+\begin{pmatrix}
+0\\
+0\\
+0
+\end{pmatrix},
+\begin{pmatrix}
+1 & \rho_{XY} & \rho_{XZ}\\
+\rho_{XY} & 1 & \rho_{YZ}\\
+\rho_{XZ} & \rho_{YZ} & 1
+\end{pmatrix}
+\right).
+\]
+$Y$ 与 $Z$ 的相关系数是 $\rho_{YZ}$。偏相关系数有许多等价定义。对一个多元正态向量，令 $\rho_{YZ\mid X}$ 表示给定 $X$ 后 $Y$ 与 $Z$ 的偏相关系数，即条件分布 $(Y,Z)\mid X$ 中二者的相关系数。证明
+\[
+\rho_{YZ\mid X}
+=
+\frac{\rho_{YZ}-\rho_{YX}\rho_{ZX}}
+{\sqrt{1-\rho_{YX}^2}\sqrt{1-\rho_{ZX}^2}} .
+\]
+
+给出一个数值例子，使得 $\rho_{YZ}>0$ 且 $\rho_{YZ\mid X}<0$。
+
+注：这是正态随机向量中的 Yule--Simpson 悖论。可以使用 \cref{sec::multivariate-normal} 的结果证明偏相关系数公式。
+
+\paragraph{Specification searches}\label{hw::lalonde-obs-reg}
+
+\cref{section:correlatioandregressionintro} 重新分析了 \citet{hainmueller2012entropy} 使用的数据。我们使用名为 \ri{re78} 的结果变量和名为 \ri{treat} 的处理变量。此外，数据还包含 $10$ 个协变量，因此线性回归中有 $2^{10}=1024$ 个可能的协变量子集。请运行全部 $1024$ 个线性回归，并报告处理变量的回归系数。有多少系数显著为正，有多少显著为负，有多少不显著？也可以报告这些回归中的其他有趣发现。
+
+\paragraph{More on racial discrimination}
+
+\cref{sec::twobytwotables-withresume} 重新分析了 \citet{bertrand2004emily} 收集的数据。请分别对男性和女性做分析。你有什么发现？

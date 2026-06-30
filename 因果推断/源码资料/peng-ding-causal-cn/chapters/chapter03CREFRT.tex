@@ -1,0 +1,722 @@
+
+\chapter{The Completely Randomized Experiment and the Fisher Randomization Test}\label{ch::frt-cre}
+ \chaptermark{Completely Randomized Experiment and FRT}
+
+
+potential outcomes framework 与 randomized experiments 有内在联系。理解各种 randomized experiments 中的 causal inference，是理解更复杂的非实验研究中的 causal inference 的基础，也很有帮助。\footnote{问：Part II 的 motivation 是什么？见附录 \cref{sec:qa-part-ii-motivation}。}
+
+
+本书的 Part \ref{part::rcts} 关注 randomized experiments。本章关注最简单的实验，即 completely randomized experiment (CRE)。
+
+\section{CRE}
+
+考虑一个包含 $n$ 个 units 的实验，其中 $n_1$ 个接受 treatment，$n_0$ 个接受 control。我们可以基于它的 treatment assignment mechanism 来定义 CRE\footnote{读者可能会认为，一个 CRE 中的 $Z_i$ 是 independent and identically distributed (IID) Bernoulli random variables，概率为 $\pi$，其中 $n_1$ 是一个 Binomial$(n,\pi)$ random variable。这称为 Bernoulli randomized experiment (BRE)；如果我们以 $(n_1, n_0)$ 为条件，它就化为 CRE。
+我会在 Chapter \ref{chapter::neyman-cr} 的 Problem \ref{hw::bre-inference} 中给出 BRE 的更多细节。
+}。
+
+\begin{definition}
+[CRE]\label{def::CRE}
+固定满足 $n = n_1 + n_0$ 的 $n_1$ 和 $n_0$。
+一个 CRE 具有如下 treatment assignment mechanism:
+$$
+\pr(  \boldsymbol{Z} = \boldsymbol{z} ) = 1 \Big / \binom{n}{n_1},
+$$
+其中 $\boldsymbol{z} = (z_1,\ldots, z_n)$ 满足 $\sumn z_i  = n_1$ 且 $\sumn (1-z_i)  = n_0 . $
+\end{definition}
+
+
+在 Definition \ref{def::CRE} 中，我们假设 treatment 下的 potential outcome vector $\boldsymbol{Y}(1) = (Y_1(1), \ldots, Y_n(1) )$ 和 control 下的 potential outcome vector $\boldsymbol{Y}(0) = (Y_1(0), \ldots, Y_n(0) )$ 都是固定的。即使我们把它们看作随机的，也可以以它们为条件，此时 treatment assignment mechanism 变为
+$$
+\pr\{    \boldsymbol{Z} = \boldsymbol{z} \mid \boldsymbol{Y}(1), \boldsymbol{Y}(0)  \} = 1 \Big / \binom{n}{n_1} 
+$$
+因为在 CRE 中 $ \boldsymbol{Z} \ind \{\boldsymbol{Y}(1), \boldsymbol{Y}(0)\}$。在 CRE 中，treatment vector $\boldsymbol{Z}$ 来自 $n_1$ 个 1 和 $n_0$ 个 0 的一个 random permutation。
+
+在其奠基性著作 {\it Design of Experiments} 中，\citet{Fisher:1935} 指出了 randomization 的如下优点：
+\begin{enumerate}
+[(1)]
+\item\label{eq::comparable}
+它平均而言会产生可比较的 treatment group 和 control group。
+
+\item\label{eq::reasonedbasis}
+它为 statistical inference 提供一个 ``reasoned basis''。
+ \end{enumerate}
+ 
+ 
+Point \ref{eq::comparable} 是直观的，因为 random treatment assignment 不会偏向 treatment 或 control。多数人都很好地理解 point 1。Point \ref{eq::reasonedbasis} 则更微妙。Fisher 的意思是，randomization 使一个 statistical test 具有正当性；这个检验现在称为 Fisher Randomization Test (FRT)。本章说明 CRE 下 FRT 的基本思想。
+
+
+\section{FRT}
+\label{sec::frt-basics}
+
+\citet{Fisher:1935} 感兴趣的是检验如下 null hypothesis:\footnote{实际上，\citet{Fisher:1935} 并没有使用这种形式的 $\HF$，因为他没有使用 potential outcomes 的记号。这一形式来自 \citet{Rubin:1980}。}
+$$
+\HF: Y_i(1) = Y_i(0) \text{ for all units } i=1,\ldots, n.
+$$
+\citet{Rubin:1980} 称其为 {\it sharp null hypothesis}，意思是它可以基于 observed data 决定所有 potential outcomes: $\boldsymbol{Y}(1) = \boldsymbol{Y}(0) =  \boldsymbol{Y} = (Y_1, \ldots, Y_n)$，也就是 observed outcomes 的向量。它也称为 {\it strong null hypothesis} \citep[e.g.,][]{wu2018randomization}。
+
+
+概念上，在 $\HF$ 下，FRT 适用于任意 test statistic
+\begin{eqnarray}\label{eq::teststatistic}
+T = T( \boldsymbol{Z}, \boldsymbol{Y})  ,
+\end{eqnarray}
+它是 observed data 的函数。在 $\HF$ 下，observed outcome vector $\boldsymbol{Y}$ 是固定的，因此 test statistic $T$ 中唯一的随机成分是 treatment vector $\boldsymbol{Z}$。实验者决定 $\boldsymbol{Z}$ 的分布，而它进一步决定 $\HF$ 下 $T$ 的分布。这就是计算 $p$-value 的基础。下面我会给出更多细节。
+
+
+在 CRE 中，$\boldsymbol{Z}$ 在集合
+$$
+\{  \boldsymbol{z}^1, \ldots, \boldsymbol{z}^M  \}
+$$
+上服从均匀分布，其中 $M = \binom{n}{n_1}$，而 $ \boldsymbol{z}^m$ 是所有含有 $n_1$ 个 $1$ 和 $n_0$ 个 $0$ 的可能向量。
+例如，当 $n=5$ 且 $n_1=3$ 时，我们可以如下枚举 $M = \binom{5}{3} = 10$ 个向量：
+\begin{lstlisting}
+> permutation10 = function(n, n1){
++  M  = choose(n, n1)
++  treat.index = combn(n, n1)
++  Z = matrix(0, n, M)
++  for(m in 1:M){
++    treat  = treat.index[, m]
++    Z[treat, m] = 1
++  }
++  Z
++ }
+> 
+> permutation10(5, 3)
+     [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]
+[1,]    1    1    1    1    1    1    0    0    0     0
+[2,]    1    1    1    0    0    0    1    1    1     0
+[3,]    1    0    0    1    1    0    1    1    0     1
+[4,]    0    1    0    1    0    1    1    0    1     1
+[5,]    0    0    1    0    1    1    0    1    1     1
+\end{lstlisting}
+
+因此，$T$ 在如下集合上服从均匀分布（允许有重复值）
+$$
+\{   T(\boldsymbol{z}^1,\boldsymbol{Y}) , \ldots, T( \boldsymbol{z}^M, \boldsymbol{Y})  \}.
+$$
+也就是说，由于 CRE 的设计，$T$ 的分布是已知的。我们把 $T$ 的这个分布称为 {\it randomization distribution}。
+
+
+
+
+如果对 $T$ 而言较大的值更极端，我们可以用下面的尾概率来衡量 test statistic 相对于其 randomization distribution 的极端程度：\footnote{因此，\eqref{eq::exactpvalue} 中的 $p_\frt$ 是单侧的。有时，我们可能希望定义双侧 $p$-values。一种做法是，如果 $T$ 围绕 $0$ 分布，则使用 $T$ 的绝对值。}
+\begin{equation}\label{eq::exactpvalue}
+p_\frt = M^{-1} \sum_{m=1}^M   I\{ T(\boldsymbol{z}^m,\boldsymbol{Y})   \geq T(\boldsymbol{Z},\boldsymbol{Y})   \},
+\end{equation}
+Fisher 称其为 $p$-value。Figure \ref{fig::frt} 展示了 $p_\frt $ 的计算过程。
+
+
+
+\begin{figure}[ht]
+\centering 
+\includegraphics[width =  \textwidth]{figures/frt_fig.pdf}
+\caption{Illustration of the FRT}\label{fig::frt}
+\end{figure}
+
+
+
+
+$p$-value，即 \eqref{eq::exactpvalue} 中的 $p_\frt$，适用于任意 test statistic 的选择和任意 outcome-generating process。它也自然推广到任意实验；这一点会在后续章节中反复讨论。重要的是，它具有 finite-sample exact 性质，含义是\footnote{这是 mathematical statistics 中 $p$-value 的标准定义。不等号往往来自 test statistic 的离散性；当等号成立时，在 null hypothesis 下 $p$-value 服从 Uniform$(0,1)$。令 $F(\cdot)$ 为 $T(\boldsymbol{Z},\boldsymbol{Y})$ 的 distribution function。尽管它是一个阶梯函数，我们先假设它像一个取值于整条实线的 continuous random variable 的 distribution function 那样连续且严格递增。因此 $p_\frt = 1- F(T)$，并且
+$$
+\pr(p_\frt \leq u) = \pr\{ 1-F(T) \leq u\} = \pr\{  T \geq F^{-1}(1-u)  \} = 1- F( F^{-1}(1-u)) = u.
+$$
+$T$ 的离散性确实会在证明中造成一些技术问题，从而得到的是不等式而不是等式。我把技术细节留给 Problem \ref{hw::exact-frt}。}：在 $\HF$ 下，
+\begin{eqnarray}\label{eq::p-value-valid}
+\pr(p_\frt \leq u) \leq u \quad  \text{ for all } \quad 0 \leq u \leq 1.
+\end{eqnarray}
+
+
+
+
+实践中，$M$ 往往太大（例如当 $n=100, n_1=50$ 时，我们有 $M > 10^{29}$），枚举 treatment vector 的所有可能取值在计算上不可行。我们通常用 Monte Carlo 近似 $p_\frt$（基本 Monte Carlo 方法的回顾见 Section \ref{sec::monte-carlo-method}）。更具体地说，我们从 treatment vector 的所有可能取值中独立随机抽样；等价地，我们随机置换 $\boldsymbol{Z}$，并用如下方式近似 $p_\frt$：
+\begin{equation}\label{eq::mcpvalue}
+\hat p_\frt  =  R^{-1} \sum_{r=1}^R   I\{ T(\boldsymbol{z}^r,\boldsymbol{Y})   \geq T(\boldsymbol{Z},\boldsymbol{Y})   \},
+\end{equation}
+其中 $\boldsymbol{z}^r$ 是 $\boldsymbol{Z}$ 的 $R$ 个 random permutations。
+\eqref{eq::mcpvalue} 中的 $p$-value 具有 Monte Carlo error，且随着 $R$ 增大快速下降；见 Problem \ref{para::monte-carlo-error-pfrt}。由于 \eqref{eq::mcpvalue} 中 $p$-value 的计算涉及 $\boldsymbol{Z}$ 的 permutations，在 CRE 的语境中，FRT 有时称为 {\it permutation test}。不过，在更复杂的实验中，FRT 的思想比 permutation test 更一般。
+
+
+
+\section{Canonical choices of the test statistic}
+\label{sec::frt-choiceofstatistic}
+
+由上面的讨论可知，FRT 对任意 test statistic 的选择都生成 finite-sample exact $p$-value。这是 FRT 的一个特征。然而，这一特征不应鼓励任意选择 test statistic。直观上，我们必须选择能够提供 $\HF$ 可能被违反的信息的 test statistics。下面我回顾若干 canonical choices。
+
+
+\begin{example}[difference-in-means]\label{eq::frt-difference-in-means}
+difference-in-means statistic 为
+$$
+\hat{\tau}   = \hat{\bar{Y}}(1) - \hat{\bar{Y}}(0)
+$$
+其中
+$$
+ \hat{\bar{Y}}(1)  =  n_1^{-1} \sum_{Z_i=1} Y_i  = n_1^{-1} \sumn Z_iY_i 
+$$
+是 treatment 下 outcomes 的 sample mean，而
+$$
+\hat{\bar{Y}}(0) = n_0^{-1}  \sum_{Z_i=0} Y_i   = n_0^{-1}  \sumn (1-Z_i) Y_i 
+$$
+是 control 下 outcomes 的 sample mean。
+%
+%\begin{eqnarray*}
+%\hat{\tau}  &=& n_1^{-1} \sum_{Z_i=1} Y_i - n_0^{-1}  \sum_{Z_i=0} Y_i  \\
+%&=&  n_1^{-1} \sumn Z_iY_i - n_0^{-1}  \sumn (1-Z_i) Y_i  \\
+%&\equiv & \hat{\bar{Y}}(1) - \hat{\bar{Y}}(0).
+%\end{eqnarray*}
+在 $\HF$ 下，它的均值为
+$$
+E(  \hat{\tau}    ) = n_1^{-1}\sumn E(Z_i)Y_i  - n_0^{-1}  \sumn E(1-Z_i) Y_i  = 0
+$$
+方差为
+\begin{eqnarray*}
+\var( \hat{\tau}   ) &=& \var\left\{  n_1^{-1} \sumn Z_iY_i - n_0^{-1}  \sumn (1-Z_i) Y_i  \right\} \\
+&=&\var\left(  \frac{n}{n_0}    \frac{1}{n_1} \sumn  Z_i Y_i         \right) \\
+&=_*& \frac{n^2}{n_0^2} \left( 1 - \frac{n_1}{n} \right) \frac{s^2}{n_1} \\ 
+&=& \frac{n}{n_1 n_0} s^2,
+\end{eqnarray*}
+其中 $=_*$ 来自 Lemma  \ref{lemma::samplemean} 中关于 simple random sampling 的结论，此处
+$$
+\bar{Y} = n^{-1}  \sumn Y_i,\quad 
+s^2 = (n-1)^{-1} \sumn (Y_i - \bar{Y})^2 .  
+$$ 
+进一步，由 Lemma \ref{lemma::finite-population-clt} 中的 finite population central limit theorem (CLT)，$\hat{\tau}$ 的 randomization distribution 近似为 Normal:
+\begin{equation}\label{eq::frt-tau-hat}
+\frac{  \hat{\tau}      }{  \sqrt{\frac{n}{n_1 n_0} s^2}    }  
+%= \frac{  n_1^{-1} \sum_{Z_i=1} Y_i - n_0^{-1}  \sum_{Z_i=0} Y_i  }{ \sqrt{   \frac{n}{n_1 n_0(n-1)}    \sumn (Y_i - \bar{Y})^2   }  }   
+\rightarrow  \N01 
+\end{equation}
+依分布收敛。由于 $s^2$ 在 $\HF$ 下是固定的，因此在 FRT 中使用
+$$
+\frac{  \hat{\tau}      }{  \sqrt{\frac{n}{n_1 n_0} s^2}    }  
+$$
+作为 test statistic 是等价的；如 \eqref{eq::frt-tau-hat} 所示，它渐近服从 $\textsc{N}(0,1)$。于是我们可以计算一个近似的 $p$-value。
+\end{example}
+
+
+observed data 为 $\{  Y_i: Z_i = 1 \}$ 和 $\{ Y_i : Z_i = 0 \}$，因此问题本质上是一个 two-sample problem。
+在 independent and identically distributed (IID) Normal outcomes 的假设下（见 Section \ref{sec::bf-problem}），假设 equal variance 的经典 two-sample $t$-test 基于
+\begin{equation}\label{eq::two-sample-t-equalv}
+\frac{  \hat{\tau}      }{  \sqrt{\frac{n}{n_1 n_0(n-2)}  \left[  \sum_{Z_i=1}  \{Y_i - \hat{\bar{Y}}(1)\}^2
++ \sum_{Z_i=0}  \{Y_i - \hat{\bar{Y}}(0)\}^2
+    \right]  }    }   \sim t_{n-2}.
+\end{equation}
+经过一些代数推导（见 Problem \ref{hw::frt-algebraic-detail}），我们有展开式
+\begin{equation}\label{eq::frt-algebra-difference-in-means}
+(n-1)s^2 = \sum_{Z_i=1}  \{Y_i - \hat{\bar{Y}}(1)\}^2 + \sum_{Z_i=0}  \{Y_i - \hat{\bar{Y}}(0)\}^2
++ \frac{n_1 n_0}{n} \hat{\tau}^2 .
+\end{equation}
+当 sample size $n$ 很大时，我们可以忽略 $\N01$ 与 $t_{n-2}$ 的差别，以及 $n-1$ 与 $n-2$ 的差别。
+此外，在 $\HF,$ 下，$\hat{\tau}$ 依概率收敛到零，因此 $ n_1 n_0 / n \hat{\tau}^2$ 可以在渐近意义下忽略。因此，在 $\HF,$ 下，Example \ref{eq::frt-difference-in-means} 中的近似 $p$-value 接近于经典 two-sample $t$-test 在 equal variance 假设下给出的 $p$-value；后者可以用带有 \ri{var.equal = TRUE} 的 \ri{t.test} 计算。在具有非零 $\tau$ 的 alternative hypotheses 下，展开式 \eqref{eq::frt-algebra-difference-in-means} 中的额外项 $\frac{n_1 n_0}{n} \hat{\tau}^2$ 可能使 FRT 的 power 低于通常的 $t$-test；\citet{Ding:2014} 指出了这一点。
+
+
+基于以上讨论，使用 $\hat{\tau}$ 的 FRT 实际上使用了一个 pooled variance，从而忽略了两个组之间的 heteroskedasticity。在 classical statistics 中，具有 heteroskedastic Normal outcomes 的 two-sample problem 称为 Behrens--Fisher problem（见 Section \ref{sec::bf-problem}）。在 Behrens--Fisher problem 中，一个标准的 test statistic 选择是下面的 studentized statistic。
+
+
+
+\begin{example}[studentized statistic]
+\label{eg::studentized-statistic}
+studentized statistic\footnote{$t$ 这个记号是有意采用的，因为它与 $t$ distribution 相关。但不要把它与记号 $t_\nu$ 混淆，后者表示自由度为 $\nu$ 的 $t$ distribution。} 为
+$$
+t = \frac{    \hat{\bar{Y}}(1)  -   \hat{\bar{Y}}(0)    }{  \sqrt{  \frac{  \hat{S}^2(1)  }{n_1}  + \frac{\hat{S}^2(0)}{n_0}  }   },
+$$
+其中
+$$
+\hat{S}^2(1) = (n_1 - 1)^{-1} \sum_{Z_i =1} \{ Y_i  -\hat{\bar{Y}}(1)   \}^2,\quad
+\hat{S}^2(0) = (n_0 - 1)^{-1} \sum_{Z_i =0} \{ Y_i  -\hat{\bar{Y}}(0)   \}^2 
+$$
+分别是 treatment 和 control 下 observed outcomes 的 sample variances。在 $\HF$ 下，finite population CLT 再次蕴含 $t$ 渐近服从 Normal:
+$$
+t \rightarrow \N01 
+$$
+依分布收敛。
+于是我们可以计算一个近似的 $p$-value，它接近于带有 \ri{var.equal = FALSE} 的 \ri{t.test} 所给出的 $p$-value。
+\end{example}
+
+
+
+一个极其重要的点是：即使 underlying distributions 不是 Normal，FRT 也能为使用 \ri{t.test} 且设定 \ri{var.equal = TRUE} 或 \ri{var.equal = FALSE} 的传统 $t$-tests 提供正当性。标准统计教材通常基于 Normality assumption 来引出 $t$-tests，但这个 assumption 在实践中可能过强。幸运的是，只要 finite population CLTs 成立，$t$-test procedures 仍然可以使用。即使我们不相信这些 CLTs，我们仍然可以把 $\hat{\tau}$ 和 $t$ 作为 FRT 中的 test statistics，以获得 finite-sample exact $p$-values。
+
+
+我们将在 Chapter \ref{chapter::unification-fisher-neyman} 中从另一个角度引出这个 studentized statistic。那里的理论表明，在 FRT 中使用 $t$ 对两个组之间的 heteroskedasticity 更稳健。
+
+
+下面这个 test statistic 对 heavy-tailed outcome data 导致的 outliers 具有稳健性。
+
+
+
+
+\begin{example}[Wilcoxon rank sum]\label{example::wilcoxon-cre}
+difference-in-means statistic $ \hat{\tau} $ 使用原始 outcomes 的 sample means，它的 sampling distribution 依赖于 outcomes 的 variances。studentized statistic $t$ 使用原始 outcomes 的 sample means 和 variances，它的 sampling distribution 依赖于 outcomes 的更高阶 moments。
+这使得 $ \hat{\tau} $ 和 $t$ 对 outliers 敏感。
+
+另一个常用 test statistic 基于 pooled observed outcomes 的 ranks。令 $R_i$ 表示 $Y_i$ 在 pooled samples $\boldsymbol{Y}$ 中的 rank:
+$$
+R_i = \#\{j : Y_j \leq Y_i  \}.
+$$ 
+Wilcoxon rank sum statistic 是 treatment 下 ranks 的总和：
+$$
+W = \sumn Z_i R_i.
+$$
+为使代数更简单，我们假设 outcomes 中没有 ties。\footnote{
+无论是否存在 ties，FRT 都可以应用。有 ties 时，我们可以给原始 outcomes 添加很小的随机噪声，或者对 tied outcomes 使用 average ranks。
+有 ties 的情形见 \citet[][Chapter 1 Section 4]{lehmann2006nonparametrics}。
+}
+由于 pooled samples 的 ranks 之和固定为 $1+2+\cdots + n = n(n+1)/2$，Wilcoxon statistic 等价于 treatment 和 control 下 ranks 均值之差。
+在 $\HF$ 下，$R_i$ 是固定的，因此
+%We can use Lemma \ref{lemma::samplemean} to calculate the moments of $W$ under $\HF$: because the $R_i$'s are fixed, 
+$W$ 的均值为
+$$
+E(W)  =  \sumn E(Z_i) R_i  =\frac{n_1}{n}  \sumn  i   = \frac{n_1}{n} \times \frac{n(n+1)}{2} = \frac{n_1(n+1)}{2} 
+$$
+方差为
+\begin{eqnarray*}
+\var(W) &=& \var\left( n_1 \frac{1}{n_1} \sumn Z_i R_i  \right) \\
+&=_*&  n_1^2  \left( 1-\frac{n_1}{n} \right)  \frac{1}{n_1}  \frac{1}{n-1} \sumn \left(R_i - \frac{n+1}{2}  \right)^2\\
+&=&  \frac{n_1 n_0}{n(n-1)} \sumn \left(i - \frac{n+1}{2}  \right)^2\\
+&=&   \frac{n_1 n_0}{n(n-1)}   \left\{ \sumn i^2 - n \left(  \frac{n+1}{2}\right)^2     \right\}\\
+&=&  \frac{n_1 n_0}{n(n-1)}  \left\{     \frac{n(n+1)(2n+1)}{6} -    n \left( \frac{n+1}{2}   \right)^2 \right\}  \\
+&=& \frac{n_1 n_0 (n+1)}{12},
+\end{eqnarray*}
+其中 $=_*$ 来自 Lemma \ref{lemma::samplemean}。
+进一步，在 $\HF$ 下，finite population CLT 保证 $\widehat{\tau}$ 的 randomization distribution 近似为 Normal:
+\begin{eqnarray}
+\label{eq::wilcox-normal}
+\frac{  \sumn Z_i R_i - \frac{n_1(n+1)}{2}   }{  \sqrt{  \frac{n_1 n_0 (n+1)}{12}   }}   \rightarrow \N01 
+\end{eqnarray}
+依分布收敛。
+基于 \eqref{eq::wilcox-normal}，我们可以进行一个 asymptotic test。在 \ri{R} 中，函数 \ri{wilcox.test} 可以基于 statistic $W - n_1(n_1+1)/2$ 计算 exact 和 asymptotic $p$-values。基于一些 asymptotic analyses，\citet{lehmann2006nonparametrics} 表明，使用 $W$ 的 FRT 在广泛的数据生成过程下都有合理的 power。
+\end{example}
+
+
+
+
+
+\begin{example}
+ [Kolmogorov--Smirnov statistic]
+\label{eg::ks-CRE}
+treatment 可能以不同方式影响 outcome。基于 empirical distributions 来概括 treatment outcomes 和 control outcomes 似乎很自然：
+$$
+\hat{F}_1( y) = n_1^{-1} \sumn Z_i I(Y_i \leq y),\quad
+\hat{F}_0( y ) = n_0^{-1} \sumn (1-Z_i) I(Y_i \leq y) . 
+$$ 
+比较这两个 empirical distributions 会得到著名的 Kolmogorov--Smirnov statistic
+$$
+D = \max_y  \Big |
+\hat{F}_1( y) 
+- \hat{F}_0( y ) 
+\Big |.
+$$
+推导 $D$ 的分布是一个具有挑战性的数学问题。当 sample sizes 较大，即 $n_1\rightarrow \infty$ 且 $n_0\rightarrow \infty$ 时，它的 distribution function 收敛到
+$$
+\pr\left(  \frac{n_1 n_0}{n}  D \leq  x   \right  ) \rightarrow   \frac{\sqrt{2\pi}}{x}   \sum_{j=1}^\infty  e^{     - (2j-1)^2 \pi^2 / (8x^2) }     ,
+$$
+基于这一结果我们可以计算 asymptotic $p$-value \citep{van2000asymptotic}。在 \ri{R} 中，函数 \ri{ks.test} 可以计算 exact 和 asymptotic $p$-values。
+\end{example}
+
+
+
+
+
+
+
+\section{A case study of the LaLonde experimental data}
+\label{sec::frt-lalonde-experiment}
+
+我使用 \citet{lalonde1986evaluating} 的 experimental data 来说明 FRT。这些数据可在 \ri{Matching} package 中获得 \citep{sekhon2011multivariate}：
+
+\begin{lstlisting}
+> library(Matching)
+> data(lalonde)
+> z = lalonde$treat
+> y = lalonde$re78
+\end{lstlisting}
+
+在上面的代码中，\ri{z} 表示 binary treatment vector，指示某个 unit 是否被随机分配到 job training program；\ri{y} 是 outcome vector，表示一个 unit 在 1978 年的实际收入。
+Figure \ref{fig::lalonde-histograms} 展示了 treatment 和 control 下 outcomes 的 histograms。
+
+
+\begin{figure}[ht]
+\centering 
+\includegraphics[width =  \textwidth]{figures/lalonde_histograms.pdf}
+\caption{Histograms of the outcomes in the LaLonde experimental data: the treatment in white and the control in grey. The vertical lines are the sample means of the outcomes: the solid line for the treatment and the dashed line for the control.}\label{fig::lalonde-histograms}
+\end{figure}
+
+
+
+下面的代码使用现有函数计算 test statistics 的 observed values：
+\begin{lstlisting}
+> tauhat = t.test(y[z == 1], y[z == 0], 
++                 var.equal = TRUE)$statistic
+> tauhat
+       t 
+2.835321 
+> student = t.test(y[z == 1], y[z == 0],
++                 var.equal = FALSE)$statistic
+> student
+       t 
+2.674146 
+> W = wilcox.test(y[z == 1], y[z == 0])$statistic
+> W
+      W 
+27402.5 
+> D = ks.test(y[z == 1], y[z == 0])$statistic
+> D
+        D 
+0.1321206 
+\end{lstlisting}
+
+通过随机置换 treatment vector，我们可以得到 test statistics 的 randomization distributions 的 Monte Carlo approximation，并把它们存储在四个向量 \ri{Tauhat}, \ri{Student}, \ri{Wilcox}, 和 \ri{Ks} 中。
+\begin{lstlisting}
+> MC = 10^4
+> Tauhat   = rep(0, MC)
+> Student  = rep(0, MC)
+> Wilcox   = rep(0, MC)
+> Ks       = rep(0, MC)
+> for(mc in 1:MC)
++ {
++   zperm       = sample(z)
++   Tauhat[mc]  = t.test(y[zperm == 1], y[zperm == 0], 
++                        var.equal = TRUE)$statistic 
++   Student[mc] = t.test(y[zperm == 1], y[zperm == 0], 
++                        var.equal = FALSE)$statistic
++   Wilcox[mc]  = wilcox.test(y[zperm == 1], 
++                             y[zperm == 0])$statistic 
++   Ks[mc]      = ks.test(y[zperm == 1], 
++                         y[zperm == 0])$statistic
++ }
+\end{lstlisting}
+
+
+
+基于 FRT 的单侧 $p$-values 全都小于 0.05：
+\begin{lstlisting}
+> exact.pv = c(mean(Tauhat >= tauhat),
++              mean(Student >= student),
++              mean(Wilcox >= W),
++              mean(Ks >= D))
+> round(exact.pv, 3)
+[1] 0.002 0.002 0.006 0.040
+\end{lstlisting}
+不使用 Monte Carlo，我们也可以计算 asymptotic $p$-values；它们也都小于 0.05：
+\begin{lstlisting}
+> asym.pv = c(t.test(y[z == 1], y[z == 0], 
++                    var.equal = TRUE)$p.value, 
++             t.test(y[z == 1], y[z == 0], 
++                    var.equal = FALSE)$p.value,
++             wilcox.test(y[z == 1], y[z == 0])$p.value,
++             ks.test(y[z == 1], y[z == 0])$p.value)
+> round(asym.pv, 3)
+[1] 0.005 0.008 0.011 0.046
+\end{lstlisting}
+
+这些 $p$-values 之间的差异来自 asymptotic approximations，也来自 \ri{t.test} 和 \ri{wilcox.test} 的默认选择是双侧检验这一事实。为了公平比较，我们需要把前三个 $p_\frt$ 乘以 $2$。
+
+
+Figure \ref{fig::randomizationdistribution-lalonde} 展示了四个 test statistics 的 randomization distributions 的 histograms，以及它们各自的 observed values。对前三个 test statistics 而言，尽管 underlying outcome data distribution 如 Figure \ref{fig::lalonde-histograms} 所示远非 Normal，Normal approximations 仍然表现得相当好。一般来说，像 Figure \ref{fig::randomizationdistribution-lalonde} 这样的图可以为检验 sharp null hypothesis 提供更清晰的信息。最近，\citet{bind2020possible} 在论文标题中提出：``when possible, report a Fisher-exact  $p$-value and display its underlying null randomization distribution.'' 我赞同这一点。
+
+\begin{figure}[ht]
+\centering 
+\includegraphics[width =  \textwidth]{figures/FRT_lalonde.pdf}
+\caption{The randomization distributions of four test statistics based on the LaLonde experimental data} \label{fig::randomizationdistribution-lalonde}
+\end{figure}
+
+
+
+
+
+\section{Some history of randomized experiments and FRT}
+
+
+\subsection{James Lind's experiment}\label{section::lind}
+
+
+James Lind (1716---1794) 是一位苏格兰医生，也是 Royal Navy 中 naval hygiene 的先驱。在他所处的时代，scurvy 是水手死亡的主要原因之一。他开展了最早的一批 randomized experiments 之一，并清楚记录了细节；在发现 Vitamin C 之前，他已经得出结论认为 citrus fruits 可以治愈 scurvy。
+
+
+在 \citet{lind1753treatise} 中，他描述了如下 randomized experiment：将 $12$ 名 scurvy 患者分配到 $6$ 个组。经过一些简化，这 $6$ 个组是：
+\begin{enumerate}
+[(1)]
+\item
+两人每天接受一夸脱 cider；
+
+\item
+两人每天三次接受二十五滴 sulfuric acid；
+
+\item
+两人每天三次接受两勺 vinegar；
+
+\item
+两人每天接受半品脱 seawater；
+
+
+\item
+两人每天接受两个 oranges 和一个 lemon；
+
+\item 
+两人每天接受一种 spicy paste，并喝 barley water。
+\end{enumerate}
+
+六天后，第五组的患者康复，而其他组患者没有康复。如果我们把 treatment 简化为
+$$
+Z_i  = 1(\text{unit } i \text{ received citrus fruits})
+$$
+并把 outcome 简化为
+$$
+Y_i = 1(\text{unit } i \text{ recovered after six days}),
+$$
+那么我们得到一个 two-by-two table
+
+\begin{center}
+\begin{tabular}{lcc}
+\hline 
+      & $Y =1$ & $Y =0$\\\hline
+$Z =1$ & $2$ & $0$\\ 
+$Z =0$ & $0$ & $10$\\
+\hline 
+\end{tabular}
+\end{center}
+
+
+这是在该实验下我们可能观察到的最极端 two-by-two table，数据为 citrus fruits 对治愈 scurvy 的正向 effect 提供了强证据。从统计角度看，我们该如何衡量证据的强度？
+
+
+遵循 FRT 的逻辑，如果 treatment 完全没有 effect（在 $\HF$ 下），那么这个极端 two-by-two table 发生的概率为
+$$
+ \frac{1}{\binom{12}{2}} = \frac{1}{66} = 0.015
+$$
+这就是 $p_\frt$。
+在 $\HF$ 下，这看起来令人惊讶：我们可以轻易地在 $0.05$ 水平拒绝 $\HF$。
+
+
+
+\subsection{Lady tasting tea}\label{section::lady-tasting-tea}
+
+
+\citet{Fisher:1935} 描述了著名的 {\it Lady Tasting Tea} 实验。\footnote{这后来成为 \citet{salsburg2001lady} 一本关于现代统计学史的书的标题。} 一位女士声称她能分辨两种制作奶茶的方式：一种是先加 milk，另一种是先加 tea。这对多数人来说可能听起来很奇怪。作为统计学家，Fisher 设计了一个实验，以检验这位女士是否真的能分辨这两种制作奶茶的方式。
+
+他制作了 $8$ 杯茶，其中 $4$ 杯先加 milk，另外 $4$ 杯先加 tea。然后他以随机顺序把这 $8$ 杯茶呈现给这位女士，并要求她选出先加 milk 的 $4$ 杯。最终实验结果可以总结为下面的 two-by-two table：
+
+\begin{tabular}{lccc}
+\hline 
+      &    milk first (lady)&    tea first (lady) & column sum \\ \hline
+      milk first (Fisher) & $X$ & $4-X$ & 4\\ 
+   tea first (Fisher) & $4-X$ & $X$ & 4\\
+   row sum & 4 & 4 &8 \\
+   \hline 
+\end{tabular}
+
+$X$ 可以取 $0, 1, 2, 3, 4$。在真实实验中，$X = 4$，这是最极端的数据，强烈表明这位女士能够分辨两种制作奶茶的方式。同样，我们如何衡量证据的强度？
+
+
+在这位女士无法分辨差异的 null hypothesis 下，$\binom{8}{4} = 70$ 种可能顺序中只有一种会得到 $X=4$ 的 two-by-two table。因此 $p$-value 为
+$$
+p_\frt = \frac{1}{70} = 0.014.
+$$
+给定 $0.05$ 的 significance level，我们拒绝 null hypothesis。
+
+
+
+\subsection{Two Fisherian principles for experiments}\label{sec::fisherian-principles-experiments}
+
+
+在 Sections \ref{section::lind} 和 \ref{section::lady-tasting-tea} 的上述两个例子中，$p_\frt$ 都由实验的 randomization 所保证。这凸显了实验的第一个 Fisherian principle: {\it randomization}。
+
+
+
+
+ 
+ 
+ 
+
+
+此外，上述两个实验在某种意义上是能够产生统计上有意义结果的最小可能实验。例如，如果 Lind 只给六个组各分配一名患者，那么最小的 $p$-value 是
+$$
+\frac{1}{\binom{6}{1}}  =\frac{1}{6} = 0.167;
+$$
+如果 Fisher 只制作 $6$ 杯茶，其中 $3$ 杯先加 milk，另外 $3$ 杯先加 tea，那么最小的 $p$-value 是
+$$
+\frac{1}{\binom{6}{3}} = \frac{1}{20} = 0.05.
+$$
+我们永远无法在 $0.05$ 水平拒绝 null hypotheses。这凸显了实验的第二个 Fisherian principle: {\it replications}。也就是说，为了保证 FRT 有 power，我们必须在实验中有足够多的 units。
+
+ 
+
+Chapter \ref{chapter::stratification-poststratification} 将讨论实验的第三个 Fisherian principle: {\it blocking}。
+
+
+ 
+
+ 
+
+\section{Discussion}
+
+\subsection{Other sharp null hypotheses and confidence intervals}\label{sec::frt-invert-interval}
+
+
+上文我集中讨论 sharp null hypothesis $\HF$。事实上，FRT 的逻辑也适用于其他 sharp null hypotheses。例如，我们可以检验
+$$
+H_0(\boldsymbol{\tau}): Y_i(1) - Y_i(0) = \tau_i \text{ for all } i=1,\ldots, n
+$$
+其中 $\boldsymbol{\tau} = (\tau_1, \ldots, \tau_n)$ 是一个已知向量。由于在 $H_0(\boldsymbol{\tau})$ 下 individual causal effects 都已知，我们可以基于 observed data 补全所有 missing potential outcomes。在 potential outcomes 已知时，任意 test statistic $T = T(\boldsymbol{Z}, \boldsymbol{Y}(1), \boldsymbol{Y}(0))$ 的分布完全由 treatment assignment mechanism 决定，因此我们可以把相应的 $p_\frt$ 计算为 $\boldsymbol{\tau} $ 的函数，并记为 $p_\frt(\boldsymbol{\tau} )$。如果我们能够指定所有可能的 $\boldsymbol{\tau}$，那么就可以计算一系列 $p_\frt(\boldsymbol{\tau} )$。由 hypothesis testing 与 confidence set 的 duality（见 Section \ref{section::duality-ci-testing}），我们可以得到 average causal effect 的一个 $(1-\alpha)$-level confidence set:
+$$
+\left \{ \tau = n^{-1}\sum_{i=1}^n \tau_i :  p_\frt(\boldsymbol{\tau} ) \geq \alpha \right \} .
+$$
+尽管这一策略在概念上很直接，但由于所有可能的 $\boldsymbol{\tau}$ 数量巨大，实践中会有复杂性。在 binary outcome 的特殊情形下，\citet{Rigdon:2015} 和 \citet{li2016exact} 提出了一些计算上可行的方法，用于基于 FRT 构造 $\tau$ 的 confidence intervals。对一般的 unbounded outcomes，这一策略往往在计算上不可行。
+
+
+一个 canonical simplification \citep{rosenbaum2002design, Rosenbaum:2010} 是考虑 sharp null hypotheses 的一个子类，其中 individual causal effects 为常数：
+$$
+H_0(c): Y_i(1) - Y_i(0) =  c\text{ for all } i=1,\ldots, n
+$$
+其中 $c$ 是一个已知常数。给定 $c$，我们可以计算 $p_\frt(c)$。由 duality，我们可以得到 average causal effect 的一个 $(1-\alpha)$-level confidence set:
+$$
+\{ c :  p_\frt(c ) \geq \alpha \} .
+$$
+由于这一 procedure 只涉及一维搜索，它在计算上是可行的。
+然而，constant individual causal effect assumption 太强。特别地，对于 binary outcomes，除非所有 units 的 effects 都是 $0,$ $-1$ 或 $1$，否则它不成立。一般而言，constant individual causal effect assumption 有可由 observed data 拒绝的可检验含义；\citet{ding2015randomization} 提出了一个正式的 statistical test。
+
+
+
+\subsection{Other test statistics}\label{section::other-statistic}
+
+
+FRT 是一种一般策略，因为它适用于任意 randomized experiment 和任意 test statistic。
+我已经在 Section \ref{sec::frt-choiceofstatistic} 中给出了若干 test statistics 的例子。事实上，test statistic 的定义可以更加一般。例如，给定 pre-treatment covariate matrix $\boldsymbol{X}$，其中第 $i$ 行是 unit $i$ 的 $X_i$ $(i = 1, \ldots, n)$ \footnote{在 causal inference 中，如果 $X_i$ 不受 treatment 影响，我们就称 $X_i$ 为 covariate。也就是说，如果 covariate 有两个 potential outcomes $X_i(1)$ 和 $X_i(0)$，那么它们必须满足 $X_i(1) = X_i(0)$。标准统计书通常不区分 treatment 和 covariates，因为它们常常都出现在 outcome 的 regression model 右侧。在那些 statistical models 中，它们都称为 covariates。本书区分 treatment 和 covariates，因为它们在 causal inference 中扮演不同角色。}，我们可以允许 test statistic $T(\boldsymbol{Z}, \boldsymbol{Y}, \boldsymbol{X})$ 成为 treatment vector、outcome vector 和 covariate matrix 的函数。Problem \ref{hw::frt-covariates} 给出了一个例子。
+
+
+
+\subsection{Final remarks}
+对一般实验而言，$\boldsymbol{Z}$ 的 probability distribution 并不在 $n_1$ 个 1 和 $n_0$ 个 0 的所有可能 permutations 上均匀分布。然而，它的分布由实验者完全知道。因此，我们总可以模拟它的分布，而这进一步蕴含 sharp null hypothesis 下任意 test statistic 的分布。一个 finite-sample exact $p$-value 等于
+$$
+p_\textsc{frt} = \pr'\{  T(\boldsymbol{Z}', \boldsymbol{Y}) \geq T(\boldsymbol{Z}, \boldsymbol{Y}) \}
+$$ 
+其中 $\pr'$ 表示在给定数据条件下，对 $\boldsymbol{Z}'$ 分布取平均。我将在后续章节讨论其他实验，并且想强调：FRT 的适用范围超出了本书讨论的这些具体实验。
+
+ 
+FRT 适用于任意 test statistic。然而，这并没有回答数据分析中如何选择 test statistic 这一实践问题。如果目标是寻找相对于 sharp null hypothesis 的 surprise，那么最好选择在 alternative hypotheses 下具有较高 power 的 test statistic。一般来说，没有任何 test statistic 能在 power 方面支配其他所有 test statistics，因为 power 取决于 alternative hypothesis。Section \ref{sec::frt-choiceofstatistic} 中的四个 test statistics 由不同的 alternative hypotheses 所激发。例如，$\hat{\tau}$ 和 $t$ 由具有非零 average treatment effect 的 alternative hypothesis 所激发；$W$ 由具有 constant causal effect 且 outcomes heavy-tailed 的 alternative hypothesis 所激发。指定一个 working alternative hypothesis 通常有助于构造 test statistic，尽管它不必精确到能够保证 FRT 的有效性。Problems \ref{hw::frt-covariates} 和 \ref{hw::frt-glm} 说明了使用 working alternative hypothesis 或 statistical model 来构造 test statistics 的思想。
+ 
+
+
+
+\section{Homework Problems}
+
+
+
+\homeworksolutionref{03}
+\paragraph{Exactness of $p_\frt$}
+\label{hw::exact-frt}
+
+证明 \eqref{eq::p-value-valid}。
+
+
+
+\paragraph{Monte Carlo error of $\hat p_\frt$ }\label{para::monte-carlo-error-pfrt}
+
+给定数据，$p_\frt$ 是一个固定数，而 \eqref{eq::mcpvalue} 中它的 Monte Carlo estimator $\hat p_\frt$ 是随机的。
+证明
+$$
+E_{\text{mc}} (\hat p_\frt) =   p_\frt
+$$
+并且
+$$
+\var_{\text{mc}} (\hat p_\frt)  \leq \frac{1}{4R},
+$$
+其中下标 ``mc'' 表示由 Monte Carlo 引入的随机性，也就是说，$\hat p_\frt$ 之所以随机，是因为 $\boldsymbol{z}^r$ 是从 $\boldsymbol{Z}$ 的所有可能取值中独立随机抽取的 $R$ 个样本。
+
+
+Remark: $p_\frt$ 是随机的，因为 $\boldsymbol{Z}$ 是随机的。但在这个问题中，我们以数据为条件，因此 $p_\frt$ 变成一个固定数。$\hat p_\frt$ 是随机的，因为 $\boldsymbol{z}^r$ 是 $\boldsymbol{Z}$ 的 random permutations。
+Problem \ref{para::monte-carlo-error-pfrt} 表明，$\hat p_\frt$ 在 Monte Carlo randomness 下是 $p_\frt$ 的 unbiased estimator，并给出了 $\hat p_\frt$ 方差的一个上界。\citet[][Theorem 2]{luo2021leveraging} 给出了关于 Monte Carlo error 的一个更精细界。
+
+
+
+
+\paragraph{A finite-sample valid Monte Carlo approximation of $p_\frt$ }\label{para::finite-sample-exact-monte-carlo-frt}
+
+
+尽管由 Problem \ref{para::monte-carlo-error-pfrt} 的结果可知，$\hat p_\frt$ 是 $p_\frt$ 的 unbiased estimator，但由于有限 $R$ 下存在 Monte Carlo error，它可能不是一个有效的 $p$-value；这里有效是指对所有 $u\in (0,1)$ 都有 $\pr(\hat p_\frt \leq u) \leq u$。下面这个修改后的 Monte Carlo approximation 总是一个 finite-sample valid $p$-value。\citet{phipson2010permutation} 在 permutation test 中指出了这个技巧。
+
+
+
+定义
+$$
+\tilde p_\frt  =  \frac{  1 + \sum_{r=1}^R   I\{ T(\boldsymbol{z}^r,\boldsymbol{Y})   \geq T(\boldsymbol{Z},\boldsymbol{Y})   \}  }{1+R}
+$$ 
+其中 $\boldsymbol{z}^r$ 是 $\boldsymbol{Z}$ 的 $R$ 个 random permutations。证明：对任意 $R$，Monte Carlo approximation $\tilde p_\frt $ 总是一个 finite-sample valid $p$-value，即对所有 $u\in (0,1)$ 都有 $\pr(\tilde p_\frt \leq u) \leq u$。
+
+
+ 
+Remark: 你可以使用下面两个基本概率结果来证明 Problem \ref{para::finite-sample-exact-monte-carlo-frt} 中的结论。
+
+
+\begin{lemma}
+\label{lemma::binomial-order}
+对两个 Binomial random variables $X_1\sim \text{Binomial}(R, p_1)$ 和 $X_2\sim \text{Binomial}(R, p_2)$，若 $p_1\geq p_2$，则对所有 $x$ 都有 $\pr(X_1\leq x) \leq  \pr(X_2\leq x) $。
+\end{lemma}
+
+\begin{lemma}
+\label{lemma::uniform}
+如果 $p\sim \text{Uniform}(0,1)$ 且 $X\mid p \sim \text{Binomial}(R, p)$，那么边际上，$X$ 是 $\{ 0,1,\ldots, R  \}$ 上的 uniform random variable。
+\end{lemma}
+
+ 
+
+
+\paragraph{Fisher's exact test}
+\label{hw::frt-fisherexacttest}
+
+考虑一个具有 binary outcome 的 CRE，其数据总结为如下 two-by-two table:
+ \begin{center}
+\begin{tabular}{lccc}
+\hline 
+        & $Y =1$ & $Y =0$& total\\\hline
+$Z =1$ & $n_{11}$ & $n_{10}$ & $n_1$\\ 
+$Z =0$ & $n_{01}$ & $n_{00}$ & $n_0$\\ 
+\hline 
+\end{tabular}
+\end{center}
+在 $\HF$ 下，证明任意 test statistic $T(n_{11}, n_{10}, n_{01}, n_{00})$ 都是 $n_{11}$ 和其他非随机固定常数的函数，并且 $n_{11}$ 的 exact distribution 是 Hypergeometric。请给出 Hypergeometric distribution 的参数。
+
+Remark:
+\citet{barnard1947significance} 和 \citet{Ding:2015} 指出了 Fisher's exact test（Section \ref{sec::fisher-exact-test} 中回顾）与 binary outcome 下 CRE 中 FRT 的等价性。
+
+
+
+
+
+\paragraph{More details for lady tasting tea}
+\label{hw::more-tea}
+
+回顾 Section \ref{section::lady-tasting-tea} 中的例子。计算 $k=0,1,2,3,4$ 时的 $\pr(X=k)$。
+
+
+\paragraph{Covariate-adjusted FRT}
+\label{hw::frt-covariates}
+
+
+本问题给出 Section \ref{section::other-statistic} 的更多细节。
+
+
+Section \ref{sec::frt-lalonde-experiment} 使用含四个 test statistics 的 FRT 重新分析了 LaLonde experimental data。加入额外 covariates 后，FRT 可以更一般，至少有如下两种额外策略。假设所有 potential outcomes 和 covariates 都是固定数。
+
+首先，我们可以使用基于 linear regression residuals 的 test statistics。对 outcomes 关于 covariates 运行 linear regression，并得到 residuals（也就是把 residuals 看作 ``pseudo outcomes''）。然后基于 residuals 定义四个 test statistics。使用这四个新的 test statistics 进行 FRT。报告相应的 $p$-values。
+
+
+其次，我们可以把 test statistic 定义为 outcomes 关于 treatment 和 covariates 的 linear regression 中的 coefficient。使用这个 test statistic 进行 FRT。报告相应的 $p$-value。
+
+
+为什么上述两种策略得到的五个 $p$-values 都是 finite-sample exact？请给出论证。
+
+
+
+\paragraph{FRT with a generalized linear model}
+\label{hw::frt-glm}
+
+
+使用与 Problem \ref{hw::frt-covariates} 相同的数据集，但把 outcome 改为 \ri{re78} 是否为正的 binary indicator。运行 outcome 关于 treatment 和 covariates 的 logistic regression。treatment 的 coefficient 是否显著，其 $p$-value 是多少？使用 treatment 的 coefficient 作为 test statistic，计算来自 FRT 的 $p$-value。
+
+
+
+
+\paragraph{An algebraic detail}
+\label{hw::frt-algebraic-detail}
+
+验证 \eqref{eq::frt-algebra-difference-in-means}。

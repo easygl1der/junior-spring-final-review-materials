@@ -1,0 +1,389 @@
+\chapter{Solutions to Chapter 7: Matched-Pairs Experiment}
+\label{sol:chapter07}
+
+\begin{exercisesolution}{The true variance of $\hat{\tau}$ in the MPE}{within-pair random signs 的方差}
+在 MPE 中，pair $i$ 的 observed within-pair difference 可写成
+\[
+\hat\tau_i=(2Z_i-1)(Y_{i1}-Y_{i2}),
+\]
+也可等价地写成 treatment outcome minus control outcome。它是 pair-specific average causal effect
+\[
+\tau_i=\frac{1}{2}\{Y_{i1}(1)+Y_{i2}(1)-Y_{i1}(0)-Y_{i2}(0)\}
+\]
+的 unbiased estimator。令
+\[
+d_i(1)=Y_{i1}(1)-Y_{i2}(0),\qquad
+d_i(0)=Y_{i2}(1)-Y_{i1}(0).
+\]
+当 $Z_i=1$ 时 $\hat\tau_i=d_i(1)$；当 $Z_i=0$ 时 $\hat\tau_i=d_i(0)$。因此
+\[
+E(\hat\tau_i)=\frac{d_i(1)+d_i(0)}{2}=\tau_i,
+\]
+并且
+\[
+\var(\hat\tau_i)
+=\frac{1}{4}\{d_i(1)-d_i(0)\}^2.
+\]
+不同 pairs 的 randomizations 独立，所以
+\[
+\var(\hat\tau)=\var\left(n^{-1}\sum_{i=1}^n\hat\tau_i\right)
+=\frac{1}{n^2}\sum_{i=1}^n\var(\hat\tau_i)
+=\frac{1}{4n^2}\sum_{i=1}^n\{d_i(1)-d_i(0)\}^2.
+\]
+把 $d_i(1)-d_i(0)$ 写回 potential outcomes，可得
+\[
+\var(\hat\tau)
+=\frac{1}{4n^2}\sum_{i=1}^n
+\{Y_{i1}(1)+Y_{i1}(0)-Y_{i2}(1)-Y_{i2}(0)\}^2.
+\]
+
+\emph{Remark / 用途：} 这个公式说明 MPE 的 variance 不是由 across-pair heterogeneity 直接决定，而是由每个 pair 内两种 possible treated-control contrasts 的差异决定。由于每个 pair 只有一次 randomization，我们无法直接估计这些 within-pair variances，这正是 \cref{thm::varianceest-mp} 保守估计的背景。
+\end{exercisesolution}
+
+\begin{exercisesolution}{A covariance estimator}{Theorem \ref{thm::covariance-mp} 的证明}
+记 $\hat\tau_{X,i}$ 为 pair $i$ 的 covariate difference，$\hat\tau_i$ 为 outcome difference。MPE 下各 pair 独立，而且
+\[
+E(\hat\tau_{X,i})=\tau_{X,i},\qquad E(\hat\tau_i)=\tau_i.
+\]
+我们要证明
+\[
+\hat\theta=\{n(n-1)\}^{-1}\sum_{i=1}^n
+(\hat\tau_{X,i}-\hat\tau_X)(\hat\tau_i-\hat\tau)
+\]
+对 $\cov(\hat\tau_X,\hat\tau)$ unbiased。
+
+使用恒等式
+\[
+\sum_{i=1}^n(a_i-\bar a)(b_i-\bar b)
+=\sum_{i=1}^n a_i b_i-n\bar a\bar b.
+\]
+因此
+\[
+n(n-1)E(\hat\theta)
+=\sum_{i=1}^nE(\hat\tau_{X,i}\hat\tau_i)
+-nE(\hat\tau_X\hat\tau).
+\]
+由于 pairs 独立，
+\[
+E(\hat\tau_X\hat\tau)
+=n^{-2}\sum_{i=1}^nE(\hat\tau_{X,i}\hat\tau_i)
++n^{-2}\sum_{i\neq j}\tau_{X,i}\tau_j.
+\]
+另一方面，
+\[
+\cov(\hat\tau_X,\hat\tau)
+=n^{-2}\sum_{i=1}^n
+\cov(\hat\tau_{X,i},\hat\tau_i),
+\]
+因为不同 pairs 的 randomizations 独立。把上式展开为
+\[
+n^2\cov(\hat\tau_X,\hat\tau)
+=\sum_{i=1}^nE(\hat\tau_{X,i}\hat\tau_i)-\sum_{i=1}^n\tau_{X,i}\tau_i.
+\]
+将 $E(\hat\tau_X\hat\tau)$ 的表达式代回 $E(\hat\theta)$ 并整理，正好得到
+\[
+E(\hat\theta)=\cov(\hat\tau_X,\hat\tau).
+\]
+
+\emph{Remark / 用途：} 这个证明与 \cref{thm::varianceest-mp} 的证明结构相同：用 across-pair sample covariance 去估计一个由 within-pair randomization 诱导的 covariance。它是 MPE covariate adjustment 能用 OLS 形式实现的关键。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Variance estimators via OLS}{intercept-only OLS 与 covariate-adjusted OLS}
+先证明 \cref{prop::mpe-variance}。把 $\hat\tau_i$ 看作 response，拟合 intercept-only regression
+\[
+\hat\tau_i=\alpha+u_i.
+\]
+OLS intercept 是 sample mean：
+\[
+\hat\alpha=n^{-1}\sum_{i=1}^n\hat\tau_i=\hat\tau.
+\]
+Intercept 的 usual OLS variance estimator 是 residual variance 除以 $n$：
+\[
+\widehat{\var}(\hat\alpha)
+=\frac{1}{n}\cdot \frac{1}{n-1}\sum_{i=1}^n(\hat\tau_i-\hat\tau)^2
+=\{n(n-1)\}^{-1}\sum_{i=1}^n(\hat\tau_i-\hat\tau)^2
+=\hat V.
+\]
+所以 point estimator 和 variance estimator 都由 intercept-only OLS 给出。
+
+再看 \cref{prop::colin2018regression}。把 $\hat\tau_i$ 对 intercept 和 $\hat\tau_{X,i}$ 做 OLS：
+\[
+\hat\tau_i=\alpha+\gamma\tran\hat\tau_{X,i}+u_i.
+\]
+OLS normal equations 给出
+\[
+\hat\alpha=\hat\tau-\hat\gamma\tran\hat\tau_X.
+\]
+这正是 covariate-adjusted estimator
+\[
+\hat\tau_{\mathrm{adj}}=\hat\tau-\hat\gamma\tran\hat\tau_X.
+\]
+同时，OLS 的 intercept variance estimator 等价于把 residualized outcome differences 的 between-pair variation 作为 variance estimator；在大样本下，它与正文给出的
+\[
+\hat V_{\mathrm{adj}}
+=\hat V-\hat\theta\tran\cov(\hat\tau_X)^{-1}\hat\theta
+\]
+相匹配。这里不需要 EHW correction 的原因是：我们已经把原始 unit-level 数据化约为 independent pair-level differences，OLS 的工作对象是 $\hat\tau_i$ 这一层面的 estimating equations。
+
+\emph{Remark / 用途：} MPE 中 OLS 的角色很干净：不是假设 outcome 真的满足 linear model，而是用 regression algebra 实现 pair-level averaging 和 covariate adjustment。这与 CRE 中 unit-level OLS 需要 robust SE 的情形不同。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Point and variance estimator with binary outcome}{用 matched binary table 表示 Neymanian quantities}
+在 \cref{tb::binarymatchedpairs} 的记号下，treated outcome 与 control outcome 的 pair-level difference 只可能为 $1$、$0$ 或 $-1$。其中 $m_{10}$ 个 pairs 的 difference 为 $1$，$m_{01}$ 个 pairs 的 difference 为 $-1$，$m_{11}+m_{00}$ 个 concordant pairs 的 difference 为 $0$。
+
+因此
+\[
+\hat\tau=\frac{m_{10}-m_{01}}{n},
+\]
+其中
+\[
+n=m_{11}+m_{10}+m_{01}+m_{00}.
+\]
+Neyman conservative variance estimator 为 pair differences 的 sample variance 除以 $n$：
+\[
+\hat V=\{n(n-1)\}^{-1}\sum_{i=1}^n(\hat\tau_i-\hat\tau)^2.
+\]
+由于
+\[
+\sum_{i=1}^n\hat\tau_i^2=m_{10}+m_{01},
+\qquad
+\sum_{i=1}^n\hat\tau_i=n\hat\tau=m_{10}-m_{01},
+\]
+所以
+\[
+\sum_{i=1}^n(\hat\tau_i-\hat\tau)^2
+=m_{10}+m_{01}-n\hat\tau^2.
+\]
+于是
+\[
+\hat V
+=\frac{m_{10}+m_{01}-n^{-1}(m_{10}-m_{01})^2}{n(n-1)}.
+\]
+
+\emph{Remark / 用途：} McNemar/FRT 只用 discordant pairs 做 sharp-null test；Neymanian inference 则把 pair-level differences 当作 causal effect estimator。两者使用同一张 matched binary table，但回答的问题不同。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Minimum sample size for the FRT}{level $0.001$ 下的最小可能 $p$-value}
+MPE 中有 $n$ 个 pairs，每个 pair 有两个 possible assignments，所以 assignment space 大小为 $2^n$。若 observed statistic 达到唯一最极端配置，最小单侧 FRT $p$-value 是
+\[
+p_{\min}^{\mathrm{MPE}}=2^{-n}.
+\]
+要求 $2^{-n}\leq 0.001$，即
+\[
+2^n\geq 1000.
+\]
+因为 $2^9=512<1000$，而 $2^{10}=1024\geq1000$，所以 MPE 需要
+\[
+n=10
+\]
+个 pairs，也就是 $20$ 个 units。
+
+CRE 中有 $2n$ 个 units，其中 $n$ treated、$n$ control。Assignment space 大小为 $\binom{2n}{n}$，最小单侧 $p$-value 是
+\[
+p_{\min}^{\mathrm{CRE}}=\binom{2n}{n}^{-1}.
+\]
+要求 $\binom{2n}{n}\geq1000$。检查
+\[
+\binom{12}{6}=924<1000,\qquad
+\binom{14}{7}=3432\geq1000.
+\]
+所以 CRE 需要
+\[
+n=7
+\]
+treated 和 $7$ control，也就是 $14$ 个 units。
+
+\emph{Remark / 用途：} 这个练习展示了 finite randomization space 的一个实际后果：matching 改善 balance，但也减少 assignment space 的大小。在很小样本下，FRT 的可拒绝性可能反而受限。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Re-analyzing Darwin's data}{Wilcoxon FRT 与 Neymanian analysis}
+Darwin's data 可由 \pkg{HistData} 中的 \ri{ZeaMays} 复现。使用 Wilcoxon sign-rank statistic 的 FRT，可以把 observed pair differences 记为
+\[
+d_i=\texttt{cross}_i-\texttt{self}_i.
+\]
+在 $\HF$ 下，absolute values $|d_i|$ 固定，signs 独立等概率翻转。可复现代码为：
+\begin{lstlisting}
+library(HistData)
+d <- ZeaMays$diff
+d <- d[d != 0]
+r <- rank(abs(d))
+W.obs <- sum(r[d > 0])
+
+R <- 10000
+W.mc <- numeric(R)
+for (b in 1:R) {
+  s <- sample(c(-1, 1), length(d), replace = TRUE)
+  W.mc[b] <- sum(r[s * abs(d) > 0])
+}
+p.frt <- mean(W.mc >= W.obs)
+p.frt.valid <- (1 + sum(W.mc >= W.obs))/(R + 1)
+\end{lstlisting}
+若要 exact 而非 Monte Carlo，只需枚举 $2^n$ 个 sign vectors。
+
+Neymanian analysis 使用
+\[
+\hat\tau=\bar d,\qquad
+\hat V=\{n(n-1)\}^{-1}\sum_{i=1}^n(d_i-\bar d)^2,
+\]
+并给出
+\[
+\hat\tau\pm 1.96\sqrt{\hat V}
+\]
+作为 large-sample 95\% confidence interval。代码为：
+\begin{lstlisting}
+tauhat <- mean(d)
+vhat <- var(d) / length(d)
+ci <- tauhat + c(-1, 1) * qnorm(0.975) * sqrt(vhat)
+\end{lstlisting}
+
+\emph{Remark / 用途：} Darwin data 是 MPE 的经典小样本例子。FRT 能给出 exact sharp-null evidence；Neymanian interval 则估计 average height effect。两者互补，而不是互相替代。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Re-analyzing children's television workshop experiment data}{多种 FRT 与 covariate adjustment}
+本题数据已经在 \cref{sec::neyman-television-mpe} 中以内嵌代码给出。记
+\[
+d^Y_i=Y_{i,\mathrm{treat}}-Y_{i,\mathrm{control}},\qquad
+d^X_i=X_{i,\mathrm{treat}}-X_{i,\mathrm{control}}.
+\]
+不调整 covariates 的 FRT 可以使用以下 statistics：
+\[
+\bar d^Y,\qquad
+t_{\mathrm{pair}},\qquad
+W=\sum_i \mathbb{I}(d^Y_i>0)\operatorname{rank}(|d^Y_i|),\qquad
+\Delta=\sum_i\mathbb{I}(d^Y_i>0).
+\]
+在 $\HF$ 下，$|d^Y_i|$ 固定，signs 随机翻转。
+
+Covariate-adjusted FRT 可以先把 outcome differences 对 covariate differences 做 pair-level regression：
+\[
+d^Y_i=\alpha+\gamma d^X_i+e_i,
+\]
+然后使用 residuals $e_i$ 的 mean、paired $t$ statistic 或 sign-rank statistic 做 FRT。也可以直接使用 regression intercept $\hat\alpha$ 作为 statistic。可复现框架为：
+\begin{lstlisting}
+T.mean <- function(d) mean(d)
+T.wilcox <- function(d) sum(rank(abs(d))[d > 0])
+
+frt.sign <- function(d, stat, R = 10000) {
+  a <- abs(d)
+  obs <- stat(d)
+  vals <- replicate(R, stat(sample(c(-1, 1), length(a), TRUE) * a))
+  c(raw = mean(vals >= obs),
+    valid = (1 + sum(vals >= obs))/(R + 1))
+}
+
+fit <- lm(diffy ~ diffx)
+res <- resid(fit)
+frt.sign(diffy, T.mean)
+frt.sign(res, T.mean)
+\end{lstlisting}
+
+\emph{Remark / 用途：} 对 8 个 pairs 的小样本，Normal approximation 尾部可能不可靠。FRT 的价值正是在这种 setting 下直接使用设计给出的 exact 或 Monte Carlo randomization distribution。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Re-analyzing \citet{angrist2009effects}'s data}{缺失 outcome 与 covariate adjustment}
+本题把 schools 当作 experimental units，并把 matched pairs 当作 MPE。对每个 outcome year，例如 \ri{pr01} 或 \ri{pr02}，先构造 pair-level treated-control difference $d^Y_i$；对 pretreatment covariates \ri{pr99}、\ri{pr00} 构造 pair-level differences $d^X_i$。
+
+不使用 covariates 的 Neymanian analysis 为
+\[
+\hat\tau=\bar d^Y,\qquad
+\hat V=\frac{\operatorname{var}(d^Y)}{n}.
+\]
+使用 covariates 的 analysis 可回归
+\[
+d^Y_i=\alpha+\gamma_1d^{99}_i+\gamma_2d^{00}_i+u_i,
+\]
+并把 intercept $\hat\alpha$ 作为 adjusted estimator。其 standard error 可由 pair-level OLS 的 intercept standard error 给出。
+
+Pair 25 中 \ri{pr02} 有缺失。合理处理方式应事先固定，不能看结果后选择。常见选择有三种：
+\begin{enumerate}
+\item 对 \ri{pr02} analysis 删除 pair 25，保持 complete-pair analysis；
+\item 只分析 \ri{pr01} 时保留 pair 25，分析 \ri{pr02} 时删除；
+\item 若有可信 missingness model，可做 sensitivity analysis 或 imputation，但主分析应报告 complete-pair 结果。
+\end{enumerate}
+在随机化分析中，删除整个 pair 比删除单个 unit 更自然，因为 MPE 的 randomization unit 是 pair-level contrast。
+
+可复现代码骨架为：
+\begin{lstlisting}
+dat <- read.csv("AL2009.csv")
+make_diff <- function(dat, y) {
+  by(dat, dat$pair, function(dd) {
+    yt <- dd[dd$z == 1, y]
+    yc <- dd[dd$z == 0, y]
+    xt99 <- dd[dd$z == 1, "pr99"] - dd[dd$z == 0, "pr99"]
+    xt00 <- dd[dd$z == 1, "pr00"] - dd[dd$z == 0, "pr00"]
+    c(dy = yt - yc, dx99 = xt99, dx00 = xt00)
+  })
+}
+D <- do.call(rbind, make_diff(dat, "pr02"))
+D <- na.omit(as.data.frame(D))
+tauhat <- mean(D$dy)
+vhat <- var(D$dy) / nrow(D)
+fit <- lm(dy ~ dx99 + dx00, data = D)
+\end{lstlisting}
+
+\emph{Remark / 用途：} 这题的重点不是套一个公式，而是尊重 MPE 的 pair structure。缺失值处理、covariate adjustment 和 variance estimation 都应在 pair-level differences 上完成。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Variance estimation in the general matched experiment}{general matched sets 的保守方差}
+General matched experiment 是 SRE 的特例。Matched set $i$ 有 $1+M_i$ 个 units，且恰有一个 treated unit。Set-level average causal effect 为 $\tau_i$，其 estimator 为 $\hat\tau_i$；总体 target 为
+\[
+\tau_w=\sum_{i=1}^n w_i\tau_i,
+\qquad
+\hat\tau_w=\sum_{i=1}^n w_i\hat\tau_i.
+\]
+由于 matched sets 独立，
+\[
+\var(\hat\tau_w)=\sum_{i=1}^n w_i^2\var(\hat\tau_i).
+\]
+这给出 Theorem \ref{thm::varianceest-mp} 的 general matched analogue：若能在 set 内写出 $\hat\tau_i$ 的 randomization variance，就把它按 $w_i^2$ 加总。
+
+现在证明 \cref{thm::hadamdard-matched-experiment} 的核心恒等式。题目提示给出
+\[
+E(\hat\tau_i-\hat\tau_w)=\tau_i-\tau_w,
+\]
+以及
+\[
+\var(\hat\tau_i-\hat\tau_w)
+=\var(\hat\tau_w)+(1-2w_i)\var(\hat\tau_i).
+\]
+于是
+\begin{eqnarray*}
+E\{(\hat\tau_i-\hat\tau_w)^2\}
+&=&\var(\hat\tau_w)+(1-2w_i)\var(\hat\tau_i)
++(\tau_i-\tau_w)^2.
+\end{eqnarray*}
+乘以 $c_i$ 并求和，得到
+\[
+E(\hat V_w)
+=\left(\sum_i c_i\right)\var(\hat\tau_w)
++\sum_i c_i(1-2w_i)\var(\hat\tau_i)
++\sum_i c_i(\tau_i-\tau_w)^2.
+\]
+由
+\[
+c_i=\frac{w_i^2/(1-2w_i)}
+{1+\sum_j w_j^2/(1-2w_j)}
+\]
+可知
+\[
+\sum_i c_i(1-2w_i)\var(\hat\tau_i)
+=\frac{\sum_i w_i^2\var(\hat\tau_i)}
+{1+\sum_j w_j^2/(1-2w_j)}
+=\frac{\var(\hat\tau_w)}
+{1+\sum_j w_j^2/(1-2w_j)}.
+\]
+同时
+\[
+\sum_i c_i=
+\frac{\sum_i w_i^2/(1-2w_i)}
+{1+\sum_j w_j^2/(1-2w_j)}.
+\]
+前两项相加正好等于 $\var(\hat\tau_w)$。因此
+\[
+E(\hat V_w)-\var(\hat\tau_w)
+=\sum_i c_i(\tau_i-\tau_w)^2\geq0.
+\]
+这就是保守性。若 $\tau_i$ 在 sets 间为常数，则右侧为零；反之，只要 weights 对应的 $c_i$ 为正，右侧刻画 set-level effects 的 heterogeneity。
+
+\emph{Remark / 用途：} General matched experiment 的难点是 set sizes 不同，简单的 sample variance 不再自然。Hadamard-type 权重 $c_i$ 的作用，是让不可观测的 within-set variance terms 在期望中正确抵消。
+\end{exercisesolution}

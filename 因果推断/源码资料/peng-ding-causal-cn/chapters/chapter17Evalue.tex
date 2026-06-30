@@ -1,0 +1,602 @@
+
+\chapter{E-Value: Evidence for Causation in Observational Studies with Unmeasured Confounding}
+\chaptermark{E-Value}\label{chapter::evalue}
+
+
+\cref{part::observational-studies} 中讨论的所有方法，本质上都依赖 ignorability assumption。它们要求我们控制 treatment 与 outcome 之间的全部 confounding。然而，ignorability assumption 不能仅凭数据本身验证。Observational studies 常常因为可能存在 unmeasured confounding 而受到质疑。\cref{chapter::correlationassociation} 中回顾的著名 Yule--Simpson Paradox 表明，一个未观测到的 binary confounder 可以完全逆转 treatment 与 outcome 之间的观测关联。不过，要逆转一个更大的观测关联，这个 unmeasured confounder 就必须与 treatment 和 outcome 都有更强的关联。换言之，不同 observational studies 提供的证据强度并不相同；有些研究比另一些研究提供了更强的 causation 证据。
+
+
+接下来的三章讨论几种 sensitivity analysis 技术：在存在 unmeasured confounding 时，如何根据 observational studies 量化 causation 的证据。本章从 E-value 开始；这一概念由 \citet{vanderweele2017sensitivity} 基于 \citet{ding2016sensitivity} 的理论提出。它特别适用于那些用 logistic regression 估计 treatment 对 binary outcome 的 conditional risk ratio 的 observational studies。\cref{chapter::sensitivity-ACE} 讨论基于 outcome regression、IPW 和 doubly robust estimation 的 average causal effect sensitivity analysis。\cref{sec::rosenbaum-sensitivity-analysis} 讨论 Rosenbaum 针对 matched observational studies 的 sensitivity analysis framework。
+
+
+
+
+
+
+\section{Cornfield-type sensitivity analysis}
+
+虽然我们不假设给定 $X$ 后的 ignorability：
+$$
+Z\nind \{  Y(1), Y(0) \} \mid X ,
+$$
+但仍然假设给定 $X$ 和一个 unmeasured confounder $U$ 后的 latent ignorability：
+$$
+Z\ind \{  Y(1), Y(0) \} \mid (X, U) . 
+$$
+本章的技术最适合 binary outcome $Y$，尽管它也可以推广到其他 non-negative outcomes \citep{ding2016sensitivity}。这里先聚焦于 binary $Y$。在 risk ratio scale 上，真实的 conditional causal effect 定义为
+$$
+\RR_{ZY\mid x}^\true = \frac{  \pr\{ Y(1) = 1\mid X=x  \} }{ \pr\{ Y(0) = 1\mid X=x  \} },
+$$
+而 observed conditional risk ratio 等于
+$$
+\RR_{ZY\mid x}^\obs = \frac{  \pr( Y  = 1\mid Z=1, X=x  ) }{ \pr( Y  = 1\mid  Z=0, X=x  ) }.
+$$
+一般来说，在存在 unmeasured confounder $U$ 时，二者并不相同：
+$$
+\RR_{ZY\mid x}^\true  \neq \RR_{ZY\mid x}^\obs 
+$$ 
+这是因为
+$$
+\RR_{ZY\mid x}^\true = \frac{  \int  \pr( Y = 1\mid Z=1, X=x, U=u  )  f(u \mid X=x) \diff u }
+{ \int \pr( Y = 1\mid Z=0,  X=x , U=u  )  f(u \mid X=x) \diff u }
+$$
+而
+$$
+\RR_{ZY\mid x}^\obs = \frac{ \int   \pr( Y  = 1\mid Z=1, X=x , U=u ) f(u \mid Z=1, X=x) \diff u   }
+{ \int  \pr( Y  = 1\mid  Z=0, X=x, U=u  ) f(u \mid Z=0, X=x) \diff u  } 
+$$
+是在 $U$ 的不同分布下求平均得到的。
+
+
+从历史上看，\citet{doll1950smoking} 发现，即使调整了许多 observed covariates $X$，cigarette smoking 对 lung cancer 的 risk ratio 仍然为 $9$\footnote{他们的原始分析基于 case-control study，并估计 cigarette smoking 对 lung cancer 的 odds ratio。但由于 lung cancer 是 rare outcome，risk ratio 接近 odds ratio；见 \cref{prop::2x2-independence}.}。\citet{Fisher::1957} 批评这一结果未必具有 causal 含义，因为可能存在一个 hidden gene 同时导致 cigarette smoking 和 lung cancer，而 cigarette smoking 对 lung cancer 的真实 causal effect 其实不存在。这就是 {\it common cause} hypothesis，\citet{reichenbach1991direction} 也讨论过这一观点。\citet{Cornfield::1959} 则采取了更具建设性的角度，追问：这个 unmeasured confounder 必须有多强，才能解释掉 cigarette smoking 与 lung cancer 之间的观测关联？下面我们使用 \citet{ding2016sensitivity} 对该问题的一般表述。
+
+
+考虑下面的 causal diagram：
+$$
+\xymatrix{
+ &U \ar[dl] \ar[dr] \\
+ Z   && Y 
+}
+$$
+这里隐含地条件化在 $X$ 上。因此 $Z\ind Y\mid (X, U)$。给定 $X$ 和 $U$ 后，我们看不到 $Z$ 与 $Y$ 的关联；但只给定 $X$ 时，我们会观察到 $Z$ 与 $Y$ 的关联。虽然可以像 \citet{ding2016sensitivity} 那样允许 $U$ 为一般变量，为了简化叙述，这里假设 $U$ 是 binary 的。
+
+
+定义两个 sensitivity parameters：
+$$
+\RR_{ZU\mid x} = \frac{ \pr(U=1\mid Z=1,X=x) }{ \pr(U=1\mid Z=0,X=x)  } 
+%\equiv \frac{  f_{1,x} }{  f_{0,x} }
+$$
+它度量 treatment-confounder association；
+并且
+$$
+\RR_{UY\mid x} = \frac{  \pr(Y=1\mid U=1, X=x) }{  \pr(Y=1\mid U=0, X=x) },
+$$
+它度量给定 covariates $X=x$ 后的 confounder-outcome association。下面可以得到本章的主要结果。
+
+\begin{theorem}\label{thm::bounding-factor}
+在 $Z\ind Y\mid (X, U)$ 下，假设
+\begin{equation}\label{eq::largerthan1-evalue}
+\RR_{ZY\mid x}^\obs > 1, \quad
+ \RR_{ZU\mid x} > 1,\quad 
+ \RR_{UY\mid x} > 1.
+\end{equation}
+则有
+$$
+\RR_{ZY\mid x}^\obs \leq \frac{ \RR_{ZU\mid x}  \RR_{UY\mid x} }{  \RR_{ZU\mid x} + \RR_{UY\mid x} - 1} .
+$$
+\end{theorem}
+
+在 \cref{thm::bounding-factor} 中，我们不失一般性地假设 \eqref{eq::largerthan1-evalue}。如果 $\RR_{ZY\mid x}^\obs < 1$，可以重新标记 treatment 和 control 的水平，使得 $\RR_{ZY\mid x}^\obs > 1$。如果 $  \RR_{ZU\mid x}  < 1$，可以把 unmeasured confounder $U$ 重新定义为 $1-U$，从而保证 $   \RR_{ZU\mid x}  > 1$。如果 $\RR_{ZY\mid x}^\obs > 1$ 且 $ \RR_{ZU\mid x} > 1$，那么 $ \RR_{UY\mid x}  > 1$ 会自动成立。这个细微的技术点留到 \cref{hw::technical-largerthan1} 中处理。
+
+
+\cref{thm::bounding-factor} 给出了在 conditional independence $Z\ind Y\mid (X, U)$ 成立时，treatment 对 outcome 的 observed risk ratio 的上界。在这一 conditional independence assumption 下，treatment 与 outcome 之间的关联完全来自 treatment 与 confounder 的关联 $\RR_{ZU\mid x} $，以及 confounder 与 outcome 的关联 $\RR_{UY\mid x}$。这个上界等于 $\RR_{ZU\mid x} \times  \RR_{UY\mid x} /  (\RR_{ZU\mid x} + \RR_{UY\mid x} - 1)$。
+类似的不等式曾出现在 \citet{lee2011bounding} 中。
+它也与 Cochran's formula，或者 linear models 中的 omitted-variable bias formula 有关；后者已在 \cref{hw::cochran+ovb} 中回顾过。
+
+
+
+反过来说，要生成某个给定的 observed risk ratio $\RR_{ZY\mid x}^\obs$，两个 confounding measures $\RR_{ZU\mid x} $ 和 $\RR_{UY\mid x}$ 不能任意取值。它们组成的函数 $\RR_{ZU\mid x}  \times  \RR_{UY\mid x} /  (\RR_{ZU\mid x} + \RR_{UY\mid x} - 1)$ 至少要和 $\RR_{ZY\mid x}^\obs$ 一样大。
+
+下面给出 \cref{thm::bounding-factor} 的证明。
+
+
+\begin{myproof}{Theorem}{\cref{thm::bounding-factor}}
+%For simplicity, we also write ``$X=x$'' as ``$x$'' in the conditional probabilities. 
+%\frac{ \pr(U=1\mid Z=1,X=x) }{ \pr(U=1\mid Z=0,X=x)  } \equiv \frac{  f_{1,x} }{  f_{0,x} }
+定义
+$$ 
+f_{1,x} = \pr(U=1\mid Z=1,X=x),\quad
+f_{0,x}  = \pr(U=1\mid Z=0,X=x) .
+$$ 
+可以将 $\RR_{ZY\mid x}^\obs$ 分解为
+\begin{eqnarray*}
+&&\RR_{ZY\mid x}^\obs  \\
+&=& \frac{  \pr( Y  = 1\mid Z=1, X=x  ) }{ \pr( Y  = 1\mid  Z=0,  X=x  ) } \\
+&=& \frac{ \left[ \splitfrac{ \pr(U=1\mid Z=1,  X=x) \pr( Y  = 1\mid Z=1, U=1,  X=x  ) }{+ \pr(U=0\mid Z=1,  X=x) \pr( Y  = 1\mid Z=1, U=0,  X=x  )} \right]}
+{ \left[ \splitfrac{\pr(U=1\mid Z=0,  X=x) \pr( Y  = 1\mid  Z=0, U=1,  X=x  )}{  +  \pr(U=0\mid Z=0,  X=x) \pr( Y  = 1\mid  Z=0, U=0,  X=x  ) } \right]  } \\
+&=& \frac{ \left[ \splitfrac{ \pr(U=1\mid Z=1,  X=x) \pr( Y  = 1\mid U=1,  X=x  ) }{+ \pr(U=0\mid Z=1,  X=x) \pr( Y  = 1\mid U=0,  X=x  )}\right] }
+{  \left[ \splitfrac{ \pr(U=1\mid Z=0,  X=x) \pr( Y  = 1\mid   U=1,  X=x  )  }{+  \pr(U=0\mid Z=0,  X=x) \pr( Y  = 1\mid  U=0,  X=x  ) }\right]  } \\
+&=& \frac{  f_{1,x} \RR_{UY\mid x} + 1- f_{1,x}  }{ f_{0,x} \RR_{UY\mid x} + 1- f_{0,x}  } \\
+&=& \frac{  (\RR_{UY\mid x} - 1) f_{1,x} + 1  }{      \frac{  \RR_{UY\mid x} - 1}{  \RR_{ZU\mid x} }    f_{1,x} + 1  } .
+\end{eqnarray*}
+利用 \cref{hw::technical-for-evalue-increasing} 的结果，可以验证 $\RR_{ZY\mid x}^\obs$ 随 $f_{1,x} $ 单调递增。因此令 $f_{1,x} = 1$，得到
+$$
+\RR_{ZY\mid x}^\obs \leq \frac{  (\RR_{UY\mid x} - 1) + 1  }{      \frac{  \RR_{UY\mid x} - 1}{  \RR_{ZU\mid x} }    + 1  }
+= \frac{ \RR_{ZU\mid x}  \RR_{UY\mid x} }{  \RR_{ZU\mid x} + \RR_{UY\mid x} - 1} .
+$$
+\end{myproof}
+
+在 \cref{thm::bounding-factor} 的证明中，我们得到一个恒等式
+\begin{equation}
+\label{eq::identity-evalue}
+\RR_{ZY\mid x}^\obs = \frac{  (\RR_{UY\mid x} - 1) f_{1,x} + 1  }{      \frac{  \RR_{UY\mid x} - 1}{  \RR_{ZU\mid x} }    f_{1,x} + 1  } .
+\end{equation}
+但这个恒等式涉及三个参数
+$$
+\{  f_{1,x}, \RR_{ZU\mid x},  \RR_{UY\mid x}  \} ;
+$$
+相关公式见 \cref{hw::Schlesselman1978formula}。相比之下，\cref{thm::bounding-factor} 中的上界只涉及两个参数
+$$
+\{  \RR_{ZU\mid x},  \RR_{UY\mid x}  \}
+ $$
+ 它们度量 confounder 的强度。
+ 从数学上说，identity \cref{eq::identity-evalue} 比 \cref{thm::bounding-factor} 中的不等式更强。然而，与 \cref{thm::bounding-factor} 相比，\cref{eq::identity-evalue} 涉及更多 sensitivity parameters。因此，在 sensitivity analysis 中，我们面对的是准确性与便利性之间的取舍。
+
+
+\section{E-value}
+
+下面的 \cref{lemma::betaw1w2} 对推出 \cref{thm::bounding-factor} 的若干有趣推论很有用。其证明留到 \cref{hw::proof-lemma-evalue}。
+
+\begin{lemma}
+\label{lemma::betaw1w2}
+对 $w_1 > 1$ 和 $w_2 > 1$，定义 $\beta(w_1, w_2) = w_1 w_2/(w_1 + w_2 - 1)$。
+\begin{enumerate}
+[(1)]
+\item
+$\beta(w_1, w_2)$ 关于 $w_1$ 和 $w_2$ 对称；
+\item
+$\beta(w_1, w_2)$ 分别随 $w_1$ 和 $w_2$ 单调递增；
+\item\label{beta2}
+$\beta(w_1, w_2) \leq w_1$ 且 $\beta(w_1, w_2) \leq w_2$；
+\item\label{beta3}
+$\beta(w_1, w_2) \leq w^2/(2w-1)$，其中 $w = \max(w_1, w_2)$。
+\end{enumerate}
+\end{lemma}
+
+
+
+ 
+
+
+由 \cref{thm::bounding-factor} 和 \cref{lemma::betaw1w2}\eqref{beta2} 可得
+$$
+ \RR_{ZU\mid x} \geq \RR_{ZY\mid x}^\obs, \quad  \RR_{UY\mid x}  \geq \RR_{ZY\mid x}^\obs , 
+$$
+等价地，
+$$
+\min( \RR_{ZU\mid x} ,  \RR_{UY\mid x} ) \geq \RR_{ZY\mid x}^\obs.
+$$
+因此，要解释掉 observed relative risk，两个 confounding measures $\RR_{ZU\mid x} $ 和 $  \RR_{UY\mid x}$ 都必须至少与 $\RR_{ZY\mid x}^\obs$ 一样大。
+\citet{Cornfield::1959} 首先推出了不等式 $\RR_{ZU\mid x} \geq \RR_{ZY\mid x}^\obs$，它也称为 {\it Cornfield inequality} \citep{gastwirth1998cornfield}。\citet{Schlesselman::1978} 推出了不等式 $\RR_{UY\mid x}  \geq \RR_{ZY\mid x}^\obs$。
+这些不等式与 information theory 中的 {\it data processing inequality} 有关\footnote{在 information theory 中，{\it mutual information}
+$$
+I(A,B) = \iint p(a,b) \log_2 \frac{  p(a,b) }{p(a)p(b)} \text{d} a \text{d} b
+$$ 
+度量两个 random variables $A$ 与 $B$ 之间的 dependence，其中 $p(\cdot)$ 表示 $(A,B)$ 的 joint 或 marginal density。{\it data processing inequality} 是一个著名结果：如果 $Z\ind Y \mid U$，那么 $I(Z,Y) \leq I(Z,U)$ 且 $I(Z,Y) \leq I(U,Y)$。
+Lihua Lei 和 Bin Yu 都向我指出了 Cornfield's inequality 与 data processing inequality 之间的联系。
+}. 
+
+
+
+如果定义 $w = \max( \RR_{ZU\mid x} ,  \RR_{UY\mid x} )$，则由 \cref{thm::bounding-factor} 和 \cref{lemma::betaw1w2}\eqref{beta3} 可得
+\begin{eqnarray*}
+&&w^2/(2w-1) \geq \beta( \RR_{ZU\mid x} , \RR_{UY\mid x}) \geq \RR_{ZY\mid x}^\obs \\ 
+&\Longrightarrow & w^2 - 2 \RR_{ZY\mid x}^\obs w + \RR_{ZY\mid x}^\obs \geq 0,
+\end{eqnarray*}
+这是一个二次不等式。一个根 $  \RR_{ZY\mid x}^\obs - \sqrt{ \RR_{ZY\mid x}^\obs (\RR_{ZY\mid x}^\obs - 1)} $ 总是小于或等于 $1$，因此有
+$$
+w = \max( \RR_{ZU\mid x} ,  \RR_{UY\mid x} ) \geq \RR_{ZY\mid x}^\obs + \sqrt{ \RR_{ZY\mid x}^\obs (\RR_{ZY\mid x}^\obs - 1)} . 
+$$
+因此，要解释掉 observed relative risk，confounding measures $\RR_{ZU\mid x} $ 和 $  \RR_{UY\mid x}$ 的最大值必须至少达到 $\RR_{ZY\mid x}^\obs + \sqrt{ \RR_{ZY\mid x}^\obs (\RR_{ZY\mid x}^\obs - 1)} $。
+基于这一结果，\citet{vanderweele2017sensitivity} 引入了下面的 E-value 概念，用于度量 observational studies 中 causation 的 {\it evidence}。
+
+ 
+
+
+\begin{definition}
+[E-Value]
+给定 observed conditional risk ratio $\RR_{ZY\mid x}^\obs$，定义 E-Value 为
+$$
+\RR_{ZY\mid x}^\obs + \sqrt{ \RR_{ZY\mid x}^\obs (\RR_{ZY\mid x}^\obs - 1)} . 
+$$ 
+\end{definition}
+
+ 
+ 
+E-value 是针对参数 $\RR_{ZY\mid x}^\obs$ 定义的。在实践中，$\RR_{ZY\mid x}^\obs$ 带有 sampling error。我们可以基于 $\RR_{ZY\mid x}^\obs$ 的估计值计算 E-value，也可以分别基于 $\RR_{ZY\mid x}^\obs$ 的 lower 和 upper confidence limits 计算相应的 E-values。
+
+
+Fisher 的 $p$-value 度量 randomized experiments 中 causal effects 的证据。本书 \cref{part::rcts} 已经讨论过基于 FRT 的 $p$-value。然而，在大样本 observational studies 中，$p$-values 可能并不是衡量 causal effects 证据的好指标。即使真实 causal effects 为 $0$，很小的 unmeasured confounding 也可能使估计产生 bias；当 sampling uncertainty 很小时，这会导致极小的 $p$-values。在大样本 observational studies 中，sampling uncertainty 通常是次要问题，而 unmeasured confounding 带来的不确定性往往是一阶问题，并不会随着样本量增加而消失。\citet{vanderweele2017sensitivity} 因而主张，E-value 是 observational studies 中衡量 causal effects 证据的更好指标。
+
+ 
+
+
+\section{A classic example}
+\label{sec::evalue-example}
+
+
+下面重新考察一个经典例子。
+
+
+\begin{example}\label{eg::hammond-evalue}
+\citet{Hammond::1968} 使用美国人群研究 cigarette smoking 与 lung cancer 的关系。忽略 covariates 后，他们的数据可以用下面的 two-by-two table 表示：
+
+
+\begin{center}
+\begin{tabular}{ccc}
+\hline 
+ & Lung cancer & No lung cancer \\
+ \hline 
+ Smoker & 397 & 78557 \\
+ Non-smoker & 51 & 108778  \\ 
+ \hline 
+\end{tabular}
+\end{center} 
+
+
+基于这些数据，他们得到的 risk ratio 估计值为 $10.73$，其 95\% confidence interval 为 $[8.02, 14.36]$（公式见 \cref{section::asymptotic-inference-2x2}）。要解释掉 point estimate，E-value 为
+$$
+10.73 + \sqrt{10.73\times (10.73-1)} = 20.95;
+$$
+要解释掉 lower confidence limit，E-value 为
+$$
+8.02 +  \sqrt{8.02\times (8.02 - 1)} = 15.52.
+$$
+
+\cref{fg::hammond-e-value} 展示了为解释掉 risk ratio 的 point estimate 和 lower confidence limit，两个 confounding measures 需要共同达到的取值。具体来说，要解释掉 point estimate，它们必须落在实线曲线上方的区域；要解释掉 lower confidence limit，它们必须落在虚线曲线上方的区域。\footnote{由简单代数可知，实线曲线和虚线曲线都是 hyperbolas。}
+\end{example}
+
+
+下面的简单 \ri{R} 代码计算 \cref{eg::hammond-evalue} 中的数值：
+ \begin{lstlisting}
+> ## e-value based on RR
+> evalue = function(rr)
++ {
++   rr + sqrt(rr*(rr - 1))
++ }
+> 
+> p1  = 397/(397+78557)
+> p0  = 51/(51+108778)
+> rr  = p1/p0
+> logrr = log(p1/p0)
+> se    = sqrt(1/397+1/51-1/(397+78557)-1/(51+108778))
+> upper = exp(logrr+1.96*se)
+> lower = exp(logrr-1.96*se)
+> 
+> ## point estimate
+> rr
+[1] 10.72978
+> ## lower CI
+> lower
+[1] 8.017414
+> ## e-value based on rr
+> evalue(rr)
+[1] 20.94733
+> ## e-value based on lower CI
+> evalue(lower)
+[1] 15.51818
+ \end{lstlisting}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width = 0.8 \textwidth]{figures/jointvalueplot.pdf}
+\caption{基于 \citet{Hammond::1968} 数据解释掉 observed risk ratio 所需的 confounding 强度}\label{fg::hammond-e-value}
+\end{figure}
+
+
+
+\section{Extensions}
+
+
+\subsection{E-value and Bradford Hill's criteria for causation}
+
+E-value 为 causation 提供 evidence。但 evidence 并不是 proof。E-value 越大，就需要越强的 unmeasured confounder 才能解释掉 observed risk ratio；相应地，causation 的证据越强。E-value 越小，则较弱的 unmeasured confounder 就可能解释掉 observed risk ratio；相应地，causation 的证据越弱。结合 \cref{sec::evalue-monotone} 中的讨论，较大的 observed risk ratio 提供了较强的 causation 证据。这与 Sir Bradford Hill 的第一个 causation criterion 密切相关，即 association 的 {\it strength} \citep{hill1965environment}。\cref{thm::bounding-factor} 对他的启发式论证给出了数学量化。
+
+
+在一篇著名论文中，\citet{hill1965environment} 提出了九条 criteria，用于为 presumed cause 与 outcome 之间的 causation 提供 evidence。
+
+
+\begin{definition}\label{def::hill-causation}
+Bradford Hill 给出了 causation 的九条 criteria：
+\begin{enumerate}
+\item
+strength;
+\item
+consistency;
+\item
+specificity;
+\item
+temporality;
+\item
+biological gradient;
+\item
+plausibility;
+\item
+coherence;
+\item
+experiment;
+\item
+analogy.
+\end{enumerate}
+\end{definition}
+
+
+E-value 可以看作对他第一条 criterion 的一种论证。
+也就是说，更强的 association 往往为 causation 提供更强的 evidence，因为要解释掉更强的 association，需要更强的 confounding measures。
+\cref{part::rcts} 已经讨论过 randomized experiments，这对应于他的第八条 criterion。限于篇幅，这里不详细讨论其他 criteria，并鼓励读者阅读 \citet{hill1965environment}。最近，这篇论文以 \citet{hill2020environment} 的形式重印，并附有许多 causal inference 领域重要研究者的深刻评论。
+
+
+
+
+\subsection{E-value after logistic regression}
+
+对于 binary outcome，epidemiologists 常常用 outcome $Y_i$ 对 treatment indicator $Z_i$ 和 covariates $X_i$ 做 logistic regression：
+$$
+\pr(Y_i = 1\mid Z_i, X_i) = \frac{  e^{\beta_0 + \beta_1 Z_i + \beta_2\tran X_i}  }{1  + e^{\beta_0 + \beta_1 Z_i + \beta_2\tran X_i}} .
+$$
+在上面的 logistic model 中，$Z_i$ 的系数是在给定 covariates 后 treatment 与 outcome 之间 conditional odds ratio 的对数：
+$$
+\beta_1 = \log \frac{   \pr(Y_i=1\mid Z_i =1, X_i=x)/  \pr(Y_i=0\mid Z_i =1, X_i=x)  }
+{  \pr(Y_i=1\mid Z_i =0, X_i=x)/  \pr(Y_i=0\mid Z_i =0, X_i=x)  }  .
+$$
+重要的是，logistic model 假设在 covariates 的所有取值上都有一个 common odds ratio。此外，当 outcome 是 rare outcome，即 $ \pr(Y_i=1\mid Z_i =1, X_i=x)$ 和 $\pr(Y_i=1\mid Z_i =0, X_i=x)$ 都接近 $0$ 时，conditional odds ratio 近似于 conditional risk ratio（见 \cref{prop::2x2-independence}(3)）：
+$$
+\beta_1  \approx \log  \frac{   \pr(Y_i=1\mid Z_i =1, X_i=x)  }
+{  \pr(Y_i=1\mid Z_i =0, X_i=x)  } = \log   \RR_{ZY\mid x}^\obs.
+$$
+因此，基于估计得到的 logistic regression coefficient 及其 corresponding confidence limits，我们可以立即计算 E-value。这是 E-value 的主要应用场景。
+
+
+
+
+\begin{example}
+\label{eg::NCHS2003}
+\ri{NCHS2003.txt} 包含 National Center for Health Statistics birth certificate data，其中下面这些 binary indicator variables 对我们有用：
+
+
+ 
+
+\begin{tabular}{ll}
+\hline 
+\texttt{PTbirth} &
+ pre-term birth \\
+\texttt{preeclampsia} &
+ pre-eclampsia \\
+\texttt{ageabove35}& 
+ 年龄 $\geq 35$ 的 older mother（treatment）\\
+\texttt{somecollege}&
+ college education \\
+\texttt{mar}& 
+ marital status \\
+\texttt{smoking}& 
+ smoking status \\
+\texttt{drinking}& 
+ drinking status \\
+\texttt{hispanic}& 
+ mother's ethnicity  \\
+\texttt{black}& 
+ mother's ethnicity  \\
+\texttt{nativeamerican}& 
+ mother's ethnicity \\
+\texttt{asian}& 
+ mother's ethnicity\\
+ \hline 
+\end{tabular} 
+
+
+
+这一版本的数据来自 \citet{valeri2014estimation}。本例关注 outcome \ri{PTbirth}，而 \cref{hw::eg::NCHS2003} 关注 outcome \ri{ pre-eclampsia}，即妊娠期的一种 multisystem hypertensive disorder。下面的 \ri{R} 代码在拟合 logistic regression 后计算 E-values。基于这些 E-values，可以得出结论：要解释掉 point estimate，最大的 confounding measure 必须大于 1.94；要解释掉 lower confidence limit，最大的 confounding measure 必须大于 1.91。虽然这些 confounding measures 不如 \cref{sec::evalue-example} 中那么强，但在 epidemiologic studies 中看起来仍然相当大。
+\end{example}
+
+
+下面的简单 \ri{R} 代码计算 \cref{eg::NCHS2003} 中的数值：
+ \begin{lstlisting}
+> NCHS2003 = read.table("NCHS2003.txt", header = TRUE, sep = "\t")
+> ## outcome: PTbirth
+> y_logit = glm(PTbirth ~ ageabove35 + 
++                 mar + smoking + drinking + somecollege + 
++                 hispanic + black + nativeamerican + asian,
++               data = NCHS2003, 
++               family = binomial)
+> log_or   = summary(y_logit)$coef[2, 1:2]
+> est      = exp(log_or[1])
+> lower.ci = exp(log_or[1] - 1.96*log_or[2])
+> est
+Estimate 
+1.305982 
+> evalue(est)
+Estimate 
+1.938127 
+> lower.ci
+Estimate 
+1.294619 
+> evalue(lower.ci)
+Estimate 
+1.912211 
+\end{lstlisting}
+
+
+\subsection{Non-zero true causal effect}
+ 
+\cref{thm::bounding-factor} 假设 treatment 对 outcome 没有 true causal effect。\citet{ding2016sensitivity} 证明了一个更一般的 theorem，允许 true causal effect 非零。
+
+
+\begin{theorem}
+\label{thm::general-evalue}
+将 $\RR_{UY\mid x}   $ 的定义改为
+$$
+ \RR_{UY\mid x}  =  \max_{z=0,1} \frac{  \pr(Y=1\mid Z=z, U=1, X=x) }{  \pr(Y=1\mid Z=z, U=0, X=x) }.
+$$
+假设 \eqref{eq::largerthan1-evalue}。
+则有
+$$
+\RR_{ZY\mid x}^\true \geq 
+\RR_{ZY\mid x}^\obs \Big /  \frac{ \RR_{ZU\mid x}  \RR_{UY\mid x} }{  \RR_{ZU\mid x} + \RR_{UY\mid x} - 1} .
+$$
+\end{theorem}
+
+当 $\RR_{ZY\mid x}^\true   = 1$ 时，\cref{thm::bounding-factor} 是 \cref{thm::general-evalue} 的一个 special case。
+\cref{thm::general-evalue} 的证明见 \citet{ding2016sensitivity} 原文。在不作任何额外假设的情况下，\cref{thm::general-evalue} 说明：给定 observed risk ratio $\RR_{ZY\mid x}^\obs$ 和两个 sensitivity parameters $\RR_{ZU\mid x} $、$ \RR_{UY\mid x}$，true risk ratio $\RR_{ZY\mid x}^\true$ 有一个 lower bound。
+
+
+当 treatment 对 outcome 表现为 preventive 时，observed risk ratio 小于 1。在这种情况下，\cref{thm::bounding-factor,thm::general-evalue} 不能直接使用；必须重新标记 treatment levels，并基于 $1/ \RR_{ZY\mid x}^\obs$ 计算 E-value。
+
+
+
+
+\section{Critiques and responses}
+
+自原始论文发表以来，E-value 已经成为许多 epidemiologic studies 中报告的标准数值。不过，它也受到了一些批评 \citep{ioannidis2019limitations}。下面回顾 E-values 的若干局限。
+
+
+
+\subsection{E-value is just a monotone transformation of the risk ratio}
+\label{sec::evalue-monotone}
+
+
+
+\subsection{Calibration of the E-value}
+
+
+
+E-value 等于为了完全解释掉一个 observed association，confounder-treatment association 与 confounder-outcome association 的最大值需要达到的水平。一个显然的问题是，这个 confounder 本质上是 latent 的。因此，判断某个 E-value 究竟大还是小并不容易。
+另一个相关问题是，E-value 依赖于我们已经控制了多少 observed covariates $X$，因为它量化的是给定 $X$ 后 residual confounding 的强度。因此，不同 studies 之间的 E-values 不能直接比较。E-value 为 causation 提供 evidence，但这种 evidence 应当结合具体问题的 background knowledge 谨慎评估。
+
+
+下面的 leave-one-covariate-out 方法是一种直观的 E-value calibration 方法。令 $X = (X_1, \ldots, X_p)$，可以假装其中的分量 $X_j$ 未被观测到，并在给定其他 observed covariates 的条件下计算 $Z$-$X_j$ 和 $X_j$-$Y$ 的 risk ratios，$(j=1, \ldots, p)$。如果我们相信 unmeasured $U$ 不会比某些 observed covariates 更强，那么这些 risk ratios 可以为 $U$ 引起的 confounding measures 提供一个参考范围。不过，我并不知道这一方法有什么形式化的 justification。
+
+
+
+\subsection{It works the best for  a binary outcome and the risk ratio}
+
+
+\cref{thm::bounding-factor} 很适合 binary outcome 和 risk ratio。\citet{ding2016sensitivity} 也为其他 causal parameters 提出了 sensitivity analysis 方法，包括 binary outcomes 的 risk difference、non-negative outcomes 的 mean ratio，以及 survival outcomes 的 hazard ratio。不过，它们不如基于 binary outcomes 和 risk ratio 的 E-value 那样优雅。下一章将为 average causal effect 提出一种简单的 sensitivity analysis 方法，它可以把 \cref{part::observational-studies} 中的 outcome regression、IPW 和 doubly robust estimators 都作为 special cases 纳入其中。
+
+
+
+
+
+\section{Homework Problems}
+
+
+\homeworksolutionref{17}
+\paragraph{A technical lemma for the proof of \cref{thm::bounding-factor}}
+\label{hw::technical-for-evalue-increasing}
+
+证明
+$$
+f(x) = \frac{ax+1}{bx+1}
+$$
+当 $a>b$ 时关于 $x$ 单调递增，当 $a<b$ 时关于 $x$ 单调递减。
+
+
+\paragraph{Technical assumption for \cref{thm::bounding-factor}}
+\label{hw::technical-largerthan1}
+
+重新考察 \cref{thm::bounding-factor} 的证明。假设 $Z\ind Y \mid (X, U)$。证明：如果 $ \RR_{ZU\mid x} > 1$ 但 $ \RR_{UY\mid x} < 1$，那么 $\RR_{ZY\mid x}^\obs < 1$。
+
+
+Remark:
+这个结果很直观。条件化在 $X$ 上。它说明：如果 $Z$-$U$ 关系为正，而 $U$-$Y$ 关系为负，那么在给定 $U$ 后 $Z$ 与 $Y$ conditional independent 的条件下，$Z$-$Y$ 关系也为负。
+基于这个结果，如果假设 $\RR_{ZY\mid x}^\obs > 1$ 且 $ \RR_{ZU\mid x} > 1$，那么必有 $ \RR_{UY\mid x} > 1$。
+因此，\eqref{eq::largerthan1-evalue} 中的第三个条件事实上是 redundant 的。
+
+
+
+\paragraph{\cref{lemma::betaw1w2}}\label{hw::proof-lemma-evalue}
+
+证明 \cref{lemma::betaw1w2}。
+
+\paragraph{\citet{Schlesselman::1978}'s formula}\label{hw::Schlesselman1978formula}
+
+为简单起见，本题中隐含地条件化在 $X$ 上。
+考虑 binary treatment $Z$、outcome $Y$ 和 unmeasured confounder $U$。
+假设在 $U=0$ 和 $U=1$ 两个水平内，treatment 对 outcome 有 common risk ratio：
+$$
+%\RR_{ZY}^{\true}  =
+ \RR_{ZY|U=0} = \RR_{ZY|U=1}, 
+$$
+并且在 $Z=0$ 和 $Z=1$ 两个水平内，confounder 对 outcome 也有 common risk ratio：
+$$  
+\RR_{UY|Z=0} = \RR_{UY|Z=1} , \text{ 记为 }\gamma.
+$$
+
+证明
+$$
+\frac{\RR_{ZY}^{\obs}}{  \RR_{ZY}^{\true} } = \frac{1 + (  \gamma  -1)\pr(U=1\mid Z=1)  }
+{ 1 + (  \gamma -1)\pr(U=1\mid Z=0) } .
+$$ 
+
+
+
+
+Remark: 先验证如果 $\RR_{ZY|U=0} = \RR_{ZY|U=1}$，则
+$$
+\RR_{ZY}^{\true}  = \RR_{ZY|U=0} = \RR_{ZY|U=1} . 
+$$
+这个恒等式说明了 risk ratio 的 {\it collapsibility}。
+在 epidemiology 中，risk ratio 是一个 {\it collapsible} association measure。
+
+
+ 
+\citet{Schlesselman::1978} 的公式并不假设 conditional independence $Z\ind Y\mid U$，而是假设 $Z$-$Y$ 和 $U$-$Y$ risk ratios 具有 homogeneity。它是 sensitivity analysis 中的经典公式。这个 identity 在预先指定
+$$
+\{   \gamma  ,  \pr(U=1\mid Z=1), \pr(U=1\mid Z=0)  \} .
+$$
+时很容易实现。
+不过，它涉及的 sensitivity parameters 比 \cref{thm::bounding-factor} 更多。尽管 \cref{thm::bounding-factor} 只给出一个 inequality，但在更强 assumptions 下，与 \citet{Schlesselman::1978} 的公式相比，它并不是一个松散的 inequality。有了 \cref{thm::bounding-factor} 后，\citet{Schlesselman::1978} 的公式主要只具有历史意义。
+
+
+
+ 
+\paragraph{E-value after logistic regression: data analysis}\label{hw::eg::NCHS2003}
+
+本题使用与 \cref{eg::NCHS2003} 相同的数据集。
+
+报告 outcome \ri{preeclampsia} 的 E-value。
+
+
+\paragraph{Cornfield-type inequalities for the risk difference}\label{hw::cornfield-rd}
+
+
+
+考虑 binary $Z, Y, U$，并隐含地条件化在 $X$ 上。假设给定 $U$ 后 latent ignorability 成立。证明在 $Z\ind Y\mid U$ 下，有
+\begin{eqnarray}
+\RD_{ZY}^\obs = \RD_{ZU} \times \RD_{UY}
+\label{eq::cornfield-rd}
+\end{eqnarray}
+其中 $\RD_{ZY}^\obs$ 是 $Z$ 对 $Y$ 的 observed risk difference，而 $\RD_{ZU}$ 和 $ \RD_{UY}$ 分别是 treatment-confounder 和 confounder-outcome risk differences（回顾 \cref{sec::twobytwotables-withresume} 中 risk difference 的定义）。
+
+
+Remark: 不失一般性地，假设 $\RD_{ZY}^\obs, \RD_{ZU} ,\RD_{UY}$ 都为正。则 \eqref{eq::cornfield-rd} 蕴含
+$$
+\min(\RD_{ZU}  , \RD_{UY}) \geq \RD_{ZY}^\obs
+$$
+并且
+$$
+\max(\RD_{ZU}  , \RD_{UY}) \geq  \sqrt{ \RD_{ZY}^\obs} .
+$$
+这些就是 binary confounder 情形下针对 risk difference 的 Cornfield inequalities。
+它们说明：若一个 unmeasured confounder 要解释掉 observed risk difference $\RD_{ZY}^\obs$，则 treatment-confounder 和 confounder-outcome risk differences 都必须大于 $\RD_{ZY}^\obs$，并且二者的最大值必须大于 $\RD_{ZY}^\obs$ 的平方根。
+
+\citet{Cornfield::1959} 得到了 \eqref{eq::cornfield-rd}，但并未充分认识到它的重要性。\citet{gastwirth1998cornfield} 和 \citet{poole2010origin} 讨论了 risk difference 的第一个 Cornfield condition，\citet{ding2014generalized} 则讨论了第二个。
+
+\citet{ding2014generalized} 还在不假设 $U$ 为 binary 的情况下推出了更一般的结果。遗憾的是，一般 $U$ 的结果弱于上面 binary $U$ 的结果；也就是说，随着 $U$ 的 levels 增多，不等式会变得更松。这促使 \citet{ding2016sensitivity} 转向关注 risk ratio 的 Cornfield inequalities，因为它们不会随着 $U$ 的 levels 增多而退化。
+
+
+
+
+\paragraph{Recommended reading}
+
+
+\citet{ding2016sensitivity} 扩展并统一了 Cornfield-type sensitivity analysis，这是 E-value 概念的理论基础。

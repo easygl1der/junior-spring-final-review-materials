@@ -1,0 +1,670 @@
+\chapter{Solutions to Chapter 27: Mediation Analysis}
+\label{sol:chapter27}
+
+\begin{exercisesolution}{\citet{Robins::1992}'s clarification of the units based on nested potential outcomes}{binary mediation 中 unit types 的计数}
+本题的关键是区分两个层次。若只把题目中列出的六个二元量
+\[
+M(1),\ M(0),\ Y(1,M_1),\ Y(1,M_0),\ Y(0,M_1),\ Y(0,M_0)
+\]
+当作六个形式上的 binary labels，那么没有任何限制时有 $2^6=64$ 种 labels；若只加 $M(1)\geq M(0)$，mediator 的 pair 从四种变成三种，因此有 $3\times 2^4=48$ 种 formal labels。不过，nested potential outcomes 的 coherent interpretation 还要求同一个 unit、同一个 treatment level、同一个 mediator value 下的 outcome 不能因为写法不同而不同。也就是说，当 $M_1=M_0$ 时，$Y(z,M_1)$ 与 $Y(z,M_0)$ 必须相等。
+
+下面给出 coherent nested-potential-outcome count。记
+\[
+a=Y(0,0),\qquad b=Y(0,1),\qquad c=Y(1,0),\qquad d=Y(1,1).
+\]
+若 $M_1=M_0=0$，则题目中的四个 nested outcomes 只剩下 $(c,c,a,a)$，所以有 $2^2=4$ 种 outcome patterns。若 $M_1=M_0=1$，同理只剩下 $(d,d,b,b)$，也有 $4$ 种。若 $M_1=1,M_0=0$，四个 nested outcomes 分别是 $(d,c,b,a)$，有 $2^4=16$ 种。若 $M_1=0,M_0=1$，四个 nested outcomes 分别是 $(c,d,a,b)$，也有 $16$ 种。因此没有 monotonicity 时共有
+\[
+4+4+16+16=40
+\]
+种 coherent unit types。
+
+若假设 $Z$ 对 $M$ 的 monotonicity，即 $M(1)\geq M(0)$，则排除 defier mediator type $(M_1,M_0)=(0,1)$。于是 coherent unit types 的个数变为
+\[
+4+16+4=24.
+\]
+
+若进一步假设
+\[
+Y(1,m)\geq Y(0,m),\qquad Y(z,1)\geq Y(z,0),
+\]
+则 response surface $(a,b,c,d)$ 必须满足
+\[
+a\leq b\leq d,\qquad a\leq c\leq d.
+\]
+在 binary outcome 下，这样的 monotone response surfaces 有 $6$ 个：全零、全一，以及 $a=0,d=1$ 时 $b,c$ 任取的四种。
+
+对三个允许的 mediator types 分别计数。若 $(M_1,M_0)=(0,0)$，可见 outcome pair 为 $(a,c)$，并且只需满足 $a\leq c$，所以有 $3$ 种。若 $(M_1,M_0)=(1,1)$，可见 outcome pair 为 $(b,d)$，并且 $b\leq d$，也有 $3$ 种。若 $(M_1,M_0)=(1,0)$，四个 entries 都可见，正好有上面 $6$ 种 monotone response surfaces。因此最后共有
+\[
+3+6+3=12
+\]
+种 coherent monotone unit types。
+
+\paragraph{Remark.}
+这道题说明 nested potential outcomes 比普通 principal strata 更细。Principal stratum 只记录 mediator response type；nested typology 还记录每个 mediator intervention 下的 outcome response surface。计数从 $40$ 降到 $24$ 再降到 $12$，正是两个 monotonicity assumptions 逐步排除不可逆 response patterns 的结果。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Sequential randomization and joint randomization}{\cref{eq::joint-randomization} 与 sequential ignorability 的等价}
+本题证明 \cref{assume::mediation1,assume::mediation2} 等价于 \cref{eq::joint-randomization}。为简洁起见，固定任意 $z,m$，并把 $Y(z,m)$ 记为 $Y^{z,m}$。要证明的是
+\[
+(Z,M)\ind Y^{z,m}\mid X
+\]
+等价于
+\[
+Z\ind Y^{z,m}\mid X,
+\qquad
+M\ind Y^{z,m}\mid (X,Z).
+\]
+
+先证明 joint randomization 推出 sequential randomization。若
+\[
+(Z,M)\ind Y^{z,m}\mid X,
+\]
+则对 $Z$ 边际化立即得到
+\[
+Z\ind Y^{z,m}\mid X.
+\]
+同时，对任意 $z_0,m_0,y$，
+\[
+\mathbb{P}(Y^{z,m}\leq y\mid X,Z=z_0,M=m_0)
+=
+\mathbb{P}(Y^{z,m}\leq y\mid X),
+\]
+而
+\[
+\mathbb{P}(Y^{z,m}\leq y\mid X,Z=z_0)
+=
+\mathbb{P}(Y^{z,m}\leq y\mid X).
+\]
+两式合并得到
+\[
+\mathbb{P}(Y^{z,m}\leq y\mid X,Z=z_0,M=m_0)
+=
+\mathbb{P}(Y^{z,m}\leq y\mid X,Z=z_0),
+\]
+这就是 $M\ind Y^{z,m}\mid (X,Z)$。
+
+反过来，假设 \cref{assume::mediation1,assume::mediation2} 成立。则
+\begin{align*}
+&\mathbb{P}(Y^{z,m}\leq y\mid X,Z=z_0,M=m_0)\\
+&\quad =
+\mathbb{P}(Y^{z,m}\leq y\mid X,Z=z_0)
+\qquad \text{by } \cref{assume::mediation2}\\
+&\quad =
+\mathbb{P}(Y^{z,m}\leq y\mid X)
+\qquad \text{by } \cref{assume::mediation1}.
+\end{align*}
+因此给定 $X$ 后，$Y^{z,m}$ 的 conditional distribution 不依赖于 $(Z,M)$。这正是 \cref{eq::joint-randomization}。
+
+\paragraph{Remark.}
+这个等价关系解释了 ``sequential'' 一词的含义：先要求 treatment 像随机分配，再要求在给定 treatment 后 mediator 也像随机分配。把两步合在一起，就是给定 $X$ 后 $(Z,M)$ 作为一个 joint intervention vector 与 fixed potential outcome surface 无关。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Verifying the assumptions for mediation analysis}{structural errors 独立时四个 mediation assumptions 的来源}
+本题讨论 \cref{eg::mediation-assumptions} 中的 structural data-generating process。给定 $X$，
+\[
+Z=1\{g_Z(X,\varepsilon_Z)\geq 0\},\qquad
+M(z)=1\{g_M(X,z,\varepsilon_M)\geq 0\},
+\]
+且
+\[
+Y(z,m)=g_Y(X,z,m,\varepsilon_Y),
+\]
+其中 $\varepsilon_Z,\varepsilon_M,\varepsilon_Y$ 相互独立。这个模型的要点是：treatment、mediator response surface 和 outcome response surface 由三个互不共享的 disturbance 生成。
+
+先看 \cref{assume::mediation1}。给定 $X$ 后，$Z$ 只是 $\varepsilon_Z$ 的函数，而 $Y(z,m)$ 只是 $\varepsilon_Y$ 的函数。由于 $\varepsilon_Z\ind\varepsilon_Y\mid X$，有
+\[
+Z\ind Y(z,m)\mid X.
+\]
+这就是不存在 treatment-outcome confounding。
+
+再看 \cref{assume::mediation2}。Observed mediator 满足
+\[
+M=M(Z)=1\{g_M(X,Z,\varepsilon_M)\geq 0\}.
+\]
+给定 $(X,Z)$ 后，$M$ 只是 $\varepsilon_M$ 的函数，而 $Y(z,m)$ 只是 $\varepsilon_Y$ 的函数。因此
+\[
+M\ind Y(z,m)\mid (X,Z).
+\]
+这就是不存在 mediator-outcome confounding。
+
+第三，给定 $X$ 后，$Z$ 由 $\varepsilon_Z$ 决定，而 $M(z)$ 由 $\varepsilon_M$ 决定。独立性给出
+\[
+Z\ind M(z)\mid X,
+\]
+即 \cref{assume::mediation3}。
+
+最后，给定 $X$ 后，$Y(z,m)$ 由 $\varepsilon_Y$ 决定，而 $M(z')$ 由 $\varepsilon_M$ 决定。于是
+\[
+Y(z,m)\ind M(z')\mid X,
+\]
+这就是 \cref{assume::mediation4}。注意这里的结论甚至覆盖 $z\neq z'$ 的 cross-world pair；这正是因为同一个 $\varepsilon_M$ 和同一个 $\varepsilon_Y$ 生成所有 potential mediators 和 potential outcomes，而且二者独立。
+
+如果把 disturbance 改成 $\varepsilon_M(z)$ 和 $\varepsilon_Y(z,m)$，这些 assumptions 不再由模型形式自动保证。下面给出两个简单反例。令 $X$ 为空且 $Z$ randomized，但令
+\[
+M(0)=U,\qquad Y(1,0)=U
+\]
+其中 $U$ 是一个 binary random variable。此时 $Y(1,0)$ 与 $M(0)$ 完全相关，所以 \cref{assume::mediation4} 失败。又若令
+\[
+Z=U,\qquad Y(1,0)=U,
+\]
+则 $Z$ 与 $Y(1,0)$ 相关，\cref{assume::mediation1} 失败。类似地，若 $M$ 与 $Y(z,m)$ 共享一个未观测 disturbance，则 \cref{assume::mediation2} 失败；若 $Z$ 与 $M(z)$ 的 disturbance 相关，则 \cref{assume::mediation3} 失败。
+
+\paragraph{Remark.}
+\cref{eg::mediation-assumptions} 不是说 mediation assumptions 很弱，而是给出一种足够强的 structural world，使这些 assumptions 同时成立。一旦 potential mediator errors 和 potential outcome errors 被允许随 intervention level 改变，cross-world independence 就需要额外假设，不能从结构形式白白得到。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Another set of assumptions for the mediation formula}{\citet{Imai::2010} assumptions 下 mediation formula 的证明}
+本题证明 \cref{thm::mediation-imai}。仍然固定 $z,z'$，并从条件在 $X=x$ 下的 nested potential outcome 出发：
+\[
+E\{Y(z,M_{z'})\mid X=x\}
+=
+\sum_m E\{Y(z,m)\mid M(z')=m,X=x\}\mathbb{P}\{M(z')=m\mid X=x\}.
+\]
+
+先处理第二个因子。由 \cref{assume::mediation-imai} 的第一部分，
+\[
+\{Y(z,m),M(z')\}\ind Z\mid X,
+\]
+特别地，
+\[
+\mathbb{P}\{M(z')=m\mid X=x\}
+=
+\mathbb{P}\{M(z')=m\mid Z=z',X=x\}.
+\]
+由 consistency，右边等于
+\[
+\mathbb{P}(M=m\mid Z=z',X=x).
+\]
+
+再处理第一个因子。因为 $\{Y(z,m),M(z')\}\ind Z\mid X$，我们可以在条件中加入 $Z=z'$：
+\[
+E\{Y(z,m)\mid M(z')=m,X=x\}
+=
+E\{Y(z,m)\mid M(z')=m,Z=z',X=x\}.
+\]
+由 \cref{assume::mediation-imai} 的第二部分，
+\[
+Y(z,m)\ind M(z')\mid (Z=z',X),
+\]
+所以上式等于
+\[
+E\{Y(z,m)\mid Z=z',X=x\}.
+\]
+再由第一部分的 $Y(z,m)\ind Z\mid X$，这又等于 $E\{Y(z,m)\mid X=x\}$。
+
+为了把这个量写成 observed outcome regression，我们使用第二部分在 $z'=z$ 时的情形：
+\[
+Y(z,m)\ind M(z)\mid (Z=z,X).
+\]
+因此
+\begin{align*}
+E(Y\mid Z=z,M=m,X=x)
+&=
+E\{Y(z,m)\mid Z=z,M(z)=m,X=x\}\\
+&=
+E\{Y(z,m)\mid Z=z,X=x\}\\
+&=
+E\{Y(z,m)\mid X=x\}.
+\end{align*}
+综上，
+\[
+E\{Y(z,M_{z'})\mid X=x\}
+=
+\sum_m E(Y\mid Z=z,M=m,X=x)\mathbb{P}(M=m\mid Z=z',X=x),
+\]
+这正是 \cref{thm::mediation} 的 conditional formula。对 $X$ 再取平均，即得 unconditional mediation formula。
+
+\paragraph{Remark.}
+\citet{Imai::2010} 的写法把 assumptions 直接放在 observed treatment level 下，因此更接近统计建模实践；\cref{assume::mediation1,assume::mediation2,assume::mediation3,assume::mediation4} 的写法则把 treatment、mediator 和 cross-world independence 分得更细。两套条件不同，但都足以推出同一个 mediation formula。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Difference method and product method are identical}{Baron--Kenny linear models 中两种 NIE estimator 的代数等价}
+本题证明 product method 与 difference method 在同一组 OLS regressions 下完全相同。为避免题目中第二个 reduced-form regression 的记号混淆，下面把它写成
+\[
+\hat Y_i=\hat\alpha_0+\hat\alpha_1 Z_i+\hat\alpha_2\tran X_i.
+\]
+
+令 $\boldsymbol{W}$ 表示由 intercept 与 $X$ 组成的 design matrix，并令
+\[
+M_W=I-\boldsymbol{W}\{(\boldsymbol{W}\tran\boldsymbol{W})^{-1}\}\boldsymbol{W}\tran
+\]
+为 residual-maker matrix。记
+\[
+\tilde Z=M_W Z,\qquad \tilde M=M_W M,\qquad \tilde Y=M_W Y.
+\]
+由 FWL theorem，mediator regression 中 $Z$ 的 OLS coefficient 为
+\[
+\hat\beta_1=\frac{\tilde Z\tran\tilde M}{\tilde Z\tran\tilde Z}.
+\]
+Reduced-form outcome regression 中 $Z$ 的 coefficient 为
+\[
+\hat\alpha_1=\frac{\tilde Z\tran\tilde Y}{\tilde Z\tran\tilde Z}.
+\]
+
+Full outcome regression 把 $\tilde Y$ 对 $(\tilde Z,\tilde M)$ 回归。记其中 $Z$ 和 $M$ 的 coefficients 为 $\hat\theta_1,\hat\theta_2$。OLS fitted decomposition 给出
+\[
+\tilde Y=\hat\theta_1\tilde Z+\hat\theta_2\tilde M+\hat e,
+\]
+并且 normal equations 使 $\tilde Z\tran\hat e=0$。两边左乘 $\tilde Z\tran$，得到
+\[
+\tilde Z\tran\tilde Y
+=
+\hat\theta_1\tilde Z\tran\tilde Z
++\hat\theta_2\tilde Z\tran\tilde M.
+\]
+两边除以 $\tilde Z\tran\tilde Z$：
+\[
+\hat\alpha_1
+=
+\hat\theta_1+\hat\theta_2
+\frac{\tilde Z\tran\tilde M}{\tilde Z\tran\tilde Z}
+=
+\hat\theta_1+\hat\theta_2\hat\beta_1.
+\]
+因此
+\[
+\hat\alpha_1-\hat\theta_1=\hat\theta_2\hat\beta_1.
+\]
+
+\paragraph{Remark.}
+这个等式是 \cref{hw::cochran+ovb} 中 Cochran's formula 的 sample analogue。在线性 Baron--Kenny model 中，total effect coefficient 等于 direct path coefficient 加上 mediated path coefficient；所以 difference method 与 product method 不是两个不同 estimators，而是同一个 OLS algebra 的两种写法。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Natural indirect effect with a binary mediator}{\cref{corollary::mediation-binary-M} 的 product form}
+本题证明 \cref{corollary::mediation-binary-M}。由 \cref{corollary::mediation-nde-nie}，
+\[
+\NIE(x)
+=
+\sum_{m=0}^1 E(Y\mid Z=1,M=m,X=x)
+\{\mathbb{P}(M=m\mid Z=1,X=x)-\mathbb{P}(M=m\mid Z=0,X=x)\}.
+\]
+记
+\[
+p_z(x)=\mathbb{P}(M=1\mid Z=z,X=x),
+\]
+并记
+\[
+\mu_m(x)=E(Y\mid Z=1,M=m,X=x).
+\]
+因为
+\[
+\mathbb{P}(M=0\mid Z=1,X=x)-\mathbb{P}(M=0\mid Z=0,X=x)
+=
+-\{p_1(x)-p_0(x)\},
+\]
+所以
+\begin{align*}
+\NIE(x)
+&=
+\mu_1(x)\{p_1(x)-p_0(x)\}
++\mu_0(x)\{(1-p_1(x))-(1-p_0(x))\}\\
+&=
+\{\mu_1(x)-\mu_0(x)\}\{p_1(x)-p_0(x)\}.
+\end{align*}
+按照 \cref{corollary::mediation-binary-M} 的记号，
+\[
+p_1(x)-p_0(x)=\tau_{Z\rightarrow M}(x)
+\]
+且
+\[
+\mu_1(x)-\mu_0(x)=\tau_{M\rightarrow Y}(1,x).
+\]
+因此
+\[
+\NIE(x)=\tau_{Z\rightarrow M}(x)\tau_{M\rightarrow Y}(1,x).
+\]
+对 $X$ 取平均得到 $\NIE=E\{\NIE(X)\}$。
+
+\paragraph{Remark.}
+这个乘积形式只在 binary mediator 下特别简洁。它把 indirect effect 拆成两段：treatment 改变 mediator 的程度，以及在 treated condition 下 mediator 改变 outcome 的程度。
+\end{exercisesolution}
+
+\begin{exercisesolution}{With treatment-outcome interaction on the outcome}{包含 $ZM$ interaction 的 linear mediation formulas}
+本题在 \cref{corollary::bk-formulas} 的基础上加入 treatment-mediator interaction。令
+\[
+\mu_z(x)=E(M\mid Z=z,X=x)=\beta_0+\beta_1 z+\beta_2\tran x.
+\]
+Outcome regression 为
+\[
+E(Y\mid Z=z,M=m,X=x)
+=
+\theta_0+\theta_1 z+\theta_2 m+\theta_3 zm+\theta_4\tran x.
+\]
+
+先求 conditional natural direct effect。由 \cref{corollary::mediation-nde-nie}，
+\begin{align*}
+\NDE(x)
+&=
+E\{Y(1,M_0)-Y(0,M_0)\mid X=x\}\\
+&=
+E\{\theta_1+\theta_3 M_0\mid X=x\}\\
+&=
+\theta_1+\theta_3\mu_0(x)\\
+&=
+\theta_1+\theta_3(\beta_0+\beta_2\tran x).
+\end{align*}
+对 $X$ 取平均得到
+\[
+\NDE
+=
+\theta_1+\theta_3\{\beta_0+\beta_2\tran E(X)\}.
+\]
+
+再求 conditional natural indirect effect。固定 $Z=1$ 时，outcome mean 中与 $m$ 有关的 slope 是 $\theta_2+\theta_3$。因此
+\begin{align*}
+\NIE(x)
+&=
+E\{Y(1,M_1)-Y(1,M_0)\mid X=x\}\\
+&=
+(\theta_2+\theta_3)\{\mu_1(x)-\mu_0(x)\}\\
+&=
+(\theta_2+\theta_3)\beta_1.
+\end{align*}
+它不依赖于 $x$，所以
+\[
+\NIE=(\theta_2+\theta_3)\beta_1.
+\]
+
+用 IID data 估计时，先用 OLS 拟合
+\[
+M\sim 1+Z+X
+\]
+得到 $\hat\beta_0,\hat\beta_1,\hat\beta_2$；再用 OLS 拟合
+\[
+Y\sim 1+Z+M+ZM+X
+\]
+得到 $\hat\theta_1,\hat\theta_2,\hat\theta_3$。令 $\bar X=n^{-1}\sum_{i=1}^n X_i$，plug-in estimators 为
+\[
+\widehat{\NDE}
+=
+\hat\theta_1+\hat\theta_3(\hat\beta_0+\hat\beta_2\tran\bar X),
+\qquad
+\widehat{\NIE}
+=
+(\hat\theta_2+\hat\theta_3)\hat\beta_1.
+\]
+Standard errors 可用 delta method，也可用 nonparametric bootstrap 同时重复两步 regressions。
+
+\paragraph{Remark.}
+Interaction term 改变了 indirect effect 的解释。Mediator 对 outcome 的 slope 不再是 $\theta_2$，而是在 treated world 中的 slope $\theta_2+\theta_3$。因此即使 $Z$ 正向影响 $M$，且平均意义下 $M$ 正向影响 $Y$，natural indirect effect 仍可能因为 treated-world slope 为负而为负。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Mediation analysis with continuous mediator and binary outcome}{Normal mediator 与 logistic outcome 下的 mediation formulas}
+本题不能像 linear outcome model 那样把 effects 化成几个 coefficients 的简单乘积，因为 logistic link 下
+\[
+E\{\expit(A+B M)\}\neq \expit\{A+B E(M)\}.
+\]
+因此正确公式必须保留对 mediator distribution 的积分。
+
+令
+\[
+\mu_z(x)=\beta_0+\beta_1z+\beta_2\tran x
+\]
+且
+\[
+q_z(m,x)=\expit(\theta_0+\theta_1z+\theta_2m+\theta_4\tran x).
+\]
+在题设模型下，
+\[
+M_z\mid X=x\sim \textsc{N}\{\mu_z(x),\sigma_M^2\}.
+\]
+由连续版本的 \cref{thm::mediation}，
+\[
+E\{Y(z,M_{z'})\mid X=x\}
+=
+\int q_z(m,x)\phi_{\sigma_M}\{m-\mu_{z'}(x)\}\d m,
+\]
+其中 $\phi_{\sigma_M}$ 是 mean $0$、variance $\sigma_M^2$ 的 Normal density。
+
+因此
+\[
+\NDE
+=
+E_X\left[
+\int \{q_1(m,X)-q_0(m,X)\}
+\phi_{\sigma_M}\{m-\mu_0(X)\}\d m
+\right],
+\]
+而
+\[
+\NIE
+=
+E_X\left[
+\int q_1(m,X)
+\left\{
+\phi_{\sigma_M}\{m-\mu_1(X)\}
+-
+\phi_{\sigma_M}\{m-\mu_0(X)\}
+\right\}\d m
+\right].
+\]
+
+用 IID data 估计时，先拟合 Normal linear mediator model $M\sim 1+Z+X$，得到 $\hat\beta$ 与 residual variance $\hat\sigma_M^2$；再拟合 logistic outcome model $Y\sim 1+Z+M+X$，得到 $\hat\theta$。然后用 empirical distribution of $X$ 近似 $E_X$：
+\[
+\widehat{\NDE}
+=
+\frac{1}{n}\sum_{i=1}^n
+\int \{\hat q_1(m,X_i)-\hat q_0(m,X_i)\}
+\phi_{\hat\sigma_M}\{m-\hat\mu_0(X_i)\}\d m,
+\]
+\[
+\widehat{\NIE}
+=
+\frac{1}{n}\sum_{i=1}^n
+\int \hat q_1(m,X_i)
+\left[
+\phi_{\hat\sigma_M}\{m-\hat\mu_1(X_i)\}
+-
+\phi_{\hat\sigma_M}\{m-\hat\mu_0(X_i)\}
+\right]\d m.
+\]
+这些一维积分可用 Gaussian quadrature 或 Monte Carlo integration 计算。若用 Monte Carlo，可对每个 $i$ 从两个 Normal distributions
+\[
+\textsc{N}\{\hat\mu_0(X_i),\hat\sigma_M^2\},
+\qquad
+\textsc{N}\{\hat\mu_1(X_i),\hat\sigma_M^2\}
+\]
+抽取 mediator values，再代入 $\hat q_z(m,X_i)$ 平均。
+
+\paragraph{Remark.}
+本题的要点是 nonlinear link 打破了 Baron--Kenny 的 product simplification。Mediation formula 仍然成立，但它给出的是一个 model-based g-computation estimator，而不是一个简单 coefficient product。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Mediation analysis with binary mediator and continuous outcome}{logistic mediator 与 linear outcome 下的公式}
+令
+\[
+p_z(x)=\mathbb{P}(M=1\mid Z=z,X=x)
+=
+\expit(\beta_0+\beta_1z+\beta_2\tran x).
+\]
+Outcome model 为
+\[
+E(Y\mid Z=z,M=m,X=x)
+=
+\theta_0+\theta_1z+\theta_2m+\theta_4\tran x.
+\]
+
+先看 direct effect。由 \cref{corollary::mediation-nde-nie}，
+\begin{align*}
+\NDE(x)
+&=
+\sum_{m=0}^1
+\{E(Y\mid Z=1,M=m,X=x)-E(Y\mid Z=0,M=m,X=x)\}\\
+&\qquad {}\times \mathbb{P}(M=m\mid Z=0,X=x)\\
+&=
+\sum_{m=0}^1 \theta_1\mathbb{P}(M=m\mid Z=0,X=x)
+=\theta_1.
+\end{align*}
+因此 $\NDE=\theta_1$。
+
+再看 indirect effect。固定 $Z=1$ 时，outcome mean 中只有 $\theta_2 m$ 会随着 mediator distribution 改变，所以
+\begin{align*}
+\NIE(x)
+&=
+\theta_2\{p_1(x)-p_0(x)\}\\
+&=
+\theta_2\left[
+\expit(\beta_0+\beta_1+\beta_2\tran x)
+-
+\expit(\beta_0+\beta_2\tran x)
+\right].
+\end{align*}
+对 $X$ 取平均得到题目中的公式：
+\[
+\NIE
+=
+\theta_2 E\left\{
+\expit(\beta_0+\beta_1+\beta_2\tran X)
+-
+\expit(\beta_0+\beta_2\tran X)
+\right\}.
+\]
+
+估计时，先用 logistic regression 拟合 $M\sim 1+Z+X$，再用 linear regression 拟合 $Y\sim 1+Z+M+X$。Plug-in estimators 为
+\[
+\widehat{\NDE}=\hat\theta_1,
+\]
+以及
+\[
+\widehat{\NIE}
+=
+\hat\theta_2\frac{1}{n}\sum_{i=1}^n
+\left[
+\expit(\hat\beta_0+\hat\beta_1+\hat\beta_2\tran X_i)
+-
+\expit(\hat\beta_0+\hat\beta_2\tran X_i)
+\right].
+\]
+Standard errors 可用 delta method；实践中 bootstrap 更直接，因为它自动保留两步模型估计和 empirical averaging 的不确定性。
+
+\paragraph{Remark.}
+这里 outcome model 仍是 linear 的，所以 direct effect 仍等于 $\theta_1$。非线性只出现在 mediator model 中，它影响的是 $Z$ 改变 mediator probability 的平均幅度。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Mediation analysis with binary mediator and outcome}{两个 logistic models 下的 mediation formulas}
+令
+\[
+p_z(x)=\mathbb{P}(M=1\mid Z=z,X=x)
+=
+\expit(\beta_0+\beta_1z+\beta_2\tran x),
+\]
+并令
+\[
+q_z(m,x)=\mathbb{P}(Y=1\mid Z=z,M=m,X=x)
+=
+\expit(\theta_0+\theta_1z+\theta_2m+\theta_4\tran x).
+\]
+因为 outcome 是 binary，natural direct and indirect effects 在这里是 risk-difference scale 上的 effects。
+
+由 \cref{corollary::mediation-nde-nie}，
+\begin{align*}
+\NDE(x)
+&=
+\sum_{m=0}^1 \{q_1(m,x)-q_0(m,x)\}
+\mathbb{P}(M=m\mid Z=0,X=x)\\
+&=
+\{q_1(1,x)-q_0(1,x)\}p_0(x)
++\{q_1(0,x)-q_0(0,x)\}\{1-p_0(x)\}.
+\end{align*}
+Similarly,
+\begin{align*}
+\NIE(x)
+&=
+\sum_{m=0}^1 q_1(m,x)
+\{\mathbb{P}(M=m\mid Z=1,X=x)-\mathbb{P}(M=m\mid Z=0,X=x)\}\\
+&=
+\{q_1(1,x)-q_1(0,x)\}\{p_1(x)-p_0(x)\}.
+\end{align*}
+因此 unconditional effects 为
+\[
+\NDE=E\{\NDE(X)\},\qquad \NIE=E\{\NIE(X)\}.
+\]
+
+用 IID data 估计时，先拟合两个 logistic regressions：
+\[
+M\sim 1+Z+X,\qquad Y\sim 1+Z+M+X.
+\]
+得到 $\hat p_z(x)$ 与 $\hat q_z(m,x)$ 后，用 empirical distribution of $X$ plug in：
+\[
+\widehat{\NDE}
+=
+\frac{1}{n}\sum_{i=1}^n
+\left[
+\{\hat q_1(1,X_i)-\hat q_0(1,X_i)\}\hat p_0(X_i)
++\{\hat q_1(0,X_i)-\hat q_0(0,X_i)\}\{1-\hat p_0(X_i)\}
+\right],
+\]
+\[
+\widehat{\NIE}
+=
+\frac{1}{n}\sum_{i=1}^n
+\{\hat q_1(1,X_i)-\hat q_1(0,X_i)\}
+\{\hat p_1(X_i)-\hat p_0(X_i)\}.
+\]
+Again, bootstrap is a convenient standard-error method because the estimators are nonlinear functions of two fitted logistic models.
+
+\paragraph{Remark.}
+Even though both working models are logistic, the resulting natural effects are not log-odds coefficients. They are averages of contrasts of predicted probabilities. This distinction matters because mediation decomposition in \cref{prop::mediation-decomposition} is on the outcome mean scale.
+\end{exercisesolution}
+
+\begin{exercisesolution}{Modify the definitions to drop the cross-world independence}{randomized mediator draw 下不需要 \cref{assume::mediation4}}
+本题证明：若把 nested potential outcome $Y(z,M_{z'})$ 改为
+\[
+Y(z,F_{M_{z'}\mid X}),
+\]
+则 identification formula 不再需要 \cref{assume::mediation4}。为简洁起见，先考虑 discrete mediator。由定义，
+\[
+Y(z,F_{M_{z'}\mid X})
+=
+\sum_m Y(z,m)\mathbb{P}\{M(z')=m\mid X\}.
+\]
+因此条件在 $X=x$ 下，
+\[
+E\{Y(z,F_{M_{z'}\mid X})\mid X=x\}
+=
+\sum_m E\{Y(z,m)\mid X=x\}\mathbb{P}\{M(z')=m\mid X=x\}.
+\]
+
+第一个因子由 \cref{assume::mediation1,assume::mediation2} 识别。根据本章 \cref{para::sr-jr} 的结果，这两个 assumptions 等价于
+\[
+(Z,M)\ind Y(z,m)\mid X.
+\]
+于是
+\[
+E\{Y(z,m)\mid X=x\}
+=
+E\{Y(z,m)\mid Z=z,M=m,X=x\}
+=
+E(Y\mid Z=z,M=m,X=x),
+\]
+其中最后一步使用 consistency。
+
+第二个因子由 \cref{assume::mediation3} 识别：
+\[
+\mathbb{P}\{M(z')=m\mid X=x\}
+=
+\mathbb{P}\{M(z')=m\mid Z=z',X=x\}
+=
+\mathbb{P}(M=m\mid Z=z',X=x).
+\]
+代回即得
+\[
+E\{Y(z,F_{M_{z'}\mid X})\mid X=x\}
+=
+\sum_m E(Y\mid Z=z,M=m,X=x)
+\mathbb{P}(M=m\mid Z=z',X=x).
+\]
+这与 \cref{thm::mediation} 的 conditional formula 完全相同。对 $X$ 取平均后，$\NDE$ 与 $\NIE$ 的 formulas 也与 \cref{corollary::mediation-nde-nie} 相同。
+
+连续 mediator 时，把上面的 sum 替换为 integral：
+\[
+E\{Y(z,F_{M_{z'}\mid X})\mid X=x\}
+=
+\int E(Y\mid Z=z,M=m,X=x)f(m\mid Z=z',X=x)\d m.
+\]
+
+为什么这里不需要 \cref{assume::mediation4}？因为 $F_{M_{z'}\mid X}$ 是从 conditional population distribution 中抽取 mediator value，而不是同一个 unit 的 cross-world mediator $M(z')$。因此推导只需要识别 $Y(z,m)$ 的 conditional mean 和 $M(z')$ 的 conditional distribution；不需要断言同一个 unit 的 $Y(z,m)$ 与 $M(z')$ 在 cross-world sense 下 independent。
+
+\paragraph{Remark.}
+这个修改把 estimand 从 ``把同一个 unit 的 mediator 设为另一个 world 中的 natural value'' 改成 ``从另一个 world 的 mediator distribution 中随机抽一个值''。代价是个体层面的 natural interpretation 变弱；收益是 identification 不再依赖最具 metaphysical 色彩的 cross-world independence。
+\end{exercisesolution}

@@ -1,0 +1,468 @@
+\chapter{Using the Propensity Score in Regressions for Causal Effects}\label{chapter::pscore-unification}
+ 
+
+自 \citet{rosenbaum1983central} 的开创性论文以来，文献中已经出现了许多对 propensity score 的创造性用法 \citep[e.g.,][]{bang2005doubly, robins2007comment, van2011targeted, vansteelandt2014regression}。本章讨论使用 propensity score 的两种简单方法：
+\begin{enumerate}
+\item
+把 propensity score 作为协变量纳入回归；
+\item
+运行按 propensity score 的倒数加权的回归。
+\end{enumerate}
+我选择聚焦于这两种方法，是因为以下原因：
+\begin{enumerate}
+\item
+它们容易实现，并且只需要标准统计软件包中的回归功能；
+\item
+它们的性质可以与许多更复杂的方法相比；
+\item
+它们可以很容易地扩展到允许灵活统计模型的情形，包括 machine learning algorithms。
+\end{enumerate}
+
+ 
+\section{Regressions with the propensity score as a covariate}
+\label{sec::regress-on-pscore}
+
+由 Theorem \ref{thm::pscore-dimreduction}，如果以 $X$ 为条件时 ignorability 成立，那么以 $e(X)$ 为条件时它也成立：
+$$
+Z\ind \{ Y(1) , Y(0)\} \mid e(X). 
+$$ 
+类似于 \eqref{eq::nonparametric-identification-tau}，$\tau$ 也可由下式 nonparametrically identified：
+$$
+\tau = E\Big[   E\{ Y\mid Z=1, e(X) \} - E\{ Y\mid Z=0, e(X) \} \Big] ,
+$$
+这启发了基于 $Y$ 对 $Z$ 和 $e(X)$ 回归的方法。
+
+
+
+最简单的回归设定是把 $Y$ 对 $\{1, Z, e(X)\}$ 做 OLS fit，并把 $Z$ 的系数作为估计量，记为 $\tau_{e}$。为简单起见，我将讨论 population OLS：
+$$
+\arg\min_{a,b,c}  E\{ Y - a - bZ - c  e(X)  \}^2
+$$
+其中 $\tau_{e}$ 定义为 $Z$ 的系数。
+如果我们有正确的 propensity score model，并且 outcome model 的确关于 $Z$ 和 $e(X)$ 为线性，那么它对 $\tau$ 是 consistent 的。更有意思的结果是，只要我们有正确的 propensity score model，即便 outcome model 完全 misspecified，$\tau_{e}$ 估计的也是 Chapter \ref{sec::other-estmand-overlap} 中引入的 $\tau_\textsc{O}$。
+
+\begin{theorem}\label{thm::ols-pscore-tau-o}
+如果 $Z\ind \{  Y(1), Y(0) \} \mid X$，那么 $Y$ 对 $\{1, Z, e(X)\}$ 的 population OLS fit 中 $Z$ 的系数等于
+$$
+\tau_e=  \tau_\textsc{O} = \frac{  E\{ h_\textsc{O}(X) \tau(X) \} }{ E\{ h_\textsc{O}(X) \} },
+$$
+回忆 $ h_\textsc{O}(X)  = e(X) \{ 1- e(X)  \} $ 且 $\tau(X) = E\{ Y(1) - Y(0) \mid X  \}$。
+\end{theorem}
+
+
+Theorem \ref{thm::ols-pscore-tau-o} 的一个不寻常之处是，不再需要 overlap condition。即使有些 units 的 propensity score $e(X)$ 等于 $0$ 或 $1$，它们对应的权重 $ e(X) \{ 1- e(X) \}$ 也是零，因此它们对最终参数 $ \tau_\textsc{O} $ 没有任何贡献。
+
+
+\begin{myproof}{Theorem}{\ref{thm::ols-pscore-tau-o}}
+我将使用 Section \ref{appendix::fwl-theorem} 中回顾的 FWL theorem 来证明 Theorem \ref{thm::ols-pscore-tau-o}。由 FWL theorem，我们可以分两步得到 $\tau_e$：
+\begin{enumerate}
+\item
+从 $Z$ 对 $\{1, e(X)\}$ 的 OLS fit 中得到 residual $\tilde{Z}$；
+\item
+从 $Y$ 对 $\tilde{Z}$ 的 OLS fit 中得到 $\tau_e$。
+\end{enumerate}
+
+%: first, we obtain the residual $\tilde{Z}$ from the OLS fit of $Z$ on $\{1, e(X)\}$; then, we obtain $\tau_e$ from the OLS fit of $Y$ on $\tilde{Z}$. 
+
+我们可以使用 Chapter \ref{appendix::tower-property} 中关于 covariance 的结果，来化简 $Z$ 对 $\{1, e(X)\}$ 的 OLS fit 中 $e(X)$ 的系数：
+\begin{eqnarray*}
+\frac{ \cov\{Z, e(X)  \}  }{  \var\{ e(X) \} }
+&=&  \frac{  E [ \cov\{Z, e(X)  \mid X\}  ] + \cov\{  E(Z\mid X), e(X) \}   }{  \var\{ e(X) \}  } \\
+&=& \frac{0 +\var\{ e(X) \}  }{ \var\{ e(X) \} } = 1,
+\end{eqnarray*}
+所以 intercept 为 $E(Z) - E\{e(X)\} = 0$，residual 为 $\tilde{Z} = Z - e(X)$。这是合理的，因为 $Z - e(X)$ 与 $X$ 的任意函数都不相关。
+
+因此，我们可以从 $Y$ 对 centered variable $Z - e(X)$ 的 univariate OLS fit 中得到 $\tau_e$：
+$$
+\tau_e = 
+\frac{ \cov\{  Z-e(X) , Y \}  }{  \var\{ Z - e(X) \} } .
+$$
+分母化简为
+\begin{eqnarray*}
+\var\{ Z - e(X) \} &=& E\{ Z - e(X)\}^2 \\
+&=& E\{ Z + e(X)^2 - 2Ze(X)\} \\
+&=&E\{ e(X) + e(X)^2 - 2e(X)^2 \} \\
+&=&E\{ h_\textsc{O}(X) \} .
+\end{eqnarray*}
+分子化简为
+\begin{eqnarray*}
+&&\cov\{ Z-e(X)  , Y\} \\
+&=&  E[ \{ Z-e(X)  \} Y ] \\
+&=& E[ \{ Z-e(X)  \} ZY(1) ] + E[ \{ Z-e(X)  \} (1-Z)Y(0) ] \\
+&& \quad\quad\quad\quad (\text{by } Y = ZY(1)  + (1-Z)Y(0)) \\
+&=& E[ \{ Z- Ze(X)  \} Y(1)]  - E[  e(X)  (1-Z)Y(0) ]  \\
+&=&  E[  Z\{ 1- e(X)  \} Y(1) ] - E [ e(X)  (1-Z)Y(0) ] \\
+&=& E[  e(X)\{ 1- e(X)  \} \mu_1(X)]  - E[  e(X)  \{ 1- e(X)  \}  \mu_0(X) ]\\
+&&   \quad\quad\quad\quad (\text{tower property and ignorability}) \\
+&=& E\{ h_\textsc{O}(X) \tau(X) \} .
+\end{eqnarray*}
+结论随之成立。
+ \end{myproof}
+ 
+ 
+ 从 Theorem \ref{thm::ols-pscore-tau-o} 的证明可见，我们可以简单地运行 $Y$ 对 centered treatment $ Z-e(X)$ 的 OLS。\citet{lee2018simple} 提出了这个步骤。此外，我们也可以在 OLS fit 中加入 $X$，这在 finite samples 中可能提高 efficiency。然而，这不会改变 estimand，它仍然是 $\tau_\textsc{O}$。我在下面的 corollary 中总结这两个结果。
+ 
+ \begin{corollary}\label{coro::regress-on-pscore}
+如果 $Z\ind \{  Y(1), Y(0) \} \mid X$，那么
+ \begin{enumerate}
+ \item[(1)]
+ $Y$ 对 $Z-e(X)$ 或 $\{1, Z-e(X) \}$ 的 population OLS fit 中 $Z-e(X)$ 的系数等于 $\tau_\textsc{O}$；
+ \item[(2)]
+ $Y$ 对 $\{1, Z, e(X), X\}$ 的 population OLS fit 中 $Z$ 的系数等于 $\tau_\textsc{O}$。
+ \end{enumerate}
+ \end{corollary}
+ 
+ 
+ 
+\begin{myproof}{Corollary}{\ref{coro::regress-on-pscore}}
+(1) 第一个结果是 Theorem \ref{thm::ols-pscore-tau-o} 证明中的一个中间步骤。第二个结果成立，是因为把 $Y$ 对 $Z-e(X)$ 或 $\{1, Z-e(X) \}$ 回归不会改变 $Z-e(X) $ 的系数，因为它的 mean 为零。
+
+
+(2) 我们可以再次使用 FWL theorem。我们可以先从 $Z$ 对 $\{1, e(X), X\}$ 的 population OLS 中得到 residual，它是 $Z-e(X) $，因为
+$$
+Z-e(X) = Z-0 - 1\cdot e(X) - 0\tran X $$ 
+且 $Z-e(X)$ 与 $X$ 的任意函数都不相关。
+于是，在 $Y$ 对 $\{1, Z, e(X), X\}$ 的 population OLS fit 中 $Z$ 的系数，等于在 $Y$ 对 $Z-e(X)$ 的 population OLS fit 中 $Z$ 的系数。
+  \end{myproof}
+  
+  
+  
+  Theorem \ref{thm::ols-pscore-tau-o} 启发了一个用于 $\tau_\textsc{O} $ 的 two-step estimator：
+\begin{enumerate}
+\item
+拟合 propensity score model，以得到 $\hat e(X_i) $；
+\item
+运行 $Y_i$ 对 $(1,X_i, \hat e(X_i) )$ 的 OLS，以得到 $Z_i$ 的系数。
+\end{enumerate}  
+Corollary \ref{coro::regress-on-pscore}(1) 启发了一个用于 $\tau_\textsc{O} $ 的 two-step estimator：
+\begin{enumerate}
+\item
+拟合 propensity score model，以得到 $\hat e(X_i) $；
+\item
+运行 $Y_i$ 对 $Z_i - \hat e(X_i)$ 的 OLS，以得到 $Z_i$ 的系数。
+\end{enumerate}
+Corollary \ref{coro::regress-on-pscore}(1) 还启发了另一个用于 $\tau_\textsc{O} $ 的 two-step estimator：
+\begin{enumerate}
+\item
+拟合 propensity score model，以得到 $\hat e(X_i) $；
+\item
+运行 $Y_i$ 对 $(1, Z_i , \hat e(X_i),  X_i ) $ 的 OLS，以得到 $Z_i$ 的系数。
+\end{enumerate}
+尽管 OLS 对得到 point estimators 很方便，但由于第一步估计 propensity score 的不确定性，对应的 standard errors 是不正确的。我们可以使用 bootstrap 来近似 standard errors。
+  
+
+  
+  
+ 
+ 
+\citet{robins1992estimating} 讨论了许多基于 propensity score 的 OLS estimators。上面的结果似乎是他们一般理论的特殊情形，尽管他们没有指出它们与 overlap weight 下 estimand 的联系；这个联系后来由 \citet{li2018balancing} 重新提出。\citet{lee2018simple} 从另一个角度提出把 $Y$ 对 $Z-e(X)$ 回归，但没有把它与 \citet{robins1992estimating} 和 \citet{li2018balancing} 中已有结果联系起来。
+
+
+\citet{rosenbaum1983central} 提出基于 $Y$ 对 $\{1, Z, e(X), Ze(X)\}$ 的 OLS fit 来估计 average causal effect。当这个 outcome model 正确时，他们的 estimator 对 average causal effect 是 consistent 的。然而，当模型不正确时，对应 estimator 的解释要复杂得多。\citet{little2004robust} 建议基于 $Y$ 对 $Z$ 和 $e(X)$ 的 flexible function\footnote{例如，我们可以在回归中加入 $e(X)$ 的 polynomial terms。\citet{little2004robust} 建议使用 splines。} 的 OLS 来构造 estimators，并说明它具有某种 double robustness property。由于实现较为复杂，我省略讨论。
+
+
+
+\section{Regressions weighted by the inverse of the propensity score} 
+
+
+\subsection{Average causal effect}
+
+
+我们先重新考察 $\tau$ 的 Hajek estimator：
+$$
+\hat{\tau}^\textup{hajek} = \frac{  \sumn \frac{Z_i Y_i}{ \hat{e}(X_i) }  }{  \sumn \frac{Z_i }{ \hat{e}(X_i) } }
+- \frac{  \sumn \frac{ (1-Z_i) Y_i}{ 1 - \hat{e}(X_i) }  }{  \sumn \frac{ 1-Z_i}{ 1 - \hat{e}(X_i) }  },
+$$
+它等于 treatment group 和 control group 中 outcomes 的 weighted means 之差。从数值上看，它等同于下面这个 $Y_i$ 对 $(1,Z_i)$ 的 weighted least squares (WLS) 中 $Z_i$ 的系数。
+
+
+\begin{proposition}
+\label{prop::hajek-wls}
+$\hat{\tau}^\textup{hajek}$ 等于下面 WLS 中的 $\hat{\beta}$：
+$$
+(\hat{\alpha}, \hat{\beta}) = \arg\min_{\alpha, \beta} \sum_{i=1}^n w_i(Y_i - \alpha - \beta Z_i)^2
+$$
+其中 weights 为
+\begin{eqnarray}\label{eq::weight-hajek}
+w_i =  \frac{Z_i}{   \hat{e}(X_i)  } + \frac{1-Z_i}{ 1-  \hat{e}(X_i) } 
+= 
+\begin{cases}
+\frac{1}{\hat{e}(X_i) } & \text{ if } Z_i=1;\\
+\frac{1}{ 1- \hat{e}(X_i) } & \text{ if } Z_i=0.
+\end{cases} 
+\end{eqnarray}
+\end{proposition}
+
+\citet{imbens2004nonparametric} 指出了 Proposition \ref{prop::hajek-wls} 中的结果。我把它留作 Problem \ref{hw::ate-hajek-wls}。
+由 Proposition \ref{prop::hajek-wls}，基于 WLS 得到 $\hat{\tau}^\textup{hajek}$ 很方便。然而，由于 estimated propensity score 中的不确定性，WLS 报告的 standard error 对 $\hat{\tau}^\textup{hajek}$ 的 true standard error 而言是不正确的。Bootstrap 提供了一个近似 true standard error 的方便方法。
+
+ 
+
+
+
+为什么 WLS 会给出 $\tau$ 的 consistent estimator？回忆在 propensity score 为常数的 CRE 中，我们可以简单地使用 $Y_i$ 对 $(1,Z_i)$ 的 OLS fit 中 $Z_i$ 的系数来估计 $\tau$。在 observational studies 中，各个 units 接受 treatment 和 control 的概率分别不同。如果我们对 treated units 赋予权重 $1/e(X_i)$，对 control units 赋予权重 $1/\{ 1-e(X_i)\}$，那么 treated group 和 control group 都能够代表 whole population。因此，通过加权，我们实际上得到一个 pseudo-randomized experiment。于是，weighted means 之差对 $\tau$ 是 consistent 的。$\hat{\tau}^\textup{hajek}$ 与 WLS 的数值等价不仅本身是一个有趣的数值事实，也有助于启发带 covariate adjustment 的更复杂 estimators。下面我给出一个扩展。
+
+
+回忆在 CRE 中，我们可以使用 $Y_i$ 对 $(1,Z_i, X_i, Z_iX_i)$ 的 OLS fit 中 $Z_i$ 的系数来估计 $\tau$，其中 covariates 经过 centered，使得 $\bar{X} = 0$。这是 \citet{lin2013} 的 estimator，它使用 covariates 来提高 efficiency。对 observational studies 的一个自然扩展，是使用 $Y_i$ 对 $(1,Z_i, X_i, Z_iX_i)$ 的 WLS fit 中 $Z_i$ 的系数来估计 $\tau$，其中 weights 由 \eqref{eq::weight-hajek} 定义。\citet{hirano2001estimation} 在一个应用中使用了这个 estimator。
+fully interacted linear model 等价于分别为 treated group 和 control group 拟合两个 separate linear models。
+如果 linear models
+$$
+E(Y\mid Z=1, X) = \beta_{10} +  \beta_{1x}\tran X,\quad
+E(Y\mid Z=0, X) = \beta_{00} +  \beta_{0x}\tran X,
+$$
+被正确设定，那么 OLS 和 WLS 都会给出 coefficients 的 consistent estimators，并且 $Z$ 的系数 estimator 对 $\tau$ 是 consistent 的。更有意思的是，如果 propensity score model 正确而 outcome model 不正确，则基于 WLS 的 $Z$ 的系数 estimator 也对 $\tau$ consistent。也就是说，基于 WLS 的 estimator 是 doubly robust 的。\citet{robins2007comment} 讨论了这个性质，并把这个结果归功于 M. Joffe 的 unpublished paper。下面我会给出更多细节。
+
+
+
+令 $e(X_i, \hat{\alpha})$ 为 fitted propensity score，并令 $( \mu_1(X_i, \hat{\beta}_1),  \mu_0(X_i, \hat{\beta}_0)) $ 为基于 WLS 得到的 outcome means fitted values。outcome regression estimator 为
+$$
+\hat{\tau}^\text{reg}_\text{wls} = \frac{1}{n} \sumn \mu_1(X_i, \hat{\beta}_1) - \frac{1}{n} \sumn \mu_0(X_i, \hat{\beta}_0)
+$$
+而 $\tau$ 的 doubly robust estimator 为
+$$
+\hat{\tau}^\text{dr}_\text{wls}  = 
+\hat{\tau}^\text{reg}_\text{wls}  + \frac{1}{n} \sumn  \frac{Z_i \{ Y_i- \mu_1(X_i, \hat{\beta}_1)\}  }{  e(X_i, \hat{\alpha}) } 
+- \frac{1}{n} \sumn  \frac{(1-Z_i) \{ Y_i- \mu_0(X_i, \hat{\beta}_0)\}  }{  1- e(X_i, \hat{\alpha}) }   .
+$$
+一个有意思的结果是，这个 doubly robust estimator 等于 outcome regression estimator；如果我们使用 weights \eqref{eq::weight-hajek}，它又化为 $Y_i$ 对 $(1,Z_i, X_i, Z_iX_i)$ 的 WLS fit 中 $Z_i$ 的系数。
+
+
+
+
+ 
+
+\begin{theorem}
+\label{thm::numerical-equivalence-wls-dr}
+如果 $\bar{X}=0$，并且 $( \mu_1(X_i, \hat{\beta}_1),  \mu_0(X_i, \hat{\beta}_0)) = (  \hat \beta_{10} +   \hat \beta_{1x}\tran X_i ,   \hat \beta_{00} +   \hat\beta_{0x}\tran X_i )$ 基于带 weights \eqref{eq::weight-hajek} 的 $Y_i$ 对 $(1,Z_i, X_i, Z_iX_i)$ 的 WLS fit，那么
+$$
+\hat{\tau}^\textup{dr}_\textup{wls}  = \hat{\tau}^\textup{reg}_\textup{wls} 
+%=  \frac{1}{n} \sumn (\hat \beta_{10} +   \hat \beta_{1x}\tran X_i)   - \frac{1}{n} \sumn (\hat \beta_{00} +   \hat\beta_{0x}\tran X_i) 
+= \hat \beta_{10} - \hat \beta_{00} ,
+$$
+它正是 WLS fit 中 $Z_i$ 的系数。
+\end{theorem}
+
+\begin{myproof}{Theorem}{\ref{thm::numerical-equivalence-wls-dr}}
+$Y_i$ 对 $(1,Z_i, X_i, Z_iX_i)$ 的 WLS fit 等价于基于 treated data 和 control data 的两个 WLS fits。两个 WLS fits 都包含 intercepts，所以 weighted residuals 的 mean 为 0（见 \eqref{eq::OLS-mean-data}）：
+$$
+\sumn  \frac{Z_i ( Y_i- \hat \beta_{10} -  \hat \beta_{1x}\tran X_i ) }{  \hat{e}(X_i) }   =0 
+$$
+以及
+$$
+\sumn  \frac{(1-Z_i) (  Y_i-\hat \beta_{00}  -   \hat\beta_{0x}\tran X_i   ) }{  1-\hat{e}(X_i) }  = 0 .
+$$
+所以 $\hat{\tau}^\text{dr} $ 与 $\hat{\tau}^\text{reg}$ 之间的差恰好为零。二者都化为
+\begin{eqnarray*}
+ \frac{1}{n} \sumn (\hat \beta_{10} +   \hat \beta_{1x}\tran X_i)   - \frac{1}{n} \sumn (\hat \beta_{00} +   \hat\beta_{0x}\tran X_i)  
+&=& \hat \beta_{10} - \hat \beta_{00}  + (\hat \beta_{1x} - \hat\beta_{0x})\tran \bar{X} \\
+&=&\hat \beta_{10} - \hat \beta_{00}
+\end{eqnarray*}
+其中 covariates 是 centered 的。因此二者都等于 $Y_i$ 对 $(1,Z_i, X_i, Z_iX_i)$ 的 WLS fit 中 $Z_i$ 的系数。
+\end{myproof} 
+
+
+\citet{freedman2008weighting} 基于一些 simulation studies，不建议使用上面的 WLS estimator。他们说明，当 outcome model 正确时，WLS estimator 比 OLS estimator 更差，因为在他们具有 homoskedastic outcomes 的 simulation setting 中，WLS estimator 有较大的 variability。这在一般情形下未必成立。当 errors 的 variance 与 propensity scores 的倒数成比例时，WLS estimator 会比 OLS estimator 更 efficient。
+
+\citet{freedman2008weighting} 还说明，基于 WLS fit 得到的 estimated standard error 对 true standard error 并不 consistent，因为它忽略了 estimated propensity score 中的不确定性。这个问题可以通过使用 bootstrap 近似 WLS estimator 的 variance 来容易地修正。
+
+
+尽管如此，\citet{freedman2008weighting} 发现 ``weighting may help under some circumstances''，因为当 outcome model 不正确时，只要 propensity score model 正确，WLS estimator 仍然是 consistent 的。
+
+
+
+本节最后，我用 Table \ref{table::regression-causal-cre-obs} 总结 randomized experiments 和 observational studies 中用于 causal effects 的 regression estimators。
+
+
+
+\begin{table}
+\caption{CREs 和 unconfounded observational studies 中的 regression estimators。weights $w_i$ 由 \eqref{eq::weight-hajek} 定义。
+假设 covariates centered at $\bar{X} = 0$.}\label{table::regression-causal-cre-obs}
+\begin{tabular}{|c|cc|}
+\hline 
+ & CRE & unconfounded observational studies \\
+ \hline 
+without $X$ &  $Y_i\sim (1, Z_i)$ & $Y_i\sim (1, Z_i)$ with weights $w_i$   \\
+with $X$ & $Y_i\sim (1, Z_i ,X_i, Z_i X_i ) $ & $Y_i\sim (1, Z_i ,X_i, Z_i X_i )$ with weights $w_i$  \\
+\hline 
+\end{tabular}
+\end{table}
+
+
+
+\subsection{Average causal effect on the treated units}
+
+$\tau_\textsc{T}$ 的结果与 $\tau$ 的结果平行。首先，$\tau_\textsc{T}$ 的 Hajek estimator
+$$
+\hat{\tau}_\textsc{T}^\text{hajek} = \hat{\bar{Y}}(1) 
+- \frac{  \sumn \hat{o}(X_i) (1-Z_i) Y_i }{ \sumn \hat{o}(X_i) (1-Z_i) } ,
+$$
+其中 $\hat{o}(X_i) = \hat{e}(X_i) / \{ 1- \hat{e}(X_i) \}$，
+等于下面 $Y_i$ 对 $(1,Z_i)$ 的 WLS fit 中 $Z_i$ 的系数。
+
+
+\begin{proposition}
+\label{prop::hajek-att}
+$\hat\tau_\textsc{T}^{\text{hajek}}$ 与下面 WLS 中的 $\hat{\beta}$ 数值相同：
+$$
+(\hat{\alpha}, \hat{\beta}) = \arg\min_{\alpha, \beta} \sum_{i=1}^n  w_{\textsc{T}i}  (Y_i - \alpha - \beta Z_i)^2
+$$
+其中 weights 为
+\begin{eqnarray}\label{eq::weight-hajek-att}
+w_{\textsc{T}i} = Z_i +(1-Z_i )  \hat{o}(X_i)
+= 
+\begin{cases}
+1 & \text{ if } Z_i=1;\\
+ \hat{o}(X_i)   & \text{ if } Z_i=0.
+\end{cases} 
+\end{eqnarray}
+\end{proposition}
+
+类似于 Proposition \ref{prop::hajek-wls}，Proposition \ref{prop::hajek-att} 是一个纯 linear algebra 结果。我把它的证明留到 Problem \ref{hw::ate-hajek-wls}。
+
+
+其次，如果我们把 covariates centered 在 $\hat{\bar{X}}(1) = 0$，那么可以用 $Y_i$ 对 $(1,Z_i, X_i, Z_iX_i)$ 的 WLS fit 中 $Z_i$ 的系数来估计 $\tau_\textsc{T}$，其中 weights 由 \eqref{eq::weight-hajek-att} 定义。类似地，这个 estimator 等于 regression estimator
+$$
+\hat{\tau}_{\textsc{T},\text{wls}}^\text{reg} = \hat{\bar{Y}}(1) - \frac{1}{n_1} \sumn Z_i \mu_0(X_i, \hat{\beta}_0),
+$$
+它也等于 doubly robust estimator
+$$
+\hat{\tau}_{\textsc{T},\text{wls}}^\text{dr} =\hat{\tau}_{\textsc{T},\text{wls}}^\text{reg} 
+- \frac{1}{n_1} \sumn  \hat{o}(X_i)  (1-Z_i) \{  Y_i- \mu_0(X_i, \hat{\beta}_0) \} .
+$$
+
+\begin{theorem}
+\label{thm::numerical-equivalence-wls-dr-att}
+如果 $\hat{\bar{X}}(1) = 0$，并且 $ \mu_0(X_i, \hat{\beta}_0) =  \hat \beta_{00} +   \hat\beta_{0x}\tran X_i$ 基于带 weights \eqref{eq::weight-hajek-att} 的 $Y_i$ 对 $(1,Z_i, X_i, Z_iX_i)$ 的 WLS fit，那么
+$$
+\hat{\tau}_{\textsc{T},\textup{wls}}^\textup{dr}  = \hat{\tau}_{\textsc{T},\textup{wls}}^\textup{reg} 
+= \hat \beta_{10} - \hat \beta_{00} ,
+$$
+它正是 WLS fit 中 $Z_i$ 的系数。
+\end{theorem}
+
+
+\begin{myproof}{Theorem}{\ref{thm::numerical-equivalence-wls-dr-att}}
+基于 treatment group 和 control group 中的 WLS fits，我们有
+\begin{eqnarray}
+\label{eq::wls-treated-att}
+\sumn Z_i ( Y_i -  \hat \beta_{10} -  \hat \beta_{1x}\tran X_i ) &=& 0 ,\\
+\label{eq::wls-control-att}
+ \sumn \hat{o}(X_i)  (1-Z_i) ( Y_i - \hat \beta_{00} - \hat\beta_{0x}\tran X_i ) &=& 0.
+\end{eqnarray}
+第二个结果 \eqref{eq::wls-control-att} 保证 $\hat{\tau}_{\textsc{T},\text{wls}}^\text{dr}  = \hat{\tau}_{\textsc{T},\text{wls}}^\text{reg} $。二者都化为
+$$
+ \hat{\bar{Y}}(1) 
+-  \frac{1}{n_1} \sumn Z_i   (\hat \beta_{00} +   \hat\beta_{0x}\tran X_i)
+= \frac{1}{n_1} \sumn  Z_i(Y_i - \hat \beta_{00} - \hat\beta_{0x}\tran X_i) .
+$$
+当 covariates centered 在 $\hat{\bar{X}}(1) = 0$ 时，第一个结果 \eqref{eq::wls-treated-att} 蕴含 $\hat{\bar{Y}}(1)  =  \hat \beta_{10} $，从而进一步把 estimator 化简为 $ \hat \beta_{10} - \hat \beta_{00}$。
+\end{myproof}
+
+
+
+
+
+
+\section{Homework problems}
+
+\homeworksolutionref{14}
+\paragraph{Hajek estimators as WLS estimators}\label{hw::ate-hajek-wls}
+
+证明 Propositions \ref{prop::hajek-wls} and \ref{prop::hajek-att}。
+
+Remark: 这些是关于 univariate WLS 的 Problem \ref{hw::wls-uni-binary} 的特殊情形。
+
+ 
+\paragraph{Predictive estimator and doubly robust estimator}\label{hw::dr-projective-estimator}
+
+另一个 outcome regression estimator 是 predictive estimator
+$$
+\hat{\tau}^\text{pred} = 
+\hat{\mu}_1^\text{pred} - \hat{\mu}_0^\text{pred} 
+$$
+其中
+$$
+\hat{\mu}_1^\text{pred} = 
+\frac{1}{n} \sumn \left\{  Z_i Y_i + (1-Z_i)  \mu_1(X_i, \hat{\beta}_1)   \right\}
+$$
+以及
+$$
+\hat{\mu}_0^\text{pred}  = 
+\frac{1}{n} \sumn \left\{  Z_i \mu_0(X_i, \hat{\beta}_1) + (1-Z_i) Y_i  \right\} .
+$$
+它与前面讨论的 outcome regression estimator 不同之处在于，它只预测 counterfactual outcomes，而不预测 observed outcomes。
+
+证明：如果 $(\mu_1(X_i, \hat{\beta}_1), \mu_0(X_i, \hat{\beta}_1) ) =  
+( \hat \beta_{10} +   \hat \beta_{1x}\tran X_i, \hat \beta_{00} +   \hat\beta_{0x}\tran X_i)$ 分别来自基于 treated data 和 control data、带 weights
+\begin{eqnarray}
+\label{eq::odds-weight-predictive}
+w_i =  Z_i/\hat{o}(X_i) + (1-Z_i) \hat{o}(X_i)
+= \begin{cases}
+\frac{1}{\hat{o}(X_i)} = \frac{ 1-  \hat{e}(X_i) }{ \hat{e}(X_i) } & \text{ if } Z_i=1;\\
+ \hat{o}(X_i) = \frac{  \hat{e}(X_i)  }{ 1-\hat{e}(X_i)} & \text{ if } Z_i=0.
+\end{cases} 
+\end{eqnarray}
+的 $Y_i$ 对 $(1, X_i)$ 的 WLS fits，那么 doubly robust estimator 等于 $\hat{\tau}^\text{pred} $。
+
+Remark: 
+\citet{cao2009improving} 和 \citet{vermeulen2015bias} 从其他更偏 theoretical 的角度启发了 \eqref{eq::odds-weight-predictive} 中的 weights。
+
+
+
+\paragraph{Weighted logistic regression  with a binary outcome}
+\label{hw::wlogit-dr}
+在 binary outcome 下，我们可以用 logistic outcome models 替代 linear outcome models。证明在 logistic regressions 中带 weights 时，doubly robust estimators 等于 outcome regression estimator。这个结果对 $\tau$ 和 $\tau_\textsc{T}$ 都成立。
+
+
+
+\paragraph{Causal inference with a misspecified linear regression}
+
+
+
+
+定义 $Y$ 对 $ (1, Z, X) $ 的 population OLS 为
+$$
+(\beta_0, \beta_1, \beta_2) = \arg\min_{b_0, b_1, b_2}   E(Y - b_0 - b_1 Z - b_2\tran X)^2. 
+$$
+回忆 $e(X) = \pr(Z=1\mid X)$ 是 propensity score，并定义 $\tilde{e}(X) = \gamma_0+\gamma_1\tran X$ 为 $Z$ 在 $X$ 上的 OLS projection，其中% (see Chapter \ref{appendix::basic-linear-regression})
+$$
+(\gamma_0, \gamma_1) =  \arg\min_{c_0, c_1}   E(Z - c_0 -  c_1\tran X)^2. 
+$$
+
+\begin{enumerate}
+\item
+证明
+$$
+\beta_1 = \frac{    E [  \tilde{w}(X) \{ \mu_1(X) - \mu_0(X) \} ]  }{   E \{ \tilde{w}(X) \} }
++ \frac{  E [  \{  e(X) - \tilde{e}(X)  \}  \mu_0(X)  ] }{  E \{ \tilde{w}(X) \}  }
+$$
+其中 $\tilde{w}(X) = e(X)\{ 1 - \tilde{e}(X)  \}$。
+
+\item
+当 $X$ 包含一个 discrete covariate 的 dummy variables 时，证明
+$$
+\beta_1 = \frac{    E [  w(X) \{ \mu_1(X) - \mu_0(X) \} ]  }{   E \{ w(X) \} }
+$$
+其中 $w(X) = e(X)\{ 1 - e(X)  \}$ 是 Chapter \ref{sec::other-estmand-overlap} 中引入的 overlap weight。
+
+\end{enumerate}
+
+
+Remark: \citet{vansteelandt2021assumption} 给出了 part 1 中的公式，但没有给出详细证明。part 2 中的结果已在文献中被多次推导 \citep[e.g.,][]{angrist1998estimating, ding2021frisch}。
+
+
+\paragraph{Analyzing a dataset from the Karolinska Institute}\label{hw::Karolinska-pscore}
+
+重新考察 Problem \ref{hw::Karolinska-dr}。基于本 Chapter 中介绍的方法估计 $\tau_\textsc{O}$ 和 $\tau$。
+
+
+ 
+ 
+
+
+ \paragraph{Recommended reading}
+\citet{kang2007demystifying} 对 doubly robust estimator 给出了批判性综述，用 simulation 将它与许多其他 estimators 进行比较。\citet{robins2007comment} 对 \citet{kang2007demystifying} 给出了非常有洞见的 comment。
+   
+ 
+ 
+ 

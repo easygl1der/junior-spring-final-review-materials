@@ -1,0 +1,870 @@
+\chapter{Solutions to Chapter 21: An Experimental Perspective of the Instrumental Variable}
+\label{sol:chapter21}
+
+\begin{exercisesolution}{Variance of the Wald estimator}{Wald ratio 的有限样本方差问题}
+本题解释 \cref{problem::infinite-var-iv} 中的技术点。Wald estimator
+\[
+\hat{\tau}_\cp=\frac{\hat{\tau}_Y}{\hat{\tau}_D}
+\]
+是两个随机量的比值。即使真实 first stage $\tau_D>0$，有限样本中的 $\hat{\tau}_D$ 仍可能等于零；一旦分母以正概率等于零，通常意义下的实值方差就不再存在。
+
+先在无协变量 CRE 中写出分母：
+\[
+\hat{\tau}_D
+=
+\frac{1}{n_1}\sum_{i:Z_i=1}D_i
+-
+\frac{1}{n_0}\sum_{i:Z_i=0}D_i.
+\]
+在 superpopulation 记号下，令
+\[
+p_1=\mathbb{P}(D=1\mid Z=1),\qquad
+p_0=\mathbb{P}(D=1\mid Z=0).
+\]
+由 \cref{assume::random,assume::Mono}，$p_1-p_0=\tau_D=\mathbb{P}(U=\cp)>0$。只要 $0<p_0<p_1<1$，两个 treatment arms 中的样本均值仍然是离散随机变量，并且存在很多使二者相等的配置。例如事件
+\[
+E_0=\{D_i=0\ \text{for all observed units}\}
+\]
+的概率为
+\[
+\mathbb{P}(E_0)=(1-p_1)^{n_1}(1-p_0)^{n_0}>0.
+\]
+在 $E_0$ 上，$\hat{\tau}_D=0$。如果在这些配置上 $\hat{\tau}_Y$ 不必然为零，例如 outcome 在两个 arms 中仍有非退化变异，则
+\[
+\mathbb{P}\{|\hat{\tau}_\cp|=\infty\}>0.
+\]
+于是
+\[
+\mathbb{E}(\hat{\tau}_\cp^2)=\infty,
+\]
+从而 $\text{var}(\hat{\tau}_\cp)=\infty$。
+
+更一般地，不必依赖 $E_0$ 这个特殊事件。只要
+\[
+\mathbb{P}(\hat{\tau}_D=0,\ \hat{\tau}_Y\neq 0)>0,
+\]
+ratio estimator 就以正概率取无穷大或未定义值，因此没有有限二阶矩。这正是 \cref{sec::estimation-IV} 和 weak-IV 讨论之间的连接：delta method 描述的是 $\hat{\tau}_D$ 在 $\tau_D$ 附近波动时的局部近似，而不是有限样本 ratio 本身的 ordinary variance。
+
+\paragraph{Remark.}
+这里的结论排除了完全退化情形。例如如果 finite population 被设计成 $\hat{\tau}_D$ 对所有 treatment assignments 都不可能为零，或者在 $\hat{\tau}_D=0$ 时 $\hat{\tau}_Y$ 也被强制为零并另行定义 ratio，那么这是另一个问题。本章要强调的是普通 IV/Wald ratio 的有限样本脆弱性：first stage 越弱，分母靠近零或等于零的概率越不能忽略。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Asymptotic variance of the Wald estimator and its estimation}{delta method 与 adjusted outcome 方差}
+本题补全 \cref{sec::estimation-IV} 中的 delta-method 论证。令
+\[
+\hat{\tau}_Y=\bar{Y}_1-\bar{Y}_0,\qquad
+\hat{\tau}_D=\bar{D}_1-\bar{D}_0,\qquad
+\tau_\cp=\frac{\tau_Y}{\tau_D},
+\]
+并假设 $\tau_D\neq 0$，$n_1/n\to p\in(0,1)$，相关二阶矩有限。设
+\[
+A(z)=Y(z)-\tau_\cp D(z),\qquad z=0,1.
+\]
+因为 $\tau_Y-\tau_\cp\tau_D=0$，有
+\[
+\tau_A
+=
+\mathbb{E}\{A(1)-A(0)\}
+=0.
+\]
+
+首先证明渐近正态性。由两组均值差的中心极限定理，
+\[
+\sqrt{n}
+\begin{pmatrix}
+\hat{\tau}_Y-\tau_Y\\
+\hat{\tau}_D-\tau_D
+\end{pmatrix}
+\rightsquigarrow
+\mathcal{N}\left\{
+0,
+\begin{pmatrix}
+V_Y & V_{YD}\\
+V_{YD} & V_D
+\end{pmatrix}
+\right\},
+\]
+其中
+\[
+V_Y=\frac{\text{var}\{Y(1)\}}{p}
++\frac{\text{var}\{Y(0)\}}{1-p},
+\]
+\[
+V_D=\frac{\text{var}\{D(1)\}}{p}
++\frac{\text{var}\{D(0)\}}{1-p},
+\]
+以及
+\[
+V_{YD}
+=
+\frac{\text{cov}\{Y(1),D(1)\}}{p}
++\frac{\text{cov}\{Y(0),D(0)\}}{1-p}.
+\]
+对函数 $g(y,d)=y/d$ 在 $(\tau_Y,\tau_D)$ 处使用 \cref{thm::delta-method}。梯度为
+\[
+\nabla g(\tau_Y,\tau_D)
+=
+\left(\frac{1}{\tau_D},-\frac{\tau_Y}{\tau_D^2}\right)
+=
+\frac{1}{\tau_D}(1,-\tau_\cp).
+\]
+因此
+\[
+\sqrt{n}(\hat{\tau}_\cp-\tau_\cp)
+\rightsquigarrow
+\mathcal{N}(0,V),
+\]
+其中
+\begin{align*}
+V
+&=
+\frac{1}{\tau_D^2}
+\left[
+V_Y+\tau_\cp^2V_D-2\tau_\cp V_{YD}
+\right]\\
+&=
+\frac{1}{\tau_D^2}
+\left[
+\frac{\text{var}\{A(1)\}}{p}
++\frac{\text{var}\{A(0)\}}{1-p}
+\right].
+\end{align*}
+这就是 adjusted outcome $A=Y-\tau_\cp D$ 出现的原因。
+
+下面证明方差估计的一致性。令
+\[
+\hat{A}_i=Y_i-\hat{\tau}_\cp D_i.
+\]
+在 $Z=z$ 的样本中，$\hat{A}_i$ 与 $A_i=Y_i-\tau_\cp D_i$ 的差为
+\[
+\hat{A}_i-A_i=-(\hat{\tau}_\cp-\tau_\cp)D_i.
+\]
+由于 $\hat{\tau}_\cp\to_p\tau_\cp$ 且 $D_i$ 有界，组内样本方差的连续性给出
+\[
+\hat{S}_{\hat A}^2(z)\to_p \text{var}\{A(z)\},
+\qquad z=0,1.
+\]
+于是
+\[
+n\hat{V}_{\hat A}
+=
+n\left\{\frac{\hat{S}_{\hat A}^2(1)}{n_1}
++\frac{\hat{S}_{\hat A}^2(0)}{n_0}\right\}
+\to_p
+\frac{\text{var}\{A(1)\}}{p}
++\frac{\text{var}\{A(0)\}}{1-p}.
+\]
+再由 $\hat{\tau}_D\to_p\tau_D$，得到
+\[
+\frac{n\hat{V}_{\hat A}}{\hat{\tau}_D^2}
+\to_p
+V.
+\]
+等价地，如果把 $\hat{\tau}_\cp$ 本身的渐近方差写成 $V/n$，那么
+\[
+\frac{\hat{V}_{\hat A}/\hat{\tau}_D^2}{V/n}\to_p 1.
+\]
+这就是正文中最终方差估计量 $\hat{V}_{\hat A}/\hat{\tau}_D^2$ 的大样本依据。
+
+\paragraph{Remark.}
+本题和上一题并不矛盾。上一题说 finite-sample ratio 可能没有 ordinary variance；本题说在 $\tau_D$ 固定远离零且 $n$ 增大时，ratio 在局部有正态近似。Weak IV 的困难正是这两个视角之间的张力。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Proof of the main theorem of \citet{imbens1994identification} and \citet{angrist1996identification}}{\cref{thm::iv-double-index} 的证明}
+本题证明 \cref{thm::iv-double-index}。在 double-index notation 中，exclusion restriction \cref{assume::ER-double-index} 把
+\[
+Y(z,d)
+\]
+化简为只依赖实际接受 treatment 的
+\[
+Y(d).
+\]
+因此，在 assignment 为 $z$ 时观测到的 potential outcome 可以写为
+\[
+Y(D(z)).
+\]
+
+在 \cref{assume::Mono} 下，每个单元只有三种可能的 compliance type：
+\[
+U=\at,\qquad U=\cp,\qquad U=\nt.
+\]
+逐类检查即可。若 $U=\at$，则 $D(1)=D(0)=1$，所以
+\[
+Y(D(1))-Y(D(0))=Y(1)-Y(1)=0,
+\]
+且
+\[
+\{D(1)-D(0)\}\{Y(1)-Y(0)\}=0\cdot\{Y(1)-Y(0)\}=0.
+\]
+若 $U=\nt$，则 $D(1)=D(0)=0$，同样两边都为零。若 $U=\cp$，则 $D(1)=1$ 且 $D(0)=0$，所以
+\[
+Y(D(1))-Y(D(0))=Y(1)-Y(0),
+\]
+而
+\[
+\{D(1)-D(0)\}\{Y(1)-Y(0)\}=1\cdot\{Y(1)-Y(0)\}.
+\]
+三种情形合在一起，得到逐单元恒等式
+\[
+Y(D(1))-Y(D(0))
+=
+\{D(1)-D(0)\}\{Y(1)-Y(0)\}.
+\]
+
+对上式取期望。由于 monotonicity 排除了 defiers，
+\[
+D(1)-D(0)=\mathbb{I}(U=\cp).
+\]
+因此
+\begin{align*}
+\tau_Y
+&=
+\mathbb{E}\{Y(D(1))-Y(D(0))\}\\
+&=
+\mathbb{E}\left[\mathbb{I}(U=\cp)\{Y(1)-Y(0)\}\right]\\
+&=
+\mathbb{P}(U=\cp)\mathbb{E}\{Y(1)-Y(0)\mid U=\cp\}\\
+&=
+\tau_D\tau_\cp,
+\end{align*}
+其中最后一步使用
+\[
+\tau_D=\mathbb{E}\{D(1)-D(0)\}=\mathbb{P}(U=\cp).
+\]
+当 $\tau_D\neq0$ 时，
+\[
+\tau_\cp=\frac{\tau_Y}{\tau_D}.
+\]
+这就证明了 \cref{thm::iv-double-index}。
+
+\paragraph{Remark.}
+这个证明的意义在于把 IV 的 ``magic'' 变成 principal strata 上的逐类代数。Always takers 和 never takers 没有被 assignment 改变实际 treatment，所以在 exclusion restriction 下不给 numerator 贡献；compliers 同时贡献 numerator 和 denominator，ratio 正好留下 complier effect。
+\end{exercisesolution}
+
+\begin{exercisesolution}{More on the FAR confidence set}{二次不等式的精确分类}
+本题补全 \cref{eg::FAR-CI-noX} 后面的代数分类。记
+\[
+a=\hat{\tau}_Y,\qquad c=\hat{\tau}_D,\qquad q=z_{1-\alpha/2}.
+\]
+再记
+\[
+\alpha
+=
+\frac{\hat{S}_D^2(1)}{n_1}
++\frac{\hat{S}_D^2(0)}{n_0},
+\]
+\[
+\beta
+=
+\frac{\hat{S}_{YD}(1)}{n_1}
++\frac{\hat{S}_{YD}(0)}{n_0},
+\]
+以及
+\[
+\gamma
+=
+\frac{\hat{S}_Y^2(1)}{n_1}
++\frac{\hat{S}_Y^2(0)}{n_0}.
+\]
+则 FAR confidence set 是所有满足
+\[
+(a-bc)^2
+\leq
+q^2(\alpha b^2-2\beta b+\gamma)
+\]
+的 $b$。移项后得到一个二次不等式：
+\[
+Ab^2-2Bb+C\leq0,
+\]
+其中
+\[
+A=c^2-q^2\alpha,\qquad
+B=ac-q^2\beta,\qquad
+C=a^2-q^2\gamma.
+\]
+令判别式
+\[
+\Delta=B^2-AC.
+\]
+
+分类如下。
+
+\begin{enumerate}
+\item
+若 $A>0$，二次函数开口向上。
+当 $\Delta<0$ 时，不等式无解，置信集为空集。
+当 $\Delta=0$ 时，置信集是单点 $\{B/A\}$。
+当 $\Delta>0$ 时，置信集是闭区间
+\[
+\left[
+\frac{B-\sqrt{\Delta}}{A},
+\frac{B+\sqrt{\Delta}}{A}
+\right].
+\]
+
+\item
+若 $A<0$，二次函数开口向下。
+当 $\Delta>0$ 时，置信集是两个不相交的闭区间
+\[
+\left(-\infty,\frac{B+\sqrt{\Delta}}{A}\right]
+\cup
+\left[\frac{B-\sqrt{\Delta}}{A},\infty\right],
+\]
+其中由于 $A<0$，左端点小于右端点的顺序已经体现在上式中。
+当 $\Delta\leq0$ 时，二次函数处处不大于零，置信集为整条实线。
+
+\item
+若 $A=0$，不等式退化为线性不等式
+\[
+-2Bb+C\leq0.
+\]
+当 $B>0$ 时，置信集为
+\[
+\left[\frac{C}{2B},\infty\right).
+\]
+当 $B<0$ 时，置信集为
+\[
+\left(-\infty,\frac{C}{2B}\right].
+\]
+当 $B=0$ 且 $C\leq0$ 时，置信集为整条实线；当 $B=0$ 且 $C>0$ 时，置信集为空集。
+\end{enumerate}
+
+上面的第三类是边界退化情形。若只讨论非退化二次情形，即 $A\neq0$，则 \cref{eg::FAR-CI-noX} 中说的四种形状正好对应：闭区间、两个不相交区间、空集、整条实线。
+
+\paragraph{Remark.}
+$A=c^2-q^2\alpha$ 衡量 first stage estimate 相对于其不确定性的强弱。当 $A>0$ 时，first stage 足够强，Fieller-type set 通常像普通 Wald interval；当 $A<0$ 时，weak first stage 使远离中心的 $b$ 也可能无法被拒绝，于是出现两个尾部区间或整条实线。
+\end{exercisesolution}
+
+\begin{exercisesolution}{More simulation for the FAR confidence set}{带协变量 FAR confidence sets 的模拟框架}
+本题要求对 \cref{fg::FAR-ci-simulation} 做平行模拟，但把无协变量 FAR confidence sets 改成 CRE 中调整协变量后的 FAR confidence sets。核心替换是：对每个 candidate value $b$，不再用 $Y-bD$ 的简单均值差，而是用 \citet{lin2013} 的 covariate-adjusted estimator 估计 adjusted outcome $A(b)=Y-bD$ 上的 treatment effect。
+
+下面代码给出完整可复现模拟。它不依赖外部数据；每次模拟生成 baseline covariates、compliance type、实际 treatment received 和 outcome，然后比较不同 $\pi_\cp$ 下 FAR p-value curve 的形状。
+
+\begin{lstlisting}
+vcovHC0_lm <- function(fit)
+{
+  X <- model.matrix(fit)
+  u <- resid(fit)
+  bread <- solve(crossprod(X))
+  meat <- crossprod(X, X * as.numeric(u^2))
+  bread %*% meat %*% bread
+}
+
+linestimator_ch21 <- function(Z, Y, X)
+{
+  X <- scale(as.matrix(X))
+  dat <- data.frame(Y = Y, Z = Z, X)
+  fit <- lm(Y ~ Z * ., data = dat)
+  est <- coef(fit)["Z"]
+  se <- sqrt(vcovHC0_lm(fit)["Z", "Z"])
+  c(est = est, se = se)
+}
+
+FARciX_ch21 <- function(Z, D, Y, X, Lower, Upper, grid)
+{
+  CIrange <- seq(Lower, Upper, by = grid)
+  Pvalue <- sapply(CIrange, function(b) {
+    A <- Y - b * D
+    lin <- linestimator_ch21(Z, A, X)
+    2 * (1 - pnorm(abs(lin["est"] / lin["se"])))
+  })
+  data.frame(b = CIrange, pvalue = Pvalue)
+}
+
+sim_one_iv <- function(n = 1000, pi_c = 0.5, tau_c = 1,
+                       seed = NULL)
+{
+  if (!is.null(seed)) set.seed(seed)
+
+  X1 <- rnorm(n)
+  X2 <- rbinom(n, 1, 0.5)
+  X <- cbind(X1 = X1, X2 = X2)
+
+  Z <- rbinom(n, 1, 0.5)
+
+  ## One-sided noncompliance: never takers and compliers.
+  Uc <- rbinom(n, 1, pi_c)
+  D0 <- rep(0, n)
+  D1 <- Uc
+  D <- ifelse(Z == 1, D1, D0)
+
+  Y0 <- 0.5 * X1 - 0.3 * X2 + rnorm(n)
+  Y1 <- Y0 + tau_c + 0.2 * X1
+  Y <- ifelse(D == 1, Y1, Y0)
+
+  list(Z = Z, D = D, Y = Y, X = X)
+}
+
+plot_far_x <- function(pi_grid = c(0.5, 0.2, 0.1),
+                       n = 1000, seed = 2026)
+{
+  op <- par(mfrow = c(length(pi_grid), 1),
+            mar = c(4, 4, 2, 1))
+  on.exit(par(op))
+
+  ans <- vector("list", length(pi_grid))
+  names(ans) <- paste0("pi_c=", pi_grid)
+
+  for (k in seq_along(pi_grid)) {
+    dat <- sim_one_iv(n = n, pi_c = pi_grid[k],
+                      seed = seed + k)
+    far <- FARciX_ch21(dat$Z, dat$D, dat$Y, dat$X,
+                       Lower = -5, Upper = 8, grid = 0.01)
+    ans[[k]] <- far
+
+    plot(far$b, far$pvalue, type = "l",
+         ylim = c(0, 1),
+         xlab = "candidate CACE b",
+         ylab = "p-value",
+         main = paste("pi_c =", pi_grid[k]))
+    abline(h = 0.05, lty = 2, col = "grey")
+  }
+
+  invisible(ans)
+}
+
+far_results <- plot_far_x()
+\end{lstlisting}
+
+解释输出时，应把置信集读成
+\[
+\{b:\text{p-value}(b)>\alpha\}.
+\]
+当 $\pi_\cp$ 较大时，first stage 强，p-value curve 通常在真值附近形成一个稳定的闭区间。当 $\pi_\cp$ 较小时，first stage 弱，curve 可能在远处重新升高，从而产生非闭区间、两个区间甚至整条实线附近的形状。这与 \cref{para::FAR-CI-cases} 的二次不等式分类完全一致。
+
+\paragraph{Remark.}
+协变量调整不改变 FAR 的基本逻辑；它只改变每个 $b$ 下 adjusted outcome $A(b)$ 的 treatment-effect estimator 和 standard error。若 $X$ 强预测 $Y$ 或 compliance behavior，\citet{lin2013} adjustment 会使 p-value curve 更稳定；若 $X$ 几乎无信息，调整前后结果应接近。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Binary IV and ordinal treatment received}{有序 treatment 下的 IV 加权平均}
+本题证明 \cref{thm::iv-ordinal-treatment}。在 \cref{assumption::iv-ordinal-treatment} 下，randomization 给出
+\[
+\mathbb{E}(Y\mid Z=1)-\mathbb{E}(Y\mid Z=0)
+=
+\mathbb{E}\{Y(D(1))-Y(D(0))\},
+\]
+以及
+\[
+\mathbb{E}(D\mid Z=1)-\mathbb{E}(D\mid Z=0)
+=
+\mathbb{E}\{D(1)-D(0)\}.
+\]
+Exclusion restriction 已经把 $Y(z,d)$ 写成 $Y(d)$。
+
+关键是把有序 treatment 的差分写成相邻 increments 的和。对任意整数 $d_1\geq d_0$，
+\[
+d_1-d_0
+=
+\sum_{j=1}^J \mathbb{I}(d_1\geq j>d_0),
+\]
+并且
+\[
+Y(d_1)-Y(d_0)
+=
+\sum_{j=1}^J \{Y(j)-Y(j-1)\}\mathbb{I}(d_1\geq j>d_0).
+\]
+把 $d_1=D(1)$、$d_0=D(0)$ 代入。由 monotonicity，$D(1)\geq D(0)$，所以
+\[
+D(1)-D(0)
+=
+\sum_{j=1}^J \mathbb{I}\{D(1)\geq j>D(0)\},
+\]
+以及
+\[
+Y(D(1))-Y(D(0))
+=
+\sum_{j=1}^J
+\{Y(j)-Y(j-1)\}\mathbb{I}\{D(1)\geq j>D(0)\}.
+\]
+对后一式取期望，并使用全期望公式：
+\begin{align*}
+&\mathbb{E}\{Y(D(1))-Y(D(0))\}\\
+&\quad =
+\sum_{j=1}^J
+\mathbb{E}\left[
+\{Y(j)-Y(j-1)\}\mathbb{I}\{D(1)\geq j>D(0)\}
+\right]\\
+&\quad =
+\sum_{j=1}^J
+\mathbb{P}\{D(1)\geq j>D(0)\}
+\mathbb{E}\{Y(j)-Y(j-1)\mid D(1)\geq j>D(0)\}.
+\end{align*}
+类似地，
+\[
+\mathbb{E}\{D(1)-D(0)\}
+=
+\sum_{j=1}^J
+\mathbb{P}\{D(1)\geq j>D(0)\}.
+\]
+只要 denominator 非零，两式相除即得
+\[
+\frac{\mathbb{E}(Y\mid Z=1)-\mathbb{E}(Y\mid Z=0)}
+{\mathbb{E}(D\mid Z=1)-\mathbb{E}(D\mid Z=0)}
+=
+\sum_{j=1}^J w_j
+\mathbb{E}\{Y(j)-Y(j-1)\mid D(1)\geq j>D(0)\},
+\]
+其中
+\[
+w_j
+=
+\frac{\mathbb{P}\{D(1)\geq j>D(0)\}}
+{\sum_{j'=1}^J\mathbb{P}\{D(1)\geq j'>D(0)\}}.
+\]
+这正是 \cref{thm::iv-ordinal-treatment}。
+
+\paragraph{Remark.}
+当 $J=1$ 时，事件 $\{D(1)\geq1>D(0)\}$ 就是 complier stratum，权重等于 $1$，于是定理退化为 \cref{thm::iv-double-index}。当 $J>1$ 时，一个人从 $D(0)=0$ 到 $D(1)=3$ 会同时属于 $j=1,2,3$ 三个阈值子群，因此这些 principal strata 可以重叠；这也是该加权平均不如 binary CACE 容易解释的原因。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Data analysis: a flu shot encouragement design \citep{mcdonald1992effects}}{\ri{fludata.txt} 的 IV 分析框架}
+本题要求分别在调整和不调整协变量的情况下分析 \ri{fludata.txt}。当前项目目录中没有找到 \ri{fludata.txt}，因此这里不编造数值结果。下面给出完整可复现代码；把数据文件放在运行目录后，它会报告 ITT、first stage、Wald CACE、bootstrap standard errors、covariate-adjusted CACE，以及 FAR confidence sets。
+
+\begin{lstlisting}
+IV_Wald <- function(Z, D, Y)
+{
+  tau_D <- mean(D[Z == 1]) - mean(D[Z == 0])
+  tau_Y <- mean(Y[Z == 1]) - mean(Y[Z == 0])
+  c(tau_D = tau_D, tau_Y = tau_Y, CACE = tau_Y / tau_D)
+}
+
+IV_Wald_delta <- function(Z, D, Y)
+{
+  est <- IV_Wald(Z, D, Y)
+  A <- Y - est["CACE"] * D
+  varA <- var(A[Z == 1]) / sum(Z == 1) +
+    var(A[Z == 0]) / sum(Z == 0)
+  c(est = est["CACE"], se = sqrt(varA) / abs(est["tau_D"]))
+}
+
+IV_boot <- function(Z, D, Y, X = NULL, n.boot = 2000,
+                    adjusted = FALSE)
+{
+  n <- length(Z)
+  boot <- replicate(n.boot, {
+    id <- sample.int(n, n, replace = TRUE)
+    if (adjusted) {
+      IV_Lin(Z[id], D[id], Y[id], X[id, , drop = FALSE])["CACE"]
+    } else {
+      IV_Wald(Z[id], D[id], Y[id])["CACE"]
+    }
+  })
+  sd(boot)
+}
+
+IV_Lin <- function(Z, D, Y, X)
+{
+  X <- scale(as.matrix(X))
+  datD <- data.frame(D = D, Z = Z, X)
+  datY <- data.frame(Y = Y, Z = Z, X)
+  tau_D <- coef(lm(D ~ Z * ., data = datD))["Z"]
+  tau_Y <- coef(lm(Y ~ Z * ., data = datY))["Z"]
+  c(tau_D = tau_D, tau_Y = tau_Y, CACE = tau_Y / tau_D)
+}
+
+FARci <- function(Z, D, Y, Lower, Upper, grid)
+{
+  bgrid <- seq(Lower, Upper, by = grid)
+  pval <- sapply(bgrid, function(b) {
+    A <- Y - b * D
+    tau_A <- mean(A[Z == 1]) - mean(A[Z == 0])
+    var_A <- var(A[Z == 1]) / sum(Z == 1) +
+      var(A[Z == 0]) / sum(Z == 0)
+    2 * (1 - pnorm(abs(tau_A / sqrt(var_A))))
+  })
+  data.frame(b = bgrid, pvalue = pval)
+}
+
+FARciX <- function(Z, D, Y, X, Lower, Upper, grid)
+{
+  bgrid <- seq(Lower, Upper, by = grid)
+  X <- scale(as.matrix(X))
+  pval <- sapply(bgrid, function(b) {
+    A <- Y - b * D
+    fit <- lm(A ~ Z * ., data = data.frame(A = A, Z = Z, X))
+    est <- coef(fit)["Z"]
+    se <- sqrt(vcovHC0_lm(fit)["Z", "Z"])
+    2 * (1 - pnorm(abs(est / se)))
+  })
+  data.frame(b = bgrid, pvalue = pval)
+}
+
+flu <- read.table("fludata.txt", header = TRUE)
+Z <- flu$assign
+D <- flu$receive
+Y <- flu$outcome
+X <- flu[, c("age", "sex", "race", "copd", "dm",
+             "heartd", "renal", "liverd")]
+
+## Design and first-stage diagnostics.
+table(Z, D)
+prop.table(table(Z, D), 1)
+
+## Unadjusted analysis.
+unadj <- IV_Wald_delta(Z, D, Y)
+unadj_boot <- IV_boot(Z, D, Y, n.boot = 2000)
+
+## Covariate-adjusted analysis under CRE.
+adj <- IV_Lin(Z, D, Y, X)
+adj_boot <- IV_boot(Z, D, Y, X, n.boot = 2000,
+                    adjusted = TRUE)
+
+out <- rbind(
+  unadjusted_delta = c(est = unadj["est"], se = unadj["se"]),
+  unadjusted_boot = c(est = unadj["est"], se = unadj_boot),
+  adjusted_boot = c(est = adj["CACE"], se = adj_boot)
+)
+out <- cbind(out,
+             lower = out[, "est"] - 1.96 * out[, "se"],
+             upper = out[, "est"] + 1.96 * out[, "se"])
+round(out, 4)
+
+far0 <- FARci(Z, D, Y, Lower = -1, Upper = 1, grid = 0.001)
+farX <- FARciX(Z, D, Y, X, Lower = -1, Upper = 1, grid = 0.001)
+
+subset(far0, pvalue >= 0.05)
+subset(farX, pvalue >= 0.05)
+\end{lstlisting}
+
+报告时建议按四步组织。第一，报告 encouragement 对 vaccination receipt 的 first stage，即 $\hat{\tau}_D$，并检查是否符合 \cref{eq::test-mono}。第二，报告 outcome 的 ITT effect $\hat{\tau}_Y$；因为 outcome 是 flu-related hospitalization，负值通常表示 encouragement 降低住院风险。第三，用 \cref{corollary::identification-CACE} 的 Wald ratio 把 ITT effect 缩放到 compliers 上。第四，比较不调整和调整协变量的结果；如果二者接近，说明 randomization 下的 covariate imbalance 不是主要驱动。
+
+\paragraph{Remark.}
+这个数据的科学问题不是 encouragement 本身是否有效，而是接种流感疫苗对 compliers 的 hospitalization risk 有何影响。IV assumptions 的实质含义是：鼓励只通过改变接种行为影响 outcome，并且不存在被鼓励后反而更不愿接种的 defiers。
+\end{exercisesolution}
+
+\begin{exercisesolution}{IV estimation conditional on covariates}{conditional ignorability 下的 ratio estimators}
+本题实现 \cref{section::unconfounded-IV} 中的想法：在
+\[
+Z\ind \{D(1),D(0),Y(1),Y(0)\}\mid X
+\]
+下，先分别估计 $Z$ 对 $D$ 和 $Y$ 的 average causal effects，再取比值。下面代码给出三条 route：outcome regression、Hajek IPW 和 augmented IPW。Bootstrap 用来估计 ratio 的 standard error。
+
+\begin{lstlisting}
+clip <- function(x, lo = 0.01, hi = 0.99)
+{
+  pmin(hi, pmax(lo, x))
+}
+
+ace_or <- function(Z, W, X, family = gaussian())
+{
+  dat <- data.frame(W = W, Z = Z, X)
+  fit <- glm(W ~ Z * ., data = dat, family = family)
+  dat1 <- dat
+  dat0 <- dat
+  dat1$Z <- 1
+  dat0$Z <- 0
+  mean(predict(fit, newdata = dat1, type = "response") -
+       predict(fit, newdata = dat0, type = "response"))
+}
+
+ace_ipw <- function(Z, W, X, trim = c(0.01, 0.99))
+{
+  ps <- glm(Z ~ ., data = data.frame(Z = Z, X),
+            family = binomial())$fitted.values
+  ps <- clip(ps, trim[1], trim[2])
+  mean(Z * W / ps) / mean(Z / ps) -
+    mean((1 - Z) * W / (1 - ps)) / mean((1 - Z) / (1 - ps))
+}
+
+ace_aipw <- function(Z, W, X, family = gaussian(),
+                     trim = c(0.01, 0.99))
+{
+  X <- as.data.frame(X)
+  ps <- glm(Z ~ ., data = data.frame(Z = Z, X),
+            family = binomial())$fitted.values
+  ps <- clip(ps, trim[1], trim[2])
+
+  fit1 <- glm(W ~ ., data = data.frame(W = W, X),
+              weights = Z, family = family)
+  fit0 <- glm(W ~ ., data = data.frame(W = W, X),
+              weights = 1 - Z, family = family)
+  m1 <- predict(fit1, newdata = X, type = "response")
+  m0 <- predict(fit0, newdata = X, type = "response")
+
+  mean(m1 - m0 + Z * (W - m1) / ps -
+       (1 - Z) * (W - m0) / (1 - ps))
+}
+
+iv_conditional_est <- function(Z, D, Y, X,
+                               method = c("aipw", "ipw", "or"),
+                               trim = c(0.01, 0.99))
+{
+  method <- match.arg(method)
+  X <- as.data.frame(scale(as.matrix(X)))
+
+  if (method == "or") {
+    tau_D <- ace_or(Z, D, X, family = binomial())
+    tau_Y <- ace_or(Z, Y, X, family = gaussian())
+  }
+  if (method == "ipw") {
+    tau_D <- ace_ipw(Z, D, X, trim = trim)
+    tau_Y <- ace_ipw(Z, Y, X, trim = trim)
+  }
+  if (method == "aipw") {
+    tau_D <- ace_aipw(Z, D, X, family = binomial(),
+                      trim = trim)
+    tau_Y <- ace_aipw(Z, Y, X, family = gaussian(),
+                      trim = trim)
+  }
+
+  c(tau_D = tau_D, tau_Y = tau_Y, CACE = tau_Y / tau_D)
+}
+
+iv_conditional_boot <- function(Z, D, Y, X,
+                                method = c("aipw", "ipw", "or"),
+                                n.boot = 1000,
+                                trim = c(0.01, 0.99),
+                                seed = 2026)
+{
+  method <- match.arg(method)
+  set.seed(seed)
+  n <- length(Z)
+  X <- as.matrix(X)
+  point <- iv_conditional_est(Z, D, Y, X, method, trim)
+  boot <- replicate(n.boot, {
+    id <- sample.int(n, n, replace = TRUE)
+    iv_conditional_est(Z[id], D[id], Y[id],
+                       X[id, , drop = FALSE],
+                       method, trim)["CACE"]
+  })
+  c(point, se = sd(boot))
+}
+
+## Example call:
+## iv_conditional_boot(Z, D, Y, X, method = "aipw")
+## iv_conditional_boot(Z, D, Y, X, method = "ipw")
+## iv_conditional_boot(Z, D, Y, X, method = "or")
+\end{lstlisting}
+
+这段代码的 interpretation 与 \cref{corollary::identification-CACE} 相同，只是 $\tau_Y$ 和 $\tau_D$ 不再由 raw difference-in-means 估计，而是由 conditional ignorability 下的 covariate-adjusted estimators 估计。实际报告时应至少列出 $\hat{\tau}_D$，因为 weak first stage 会使所有 ratio routes 都不稳定。
+
+\paragraph{Remark.}
+这里的 AIPW route 对 nuisance models 有双重稳健性，但 ratio 本身不自动继承所有好性质：如果 $\hat{\tau}_D$ 很小，任何 numerator route 都会被放大。因此 conditional IV 分析应同时报告 first-stage diagnostics、overlap diagnostics 和 bootstrap uncertainty。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Data analysis: the Karolinska data}{Karolinska IV 分析框架}
+本题要求在给定协变量后把 Karolinska data 作为 IV problem 重新分析。当前项目目录中没有找到 \ri{karolinska.txt}，因此这里不编造数值。下面代码复用 \cref{hw::iv-conditional-x} 的估计器；读入数据后，需要把 IV、actual treatment received、outcome 和 covariates 的变量名核对清楚。
+
+\begin{lstlisting}
+karolinska <- read.table("karolinska.txt", header = TRUE)
+names(karolinska)
+
+## In Chapter 12, hvdiag is used as the large-volume-hospital
+## diagnosis indicator. For IV analysis, set Z to diagnosis in a
+## large-volume hospital and D to actual treatment in a large-volume
+## hospital. Replace dname below by the corresponding column in the
+## released data.
+Z <- karolinska$hvdiag
+dname <- "hvtreat"
+if (!dname %in% names(karolinska)) {
+  stop("Set dname to the column for actual large-volume treatment.")
+}
+D <- karolinska[[dname]]
+
+## Chapter 12 used one-year mortality as the binary outcome.
+Y <- 1 - (karolinska$year.survival == 1)
+X <- as.matrix(karolinska[, c(3, 4, 5)])
+
+## First stage and covariate balance diagnostics.
+table(Z, D)
+summary(glm(Z ~ X, family = binomial()))
+
+res <- rbind(
+  aipw = iv_conditional_boot(Z, D, Y, X, method = "aipw",
+                             n.boot = 2000),
+  ipw = iv_conditional_boot(Z, D, Y, X, method = "ipw",
+                            n.boot = 2000),
+  outcome_reg = iv_conditional_boot(Z, D, Y, X, method = "or",
+                                    n.boot = 2000)
+)
+
+ci <- cbind(res,
+            lower = res[, "CACE"] - 1.96 * res[, "se"],
+            upper = res[, "CACE"] + 1.96 * res[, "se"])
+round(ci, 4)
+\end{lstlisting}
+
+解释时要把三个变量分开：$Z$ 是是否在 large volume hospital 被诊断，$D$ 是是否在 large volume hospital 接受实际治疗，$Y$ 是 mortality 或 survival outcome。IV assumption 是给定 age、rural status、sex 等协变量后，诊断地点近似随机，并且它对 outcome 的影响只通过实际治疗地点发生。这个 assumption 比普通 observational ignorability 更结构化，也更需要 substantive justification。
+
+\paragraph{Remark.}
+Karolinska 样本量只有 $158$，所以本题最重要的不是追逐一个精确数字，而是报告 first stage 是否足够强，以及 adjusted IV estimates 是否在 AIPW、IPW、outcome-regression routes 之间稳定。若三条 routes 差别很大，应把它作为模型敏感性而不是技术细节处理。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Data analysis: a job training program}{JTPA 类数据的 IV 分析计划}
+本题的数据文件 \ri{jobtraining.rtf}、\ri{X.csv} 和 \ri{Y.csv} 未出现在当前项目目录中，因此这里不编造数值。这个练习的难点在于数据结构，而不只是调用 IV estimator：\ri{X.csv} 包含 pretreatment covariates，\ri{Y.csv} 包含 assignment、receipt、sampling weight 和多个 post-treatment outcomes。分析前必须先明确研究问题。
+
+下面给出一套可复现代码框架。它把 sampling weight \ri{wgt} 默认作为协变量处理；若要做 survey-weighted analysis，应另行说明 target population 和 variance estimator。
+
+\begin{lstlisting}
+Xdat <- read.csv("X.csv")
+Ydat <- read.csv("Y.csv")
+
+## Replace id by the actual individual identifier if needed.
+idname <- intersect(names(Xdat), names(Ydat))[1]
+dat <- merge(Xdat, Ydat, by = idname)
+
+## Replace these names by the names in jobtraining.rtf.
+zname <- "assigned"
+dname <- "received"
+yname <- "earnings_30m"
+wname <- "wgt"
+
+needed <- c(zname, dname, yname)
+if (!all(needed %in% names(dat))) {
+  stop("Check zname, dname, and yname against jobtraining.rtf.")
+}
+
+Z <- dat[[zname]]
+D <- dat[[dname]]
+Y <- dat[[yname]]
+
+pretreat_names <- setdiff(names(Xdat), idname)
+if (wname %in% names(dat)) {
+  pretreat_names <- union(pretreat_names, wname)
+}
+X <- dat[, pretreat_names, drop = FALSE]
+
+## Complete-case analysis for the chosen outcome. Missingness should
+## be reported, not silently ignored in the final write-up.
+cc <- complete.cases(Z, D, Y, X)
+Z <- Z[cc]
+D <- D[cc]
+Y <- Y[cc]
+X <- X[cc, , drop = FALSE]
+
+## Unadjusted encouragement-design analysis.
+unadj <- IV_Wald_delta(Z, D, Y)
+
+## Adjusted CRE-style analysis.
+adj_cre <- IV_Lin(Z, D, Y, X)
+adj_cre_se <- IV_boot(Z, D, Y, X, n.boot = 2000,
+                      adjusted = TRUE)
+
+## Conditional-on-covariates observational-style analysis.
+cond <- rbind(
+  aipw = iv_conditional_boot(Z, D, Y, X, method = "aipw",
+                             n.boot = 2000),
+  ipw = iv_conditional_boot(Z, D, Y, X, method = "ipw",
+                            n.boot = 2000),
+  outcome_reg = iv_conditional_boot(Z, D, Y, X, method = "or",
+                                    n.boot = 2000)
+)
+
+list(unadjusted = unadj,
+     adjusted_CRE = c(adj_cre, se = adj_cre_se),
+     conditional = cond)
+\end{lstlisting}
+
+写报告时应至少说明三件事。
+\begin{enumerate}
+\item
+研究问题：例如 training receipt 对某个时间点的 earnings、employment indicator 或 welfare receipt 的 complier effect。不同 outcomes 和时间点对应不同 estimands。
+\item
+缺失与结构性零：工资 outcome 中，失业个体没有工资并不等同于随机缺失。可以把研究问题定义为 employment effect、unconditional earnings effect，或 conditional wage among employed；三者不能混在一起。
+\item
+是否使用 sampling weights：把 \ri{wgt} 当作协变量是一种简化；把它作为 survey weight 则改变 target population 和 standard error 的含义。
+\end{enumerate}
+
+\paragraph{Remark.}
+Job training 数据是 IV 练习的好例子，因为 assignment、receipt 和 outcomes 的区分非常清楚。但它也提醒我们：一个漂亮的 Wald ratio 不能替代清楚的 estimand。先定义 outcome 和 target population，再选择 unadjusted、CRE-adjusted 或 conditional-IV estimator，才是可解释分析的顺序。
+\end{exercisesolution}

@@ -1,0 +1,557 @@
+
+\chapter{The Average Causal Effect on the Treated Units and Other Estimands}
+ \label{chapter::ATT-and-other}
+
+Chapters \ref{chapter::observational-studies}--\ref{chapter::doubly-robust} 关注在 ignorability 和 overlap 假设下平均因果效应 $\tau = E\{  Y(1) - Y(0) \}$ 的识别和估计。从概念上说，将讨论推广到 treated units 和 control units 上的平均因果效应是直接的：
+\begin{eqnarray*}
+\tau_\textsc{T}  &=&  E\{  Y(1) - Y(0) \mid Z=1 \} ,  \\
+\tau_\textsc{C}  &=&  E\{  Y(1) - Y(0) \mid Z=0 \} . 
+\end{eqnarray*}
+如果 $\tau_\textsc{T}$ 和 $\tau_\textsc{C}$ 不同于 $\tau$，则平均因果效应在 treatment group 和 control group 之间存在异质性。我们应当估计 $\tau_\textsc{T}$、$\tau_\textsc{C}$ 还是 $\tau$，取决于所关心的实际问题。
+
+
+由于对称性，本章聚焦于 $\tau_\textsc{T} $。Chapter \ref{sec::other-estmand-overlap} 也讨论到其他 estimands 的推广。
+
+
+
+\section{Nonparametric identification of $\tau_\textsc{T} $ }
+
+
+treated units 上的平均因果效应等于
+$$
+\tau_\textsc{T} = E(Y\mid Z=1) -  E\{    Y(0) \mid Z=1 \},
+$$
+其中第一项 $E(Y\mid Z=1) $ 可由数据直接识别，而第二项 $E\{    Y(0) \mid Z=1 \}$ 是 counterfactual。识别第二项的关键假设是如下 ignorability 和 overlap 假设。
+
+
+
+\begin{assumption}
+\label{assume::ignorability-y0}
+$Z\ind Y(0) \mid X$ 且 $e(X) < 1$。
+\end{assumption}
+
+由于关键在于识别 $E\{    Y(0) \mid Z=1 \}$，我们只需要 ``one-sided'' ignorability 和 overlap 假设。在 Assumption \ref{assume::ignorability-y0} 下，我们有如下关于 $\tau_\textsc{T} $ 的识别结果。
+
+
+\begin{theorem}
+\label{thm::identification-ATT}
+在 Assumption \ref{assume::ignorability-y0} 下，有
+\begin{eqnarray*}
+ E\{    Y(0) \mid Z=1 \}  &=& E\left\{  E(    Y \mid Z=0 , X) \mid  Z=1  \right\} \\
+ &=&  \int  E(    Y \mid Z=0 , X=x) f(  x \mid Z=1) \diff x .
+\end{eqnarray*}
+\end{theorem}
+
+
+由 Theorem \ref{thm::identification-ATT} 可知，counterfactual mean $ E\{    Y(0) \mid Z=1 \}  $ 等于 control 下观测结局的条件均值，再对 treatment 下 covariates 的分布取平均。
+这意味着 $\tau_\textsc{T} $ 可由下式非参数识别：
+\begin{equation}
+\tau_\textsc{T}  = E(Y\mid Z=1) -E\left\{  E(    Y \mid Z=0 , X) \mid  Z=1  \right\}  \label{eq::att-identification} 
+\end{equation}
+
+\begin{myproof}{Theorem}{\ref{thm::identification-ATT}} 
+我们有
+\begin{eqnarray*}
+ E\{    Y(0) \mid Z=1 \} &=&  E\big[   E\{    Y(0) \mid Z=1 , X\} \mid  Z=1  \big] \\
+ &=& E\big[   E\{    Y(0) \mid Z=0 , X\} \mid  Z=1  \big] \\
+ &=& E\left\{  E(    Y \mid Z=0 , X) \mid  Z=1  \right\} \\
+ &=& \int  E(    Y \mid Z=0 , X=x) f(  x \mid Z=1)  \diff x.
+\end{eqnarray*}
+\end{myproof}
+
+
+当 $X$ 是离散变量时，Theorem \ref{thm::identification-ATT} 中的识别公式化简为
+$$
+ E\{    Y(0) \mid Z=1 \}  = \sum_{k=1}^K E(    Y \mid Z=0 , X=k) \pr(X=k \mid  Z=1  ),
+$$
+%
+%Under Assumption \ref{assume::ignorability-y0}, we have 
+%\begin{eqnarray*}
+% E\{    Y(0) \mid Z=1 \} &=&  E\big[   E\{    Y(0) \mid Z=1 , X\} \mid  Z=1  \big] \\
+% &=& E\big[   E\{    Y(0) \mid Z=0 , X\} \mid  Z=1  \big] \\
+% &=& E\left\{  E(    Y \mid Z=0 , X) \mid  Z=1  \right\} ,
+%\end{eqnarray*}
+%therefore, we can identify $\tau_\textsc{T}$ by
+%\begin{eqnarray} 
+%\tau_\textsc{T}  &=& E(Y\mid Z=1) -E\left\{  E(    Y \mid Z=0 , X) \mid  Z=1  \right\}  \label{eq::att-identification}  \\
+%&=& E(Y\mid Z=1) - \sum_{k=1}^K E(    Y \mid Z=0 , X=k) \pr(X=k \mid  Z=1  )  \nonumber \\
+%&=& E(Y\mid Z=1) - \int  E(    Y \mid Z=0 , X=x) F( \text{d} x \mid Z=1),  \nonumber 
+%\end{eqnarray} 
+%where $F( x \mid Z=1)$ is the distribution function of the covariates among treated units. 
+%For discrete $X$, we can use
+这启发了如下针对 $\tau_\textsc{T} $ 的 stratified estimator：
+$$
+\hat{\tau}_\textsc{T} =   \hat{\bar{Y}}(1) - \sum_{k=1}^K \hat{\pi}_{[k]\mid 1} \hat{\bar{Y}}_{[k]}(0),
+$$
+其中 $\hat{\pi}_{[k]\mid 1} = n_{[k]1}/n_1$ 是 treated units 中 $X$ 属于 category $k$ 的比例。
+
+
+对于连续 $X$，我们需要用 control units 拟合 $E(Y\mid Z=0, X)$ 的 outcome model。如果 control potential outcomes 的拟合值为 $\hat{\mu}_0(X_i)$，则 outcome regression estimator 为
+$$
+\hat{\tau}_\textsc{T}^\text{reg} =  \hat{\bar{Y}}(1) - n_1^{-1} \sumn Z_i \hat{\mu}_0(X_i) = n_1^{-1} \sumn Z_i  \{  Y_i - \hat{\mu}_0(X_i)  \}. 
+$$
+
+
+\begin{example}\label{eg::att-regression1}
+如果我们对所有 units 指定一个线性模型
+$$
+E(Y\mid Z, X) = \beta_0  + \beta_z  Z + \beta_x\tran X,
+$$
+则
+\begin{eqnarray*}
+\tau_\textsc{T} &=& E\{   E(Y\mid Z=1, X)  -  E(    Y \mid Z=0 , X)  \mid Z=1\} \\
+&=&  \beta_z.
+\end{eqnarray*}
+如果运行 OLS 得到 $( \hat{\beta}_0, \hat{\beta}_z,  \hat{\beta}_x )$，则可以用 $\hat{\beta}_z$ 估计 $\tau_\textsc{T} $。
+% The estimator is
+%$$
+%\hat{\tau}_\textsc{T} = \hat{\bar{Y}}(1) - \hat{\beta}_0 -  \hat{\beta}_x \tran \hat{\bar{X}}(1).
+%$$
+%Using the property of the OLS (see Section \ref{eq::OLS-mean-data}), we have
+%$$
+%\sumn Z_i(   Y_i - \hat{\beta}_0 -  \hat{\beta}_z Z_i -   \hat{\beta}_x\tran X_i  ) = 0
+%\Longrightarrow   
+%\hat{\bar{Y}}(1)  -  \hat{\beta}_0 - \hat{\beta}_z -   \hat{\beta}_x\tran \hat{\bar{X}}(1) =0 .
+%$$
+%%which implies that $  \hat{\bar{Y}}(1)  -  \hat{\beta}_0 - \hat{\beta}_z -   \hat{\beta}_x\tran \hat{\bar{X}}(1) =0$. 
+%Therefore, the above estimator reduces to $\hat{\tau}_\textsc{T}  = \hat{\beta}_z$, the OLS coefficient of $Z$. 
+%
+%
+%By the property of the OLS, we can also write $\hat{\beta}_z$ as the difference in means of the adjusted outcome $Y_i -  \hat{\beta}_x\tran X_i $, resulting in
+%\begin{eqnarray}
+%\hat{\tau}_\textsc{T}  
+%&=&  \left\{  \hat{\bar{Y}}(1) - \hat{\beta}_x\tran \hat{\bar{X}}(1)  \right\} 
+%-    \left\{  \hat{\bar{Y}}(0)   -  \hat{\beta}_x\tran \hat{\bar{X}}(0)   \right\}  \nonumber   \\
+%&=& \left\{  \hat{\bar{Y}}(1) - \hat{\bar{Y}}(0) \right\} 
+%-  \hat{\beta}_x\tran  \left\{  \hat{\bar{X}}(1) -  \hat{\bar{X}}(0) \right\}. \label{eq::ATT--regression1}
+%\end{eqnarray}
+%Therefore, $\hat{\tau}_\textsc{T}  $ equals the simple difference in means of the outcome, adjusted by the imbalance of the covariates in the treatment and control groups. 
+Section \ref{sec::outcome-regression} 表明 $\hat{\beta}_z$ 是 $\tau$ 的一个 estimator，而本例进一步表明 $\hat{\beta}_z$ 也是 $\tau_\textsc{T}$ 的一个 estimator。这并不奇怪，因为线性模型假设不同 units 上的 causal effects 是常数。
+\end{example}
+
+
+\begin{example}\label{eg::att-regression2}
+识别公式只依赖于 $E(Y\mid Z=0, X)$，因此我们只需要为 control units 指定一个模型。当该模型为线性时，
+$$
+E(Y\mid Z=0, X) =\beta_{0\mid 0}   + \beta_{x\mid 0} \tran X,
+$$
+有
+\begin{eqnarray*}
+\tau_\textsc{T} &=& E(Y\mid Z=1) - E(   \beta_{0\mid 0}   + \beta_{x\mid 0} \tran X  \mid Z=1 ) \\
+&=& E(Y\mid Z=1) -   \beta_{0\mid 0}    -  \beta_{x\mid 0}   \tran E(X\mid Z=1). 
+\end{eqnarray*}
+如果只用 control units 运行 OLS 得到 $( \hat{\beta}_{0\mid 0} ,  \hat{\beta}_{x\mid 0})$，则 estimator 为
+$$
+\hat{\tau}_\textsc{T} = \hat{\bar{Y}}(1) -\hat{\beta}_{0\mid 0}  - \hat{\beta}_{x\mid 0}  \tran \hat{\bar{X}}(1).
+$$
+利用 OLS 的性质（见 \ref{eq::OLS-mean-data}），我们有
+$$
+\hat{\bar{Y}}(0) = \hat{\beta}_{0\mid 0} + \hat{\beta}_{x\mid 0}  \tran \hat{\bar{X}}(0).
+$$ 
+因此，上述 estimator 化简为
+$$
+\hat{\tau}_\textsc{T} = \left\{  \hat{\bar{Y}}(1) - \hat{\bar{Y}}(0) \right\} - \hat{\beta}_{x\mid 0}  \tran \left\{  \hat{\bar{X}}(1) -  \hat{\bar{X}}(0) \right\}, 
+$$
+它类似于前一例中的 regression-adjusted 公式，只是 covariates 均值差的系数不同。
+
+作为一个代数事实，可以证明该 estimator 等于如下 OLS 拟合中 $Z$ 的系数：以 outcome 为因变量，以 treatment、covariates 以及它们的交互项为自变量，并将 covariates 中心化为 $ X_i  - \hat{\bar{X}}(1)$。更多细节见 Problem \ref{para::regression-att-algebra}。
+\end{example}
+
+
+
+
+\section{Inverse propensity score weighting and doubly robust estimation of $\tau_\textsc{T} $}
+
+
+\begin{theorem}
+\label{thm::ipw-att}
+在 Assumption \ref{assume::ignorability-y0} 下，有
+\begin{eqnarray}
+E\{ Y(0) \mid Z=1 \} = E\left\{         \frac{e(X)}{e}  \frac{1-Z}{1-e(X)} Y \right\}
+\label{eq::ipw-att}
+\end{eqnarray}
+且
+\begin{eqnarray}\label{eq::att-ipw-formula}
+\tau_\textsc{T} = E(Y\mid Z=1) -  E\left\{         \frac{e(X)}{e}  \frac{1-Z}{1-e(X)} Y \right\} ,
+\end{eqnarray}
+其中 $e = \pr(Z=1)$ 是 treatment 的边际概率。
+\end{theorem}
+
+
+\begin{myproof}{Theorem}{\ref{thm::ipw-att}} 
+\eqref{eq::ipw-att} 的左端等于
+\begin{eqnarray*}
+E\{ Y(0) \mid Z=1 \} &=& E\{ ZY(0)   \} /e \\
+&=& E\big[  E( Z \mid X) E\{ Y(0) \mid X  \} \big] /e \\
+&=&E\big[ e(X)  E\{ Y(0) \mid X  \} \big] /e . 
+\end{eqnarray*}
+\eqref{eq::ipw-att} 的右端等于
+\begin{eqnarray*}
+E\left\{         \frac{e(X)}{e}  \frac{1-Z}{1-e(X)} Y \right\} 
+&=& E\left[  E\left\{         \frac{e(X)}{e}  \frac{1-Z}{1-e(X)} Y(0) \mid X \right\}  \right]\\
+&=& E\left[   \frac{e(X)}{e \{1-e(X)\} }   E\left\{       (1-Z)Y(0) \mid X \right\}  \right]\\
+&=& E\left[   \frac{e(X)}{e \{1-e(X)\} }   E(      1-Z\mid X )   E\left\{       Y(0) \mid X \right\}  \right]\\
+&=& E\big[ e(X)  E\{ Y(0) \mid X  \} \big] /e .  
+\end{eqnarray*}
+因此 \eqref{eq::ipw-att} 成立。
+\end{myproof}
+
+
+
+
+我们有两个 IPW estimators：
+$$
+\hat{\tau}_\textsc{T}^\text{ht} =  \hat{\bar{Y}}(1) - n_1^{-1} \sumn \hat{o}(X_i) (1-Z_i) Y_i
+$$
+以及
+$$
+\hat{\tau}_\textsc{T}^\text{hajek} = \hat{\bar{Y}}(1) 
+- \frac{  \sumn \hat{o}(X_i) (1-Z_i) Y_i }{ \sumn \hat{o}(X_i) (1-Z_i) } ,
+$$
+其中 $\hat{o}(X_i) = \hat{e}(X_i) / \{ 1 - \hat{e}(X_i)  \} $ 是给定 covariates 后 treatment 的 fitted odds。
+
+ 
+ 
+
+
+
+我们还可以得到一个针对 $E\{  Y(0)\mid Z=1\}$ 的 doubly robust estimator，它结合了 propensity score model 和 outcome model。定义
+\begin{eqnarray}
+\label{eq::dr-att-mu0}
+\tilde{\mu}_{0\textsc{T}}^\textup{dr} = E\left[ o(X,\alpha)  (1-Z) \{ Y - \mu_0(X, \beta_0) \}     + Z  \mu_0(X, \beta_0) \right] /e, 
+\end{eqnarray}
+其中 $o(X,\alpha)  = e(X,\alpha)/ \{ 1 - e(X,\alpha)\}.$
+
+\begin{theorem}
+\label{thm::dr-att}
+在 Assumption \ref{assume::ignorability-y0} 下，如果 $ e(X,\alpha) = e(X)$ 或 $\mu_0(X, \beta_0)=\mu_0(X) $ 二者之一成立，则 $\mu_{0\textsc{T}}^\text{dr}  = E\{ Y(0) \mid Z=1 \}.$
+\end{theorem}
+
+
+\begin{myproof}{Theorem}{\ref{thm::dr-att}}
+我们有如下分解：
+\begin{eqnarray*}
+&&  e\left[  \tilde{\mu}_{0\textsc{T}}^\text{dr}  -  E\{ Y(0) \mid Z=1 \} \right] \\
+&=& E\left[ o(X,\alpha) ( 1-Z )  \{ Y(0) - \mu_0(X, \beta_0) \} + Z  \mu_0(X, \beta_0) \right] -  E\{ Z Y(0)   \} \\
+&=& E\left[ o(X,\alpha) ( 1-Z ) \{ Y(0) - \mu_0(X, \beta_0) \} - Z  \{ Y (0) - \mu_0(X, \beta_0) \} \right] \\
+&=& E\left[ \left\{ o(X,\alpha)  ( 1-Z  ) -Z\right\} \{ Y (0) - \mu_0(X, \beta_0) \}   \right] \\
+&=& E\left[    \frac{ e(X,\alpha) - Z  }{1-  e(X,\alpha)}   \{ Y (0) - \mu_0(X, \beta_0) \}   \right] \\
+&=& E\left[  E\left\{   \frac{ e(X,\alpha) - Z  }{1-  e(X,\alpha)}  \mid X \right\}  \times E  \{ Y (0) - \mu_0(X, \beta_0)  \mid X\}   \right] \\
+&=& E\left[   \frac{ e(X,\alpha) - e(X)  }{1-  e(X,\alpha)} \times    \{ \mu_0(X) - \mu_0(X, \beta_0)  \}   \right] .
+\end{eqnarray*}
+因此，若 $ e(X,\alpha) = e(X)$ 或 $\mu_0(X, \beta_0)=\mu_0(X) $ 二者之一成立，则 $\tilde{\mu}_{0\textsc{T}}^\text{dr}  -  E\{ Y(0) \mid Z=1 \}  = 0$。
+\end{myproof}
+
+
+基于 \eqref{eq::dr-att-mu0} 中 $\tilde{\mu}_{0\textsc{T}}^\text{dr}$ 的 population version，可以得到其 sample version，从而构造 $\tau_\textsc{T}$ 的 doubly robust estimator。
+
+\begin{definition}
+[doubly robust estimator for $\tau_\textsc{T}$]\label{def::dr-att}
+基于数据 $(X_i, Z_i, Y_i)_{i=1}^n$，可以按如下步骤得到 $\tau_\textsc{T}$ 的 doubly robust estimator：
+\begin{enumerate}
+[(1)]
+\item
+得到 propensity scores $e(X_i, \hat{\alpha})$ 的 fitted values，然后得到 odds 的 fitted values $o(X_i, \hat{\alpha})  =  e(X_i, \hat{\alpha}) / (1- e(X_i, \hat{\alpha}))$；
+\item
+得到 control 下 outcome mean $ \mu_0(X_i, \hat{\beta}_0) $ 的 fitted values；
+\item
+构造 doubly robust estimator：$\hat{\tau}_\textsc{T}^\textup{dr} = \hat{\bar{Y}}(1) - \hat{\mu}_{0\textsc{T}}^\textup{dr}$，其中
+$$
+ \hat{\mu}_{0\textsc{T}}^\textup{dr}  
+ = \frac{1}{n_1} \sumn \left[ o(X_i,\hat{\alpha}) (1-Z_i)\{ Y_i-\mu_0(X_i, \hat{\beta}_0) \}      +Z_i \mu_0(X_i, \hat{\beta}_0)       \right].
+$$
+\end{enumerate}
+\end{definition}
+
+
+由 Definition \ref{def::dr-att}，可以将 $\hat{\tau}_\textsc{T}^\textup{dr}$ 改写为
+$$
+e(X_i, \hat{\alpha})
+= \hat{\tau}_\textsc{T}^\textup{reg}
+ - \frac{1}{n_1} \sumn  o(X_i,\hat{\alpha})  (1-Z_i)\{ Y_i-\mu_0(X_i, \hat{\beta}_0) \}    
+$$
+或者
+$$
+e(X_i, \hat{\alpha})
+= \hat{\tau}_\textsc{T}^\textup{ht} 
+- \frac{1}{n_1} \sumn  \{ o(X_i,\hat{\alpha}) (1-Z_i) + Z_i  \} \mu_0(X_i, \hat{\beta}_0)  .
+$$
+类似于关于 $\hat{\tau}^\textup{dr}  $ 的讨论，可以通过从 $(Z_i, X_i, Y_i)_{i=1}^n$ 重抽样的 bootstrap 来估计 $\hat{\tau}_\textsc{T}^\textup{dr}  $ 的方差。
+\citet{hahn1998role}, \citet{mercatanti2014debit}, \citet{shinozaki2015brief} 和 \citet{yang2018asymptotic} 是关于 $\tau_\textsc{T}$ 估计的参考文献。
+
+
+
+\section{An example}
+\label{sec::dr-att-example}
+
+
+下面的 \ri{R} 函数实现了两个 outcome regression estimators、两个 IPW estimators，以及 $\tau_\textsc{T}$ 的 doubly robust estimator。为了避免极端的 estimated propensity scores，也可以从上方对它们截断。
+
+\begin{lstlisting}
+ATT.est = function(z, y, x, out.family = gaussian, Utruncps = 1)
+{
+  ## sample size
+  nn  = length(z)
+  nn1 = sum(z)
+  
+  ## fitted propensity score
+  pscore   = glm(z ~ x, family = binomial)$fitted.values
+  pscore   = pmin(Utruncps, pscore)
+  odds     = pscore/(1 - pscore)
+  
+  ## fitted potential outcomes
+  outcome0 = glm(y ~ x, weights = (1 - z), 
+                 family = out.family)$fitted.values
+  
+  ## outcome regression estimator
+  ace.reg0 = lm(y ~ z + x)$coef[2]
+  ace.reg  = mean(y[z==1]) - mean(outcome0[z==1]) 
+  ## propensity score weighting estimator
+  ace.ipw0 = mean(y[z==1]) - 
+                mean(odds*(1 - z)*y)*nn/nn1
+  ace.ipw  = mean(y[z==1]) - 
+                mean(odds*(1 - z)*y)/mean(odds*(1 - z))
+  ## doubly robust estimator
+  res0     = y - outcome0
+  ace.dr   = ace.reg - mean(odds*(1 - z)*res0)*nn/nn1
+  
+  return(c(ace.reg0, ace.reg, ace.ipw0, ace.ipw, ace.dr))     
+}
+\end{lstlisting}
+
+下面的 \ri{R} 函数进一步实现 bootstrap variance estimators。
+
+\begin{lstlisting}
+OS_ATT = function(z, y, x, n.boot = 10^2,
+                  out.family = gaussian, Utruncps = 1)
+{
+  point.est  = ATT.est(z, y, x, out.family, Utruncps)
+  
+  ## nonparametric bootstrap
+  n   = length(z)
+  x          = as.matrix(x)
+  boot.est   = replicate(n.boot, {
+    id.boot = sample(1:n, n, replace = TRUE)
+    ATT.est(z[id.boot], y[id.boot], x[id.boot, ], 
+            out.family, Utruncps)
+  })
+  
+  boot.se    = apply(boot.est, 1, sd)
+  
+  res        = rbind(point.est, boot.se)
+  rownames(res) = c("est", "se")
+  colnames(res) = c("reg0", "reg", "HT", "Hajek", "DR")
+  
+  return(res)
+}
+\end{lstlisting}
+
+ 
+现在重新分析 Example \ref{eg::chan-bmi-ATE} 中的数据，以估计 $\tau_\textsc{T}$。
+我们得到
+\begin{lstlisting}
+     reg0    reg     HT  Hajek     DR
+est 0.061 -0.351 -1.992 -0.351 -0.187
+se  0.227  0.258  0.705  0.328  0.287
+\end{lstlisting}
+在不截断 estimated propensity scores 时，以及
+\begin{lstlisting}
+     reg0    reg     HT  Hajek     DR
+est 0.061 -0.351 -0.597 -0.192 -0.230
+se  0.223  0.255  0.579  0.302  0.276
+\end{lstlisting}
+在从上方将 estimated propensity scores 截断到 $0.9$ 时的结果。正如预期，HT estimator 对截断很敏感。Example \ref{eg::att-regression1} 中的 regression estimator 与其他 estimators 差异较大。它施加了一个不必要的假设，即 treatment group 和 control group 中的 regression functions 共享相同的 $X$ 系数。Example \ref{eg::att-regression2} 中的 regression estimator 更接近 Hajek 和 doubly robust estimators。上述 estimates 与 Section \ref{sec::ATE-application} 中的结果略有不同，提示 $\tau_\textsc{T}$ 与 $\tau$ 之间存在 treatment effect heterogeneity。
+
+
+
+\section{Other estimands}\label{sec::other-estmand-overlap}
+
+
+\citet{li2018balancing} 对 observational studies 中的 causal estimands 给出了统一讨论。从 conditional average causal effect $\tau(X)$ 出发，他们提出了一般的 estimands 类：
+$$
+\tau^h =  \frac{  E\{ h(X) \tau(X)  \} }{ E\{ h(X)   \} }
+$$
+它由 weighting function $h(X)$ 索引，并满足 $E\{ h(X)   \}  \neq 0$。分母中的 normalization 是为了保证当 causal effect 为常数 $\tau(X) = \tau$ 时，平均后仍为同一个 $\tau$。
+
+
+在 ignorability 下，
+$$
+\tau^h =  \frac{  E[  h(X)   \{ \mu_1(X) - \mu_0(X) \}   ] }{ E\{ h(X)   \} }
+$$
+这启发了 outcome regression estimator：
+$$
+\hat \tau^h =  \frac{   \sumn h(X_i)  \{ \hat{\mu}_1(X_i)   -  \hat{\mu}_0(X_i) \}  }{  \sumn h(X_i) } .
+$$
+此外，可以证明 $\tau^h$ 具有如下 weighting form：
+
+\begin{theorem}\label{thm::weighted-estimand-li}
+在 ignorability 和 overlap 假设下，有
+$$
+\tau^h = E\left\{ \frac{ZYh(X)}{ e(X)}  - \frac{(1-Z)Yh(X)}{1-e(X)}  \right\} / E\{ h(X)   \} .
+$$
+\end{theorem}
+
+Theorem \ref{thm::weighted-estimand-li} 的证明类似于 Theorems \ref{thm::pscore-weighting} 和 \ref{thm::ipw-att} 的证明，留到 Problem \ref{problem::general-estimand-li}。基于 Theorem \ref{thm::weighted-estimand-li}，可以构造 $\tau^h$ 对应的 IPW estimator。
+
+
+由 Theorem \ref{thm::weighted-estimand-li} 可知，每个 unit 都关联两个权重：一个来自 estimand 的定义，另一个来自 propensity score 的倒数。最终，treated units 的权重为 $h(X) / e(X)$，control units 的权重为 $h(X)/ \{  1-e(X) \}$。\citet[][Table 1]{li2018balancing} 总结了若干 estimands，下面列出其中一部分：
+
+\begin{tabular}{cccc}
+\hline 
+ population & $h(X)$ & estimand & weights \\ \hline 
+combined & $1$ & $\tau$ & $1/e(X)$ and $1/\{  1-e(X) \} $  \\
+treated & $e(X)$ & $\tau_\textsc{T}$ & 1 and $ e(X)/\{  1-e(X) \}$ \\
+control & $1-e(X)$ & $\tau_\textsc{C}$ & $\{  1-e(X) \} /e(X) $ and 1\\
+overlap & $e(X)\{  1-e(X) \} $ &$\tau_\textsc{O}$  &  $ 1-e(X)$ and $e(X) $ \\
+\hline 
+\end{tabular}
+
+
+overlap population 及其对应的 estimand
+$$
+\tau_\textsc{O} = \frac{   E\left[ e(X)\{  1-e(X) \}   \tau(X) \right] }{   E\left[ e(X)\{  1-e(X) \}    \right] }
+$$
+对我们来说是新的。这个 estimand 对 $e(X) = 1/2$ 的 units 赋予最大权重，并下调 extreme propensity scores 的 units 的权重。
+这个 estimand 的一个好特征是，其 IPW estimator 比较稳定，因为分母中没有可能极小的 $e(X)$ 和 $1-e(X) $。如果 $ e(X) \ind  \tau(X) $，包括 $\tau(X) = \tau$ 这个特殊情形，则参数 $\tau_\textsc{O} $ 化简为 $\tau$。不过一般而言，estimand $\tau_\textsc{O} $ 可能引起争议，因为它改变了初始 population，并且依赖于实践中可能被错设的 propensity score。\citet{li2018balancing} 和 \citet{li2019addressing} 给出了一些理由和数值证据。
+这个 estimand 会在 Chapter \ref{chapter::pscore-unification} 中再次出现。
+
+
+我们也可以为 $\tau^h$ 构造 doubly robust estimator。细节留到 Problem \ref{problem::general-estimand-dr}。
+ 
+ 
+ \section{Homework Problems}
+ 
+ 
+\homeworksolutionref{13}
+\paragraph{Comparing $\tau_\textsc{T},  \tau_\textsc{C}, $ and $\tau$}\label{hw::difference-tau-T-tau} 
+ 
+假设 $Z\ind \{Y(1), Y(0)\} \mid X$。回忆 $e(X) = \pr(Z=1\mid X)$ 是 propensity score，$e = \pr(Z=1)$ 是 treatment 的边际概率，而 $\tau(X) = E\{  Y(1)-Y(0) \mid X \}$ 是 CATE。
+证明
+$$
+\tau_\textsc{T} - \tau = \frac{  \cov\{ e(X) ,  \tau(X)  \} }{e},\quad
+\tau_\textsc{C} - \tau = - \frac{  \cov\{ e(X) ,  \tau(X)  \} }{1-e}.
+$$ 
+
+
+Remark: 上述结果也意味着 $ \tau_\textsc{T} -  \tau_\textsc{C} =  \cov\{ e(X) ,  \tau(X)  \} / \{  e(1-e) \}$。因此，$ \tau_\textsc{T} ,   \tau_\textsc{C} , \tau$ 之间的差异取决于 propensity score 与 CATE 之间的 covariance。
+当 $e(X) $ 和 $  \tau(X) $ 不相关时，它们之间的差异为 0。
+ 
+ 
+\paragraph{An algebraic fact about a regression estimator for $\tau_\textsc{T}$} 
+ \label{para::regression-att-algebra}
+ 
+ 本题为 Example \ref{eg::att-regression2} 补充更多细节。
+ 
+证明：如果对所有 units 将 covariates 中心化为 $X_i - \hat{\bar{X}}(1)$，则 $\hat{\tau}_\textsc{T} $ 等于如下 OLS 拟合中 $Z$ 的系数：以 outcome 为因变量，以 intercept、treatment、covariates 以及它们的交互项为自变量。
+ 
+ 
+ 
+Chapter \ref{chapter::doubly-robust} 针对 $\tau$ 运行了一些 simulation studies。请针对 $\tau_\textsc{T}$ 运行类似的 simulation studies，其中 propensity score model 或 outcome model 可以正确也可以错误。
+
+你可以选择不同的 model parameters、更多 simulation settings，以及更多 bootstrap replicates。报告你的发现，至少包括 bias、variance，以及通过 bootstrap 得到的 variance estimator。也可以报告 estimators 的其他性质，例如 asymptotic Normality 和 confidence intervals 的 coverage rates。
+
+
+
+\paragraph{An alternative form of the doubly robust estimator for $\tau_\textsc{T}$}\label{hw::alternative-dr2-robins-att}
+
+受 \eqref{eq::dr-att-mu0} 启发，我们有 $ E\{ Y(0) \mid Z=1 \}  $ 的另一种 doubly robust estimator 形式：
+$$
+\tilde{\mu}_{0\textsc{T}}^\text{dr2} = 
+\frac{  E\left[ o(X,\alpha)   (1-Z) \{ Y - \mu_0(X, \beta_0) \}  \right] }{  E\left[ o(X,\alpha)   (1-Z) \right] } 
+  + E\{  Z  \mu_0(X, \beta_0) \} /e.
+$$
+
+证明：在 Assumption \ref{assume::ignorability-y0} 下，如果 $e(X,\alpha)  = e(X)$ 或 $\mu_0(X, \beta_0) =  \mu_0(X)$ 二者之一成立，则 $\tilde{\mu}_{0\textsc{T}}^\text{dr2}= E\{ Y(0) \mid Z=1 \}$。给出 $\tau_\textsc{T}$ 的 doubly robust estimator 的 sample analog。
+
+ 
+
+
+
+ \paragraph{Average causal effect on the control units}\label{hw::formulas-atc}
+
+证明 $\tau_\textsc{C}$ 的识别公式，类似于 \eqref{eq::att-identification} 和 \eqref{eq::att-ipw-formula}。提出 $\tau_\textsc{C}$ 的 doubly robust estimator。
+
+
+\paragraph{Estimating individual effect and conditional average causal effect}\label{hw::individual-effect-prediction}
+
+假设 $\{ Z_i, X_i, Y_i(1), Y_i(0) \}_{i=1}^n \iidsim \{ Z, X, Y(1), Y(0) \}$。individual effect 为 $\tau_i = Y_i(1) - Y_i(0)$，conditional average causal effect 为 $\tau(X_i) = E\{ Y_i(1) - Y_i(0) \mid X_i  \}$。由于这里会讨论 individual effect，我们不省略下标 $i$，因为 $\tau$ 表示 average causal effect，而不是 $Y(1) - Y(0)$ 的 population version。
+
+\begin{enumerate}
+\item
+在 randomization 下，若 $Z_i\ind \{ Y_i(1), Y_i(0)  \}$ 且 $e = \pr(Z_i = 1)$，证明
+$$
+\delta_i = \frac{Z_i Y_i}{e} - \frac{(1-Z_i)Y_i}{1-e}
+$$
+是 individual effect 的 unbiased predictor，意思是
+$$
+E( \delta_i  -  \tau_i ) = 0\quad (i=1,\ldots, n).
+$$
+进一步证明，对所有 $i=1,\ldots, n$，都有 $E( \delta_i ) = \tau $。
+
+\item
+在 ignorability 下，若 $Z_i\ind \{ Y_i(1), Y_i(0)  \}\mid X_i$ 且 $e(X_i) = \pr(Z_i=1\mid X_i)$，证明
+$$
+\delta_i = \frac{Z_i Y_i}{ e(X_i) } - \frac{(1-Z_i)Y_i}{1-e(X_i)}
+$$
+是 individual effect 和 conditional average causal effect 的 unbiased predictor，意思是
+$$
+E( \delta_i  -  \tau_i ) = 0, \quad
+E\{  \delta_i  -  \tau(X_i) \} = 0, \quad (i=1,\ldots, n).
+$$
+进一步证明，对所有 $i=1,\ldots, n$，都有 $E( \delta_i ) = \tau $。
+\end{enumerate}
+ 
+
+
+\paragraph{General estimand and $(\tau_\textsc{T}, \tau_\textsc{C})$}\label{problem::general-estimand-att-atc}
+
+
+假设 unconfoundedness。
+证明：若 $h(X) = e(X)$，则 $\tau^h = \tau_\textsc{T}$；若 $h(X) = 1-  e(X)$，则 $\tau^h = \tau_\textsc{C}$。
+
+
+\paragraph{More on $\tau_\textsc{O}$}\label{problem::ATO-treated-control}
+
+证明
+$$
+\tau_\textsc{O} 
+=  \frac{   E  [   \{1-e(X)\} \tau(X) \mid Z=1   ]      }{  E  \{ 1-e(X) \mid Z=1   \}   }
+=  \frac{   E  \{ e(X) \tau(X) \mid Z=0   \}      }{  E  \{ e(X) \mid Z=0   \}   }.
+$$
+
+
+
+\paragraph{IPW for the general estimand}\label{problem::general-estimand-li}
+
+证明 Theorem \ref{thm::weighted-estimand-li}。
+
+
+\paragraph{Doubly robust estimation for general estimand}\label{problem::general-estimand-dr}
+
+
+给定 $h(X)$，我们有如下公式来构造 $\tau^h$ 的 doubly robust estimator：
+\begin{eqnarray*}
+\tilde{\mu}_1^{h,\textup{dr}} &=& E\left[   \frac{Zh(X)  \{ Y-\mu_1(X,\beta_1)   \}}{  e(X,\alpha) }   + h(X) \mu_1(X, \beta_1)  \right] ,  \\
+\tilde{\mu}_0^{h, \textup{dr}} &=& E\left[   \frac{(1-Z) h(X)  \{ Y-\mu_0(X,\beta_0) \}}{  1-e(X,\alpha) }   + h(X) \mu_0(X, \beta_0)  \right]  .  
+\end{eqnarray*}
+证明在 ignorability 和 overlap 下，
+\begin{enumerate}
+\item
+如果 $e(X,\alpha) = e(X)$ 或 $\mu_1(X, \beta_1) = \mu_1(X)$ 二者之一成立，则 $\tilde{\mu}_1^{h,\textup{dr}}= E\{  h(X)  Y(1) \}$；
+\item
+如果 $e(X,\alpha) = e(X)$ 或 $\mu_0(X, \beta_0) = \mu_0(X)$ 二者之一成立，则 $\tilde{\mu}_0^{h, \textup{dr}}= E\{ h(X)  Y(0) \}$；
+\item 
+如果 $e(X,\alpha) = e(X)$ 或 $\{\mu_1(X, \beta_1) = \mu_1(X),   \mu_0(X, \beta_0) = \mu_0(X)\}$ 二者之一成立，则
+$$
+\frac{\tilde{\mu}_1^{h,\textup{dr}}  -\tilde{\mu}_0^{h, \textup{dr}}  }{  E\{ h(X)  \}  }
+= \tau^h .
+$$
+\end{enumerate}
+
+Remark: 
+\citet{tao2019doubly} 证明了上述结果。不过，它们只对给定的 $h(X)$ 成立。最有趣的 $\tau_\textsc{T}, \tau_\textsc{C}$ 和 $\tau_\textsc{O}$ 情形，其权重都依赖于 propensity score $e(X)$，而后者首先必须被估计。上述公式不适用于构造 $\tau_\textsc{T}$ 和 $\tau_\textsc{C}$ 的 doubly robust estimators；$\tau_\textsc{O}$ 不存在 doubly robust estimator。
+
+
+\paragraph{Analyzing a dataset from the Karolinska Institute}\label{hw::Karolinska-att}
+
+重新考察 Problem \ref{hw::Karolinska-dr}。基于本 Chapter 介绍的方法估计 $\tau_\textsc{T}$。

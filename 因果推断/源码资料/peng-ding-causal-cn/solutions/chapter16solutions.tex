@@ -1,0 +1,156 @@
+\chapter{Solutions to Chapter 16: Difficulties of Unconfoundedness in Observational Studies for Causal Effects}
+\label{sol:chapter16}
+
+\begin{exercisesolution}{More details for the formula of Z-bias}{adjusted regression 中的 bias 放大}
+本题补全 \cref{hw::z-bias-formula} 中留出的线性方程求解。关键点很简单：
+conditioning on $X$ 以后，$Z$ 中由 $X$ 解释的那一部分被拿掉，剩下的随机性更集中地来自 unmeasured confounder $U$。代数上，这正体现为 bias 的分母从 $a^2+b^2+1$ 变成 $b^2+1$。
+
+在 \cref{sec::z-bias} 的 linear data-generating process 中，
+\[
+Z=aX+bU+\varepsilon_Z,\qquad
+Y=\tau Z+cU+\varepsilon_Y,
+\]
+其中 $(U,X,\varepsilon_Z,\varepsilon_Y)\iidsim\N01$，并且四者相互独立。把 $Y$ 对 $(Z,X)$ 做 population OLS，记 $Z$ 的系数为 $\tau_\textup{adj}$，$X$ 的系数为 $\alpha$。OLS normal equations 为
+\[
+\mathbb{E}\{Z(Y-\tau_\textup{adj}Z-\alpha X)\}=0,\qquad
+\mathbb{E}\{X(Y-\tau_\textup{adj}Z-\alpha X)\}=0.
+\]
+由于
+\[
+\mathbb{E}Z^2=a^2+b^2+1,\qquad
+\mathbb{E}(ZX)=a,\qquad
+\mathbb{E}(ZU)=b,\qquad
+\mathbb{E}X^2=1,\qquad
+\mathbb{E}(XU)=0,
+\]
+且 $\varepsilon_Y$ 与 $(Z,X)$ 独立，上面的两个 normal equations 化为
+\[
+\left\{
+\begin{aligned}
+(\tau-\tau_\textup{adj})(a^2+b^2+1)+bc-\alpha a&=0,\\
+a(\tau-\tau_\textup{adj})-\alpha&=0.
+\end{aligned}
+\right.
+\]
+第二个方程给出
+\[
+\alpha=a(\tau-\tau_\textup{adj}).
+\]
+代回第一个方程，得到
+\begin{align*}
+0
+&=(\tau-\tau_\textup{adj})(a^2+b^2+1)+bc
+  -a^2(\tau-\tau_\textup{adj})\\
+&=(\tau-\tau_\textup{adj})(b^2+1)+bc.
+\end{align*}
+因此
+\[
+\tau_\textup{adj}-\tau=\frac{bc}{b^2+1},
+\]
+也就是
+\[
+\tau_\textup{adj}=\tau+\frac{bc}{b^2+1},
+\]
+这正是 \cref{eq::zbias-result}。同时，
+\[
+\alpha=-\frac{abc}{b^2+1}.
+\]
+
+\paragraph{Remark.}
+若不调整 $X$，\cref{sec::z-bias} 已经给出
+\[
+\tau_\textup{unadj}-\tau=\frac{bc}{a^2+b^2+1}.
+\]
+因此只要 $a\neq 0$，unadjusted bias 的绝对值严格小于 adjusted bias 的绝对值。这里 $a$ 越大，$X$ 对 treatment $Z$ 的预测能力越强；但正因为 $X$ 解释掉了 $Z$ 的一部分变异，剩余的 $Z$ 与 $U$ 的相对关联反而更强，confounding bias 被放大。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Cochran's formula or the omitted variable bias formula}{long regression 与 short regression 的系数关系}
+本题证明 \cref{hw::cochran+ovb}。这个公式的用途是把``少控制一个变量''造成的变化精确拆成两部分：被遗漏变量 $x_{i2}$ 对 outcome 的影响 $\beta_2$，以及被遗漏变量与保留变量 $x_{i1}$ 的线性关系 $\delta$。二者相乘，就是 omitted-variable bias。
+
+\paragraph{Population version.}
+为了让系数唯一，假设 second-moment matrices 存在，且 $\mathbb{E}(x_{i1}x_{i1}\tran)$ nonsingular。若需要 intercept，可把常数 $1$ 放进 $x_{i1}$。按照题目中的记号，$\beta_1$ 和 $\gamma$ 是 $K\times 1$ vectors，$\beta_2$ 是 $L\times 1$ vector，而 $\delta$ 是 $K\times L$ matrix，使得
+\[
+x_{i2}=\delta\tran x_{i1}+v_i.
+\]
+这里的 population OLS decompositions 等价于 normal equations。由 long regression \cref{eq::long}，有
+\[
+\mathbb{E}\left[
+x_{i1}\{y_i-\beta_1\tran x_{i1}-\beta_2\tran x_{i2}\}
+\right]=0.
+\]
+于是
+\begin{equation}
+\label{eq:sol16-long-normal-x1}
+\mathbb{E}(x_{i1}y_i)
+=\mathbb{E}(x_{i1}x_{i1}\tran)\beta_1
++ \mathbb{E}(x_{i1}x_{i2}\tran)\beta_2.
+\end{equation}
+另一方面，由 intermediate regression \cref{eq::inter}，有
+\[
+\mathbb{E}\{x_{i1}(x_{i2}-\delta\tran x_{i1})\tran\}=0,
+\]
+也就是
+\begin{equation}
+\label{eq:sol16-inter-normal}
+\mathbb{E}(x_{i1}x_{i2}\tran)
+=\mathbb{E}(x_{i1}x_{i1}\tran)\delta.
+\end{equation}
+把 \cref{eq:sol16-inter-normal} 代入 \cref{eq:sol16-long-normal-x1}，得到
+\[
+\mathbb{E}(x_{i1}y_i)
+=\mathbb{E}(x_{i1}x_{i1}\tran)(\beta_1+\delta\beta_2).
+\]
+而 short regression \cref{eq::short} 的 normal equation 是
+\[
+\mathbb{E}(x_{i1}y_i)
+=\mathbb{E}(x_{i1}x_{i1}\tran)\gamma.
+\]
+由于 $\mathbb{E}(x_{i1}x_{i1}\tran)$ nonsingular，比较两式即得
+\[
+\gamma=\beta_1+\delta\beta_2.
+\]
+
+同一个结论也可以从 residual 的角度看。把
+$x_{i2}=\delta\tran x_{i1}+v_i$ 代入 long regression，得到
+\[
+y_i=(\beta_1+\delta\beta_2)\tran x_{i1}
++ \beta_2\tran v_i+\varepsilon_i.
+\]
+由于 $v_i$ 与 $x_{i1}$ 正交，$\varepsilon_i$ 也与 $x_{i1}$ 正交，右侧 residual 对 $x_{i1}$ 正交。因此 short regression 的 coefficient 必须是 $\beta_1+\delta\beta_2$。
+
+\paragraph{Sample version.}
+现在完全不使用 randomness，只做线性代数。假设 $X_1\tran X_1$ nonsingular；若 $X_1$ 不满列秩，则 fitted values 仍由 projection 唯一决定，但 coefficient vector 本身可能不唯一，题目中的等式需要在选定同一 generalized inverse convention 后理解。
+
+三个 OLS fits 的 normal equations 分别给出
+\[
+X_1\tran(Y-X_1\hat\beta_1-X_2\hat\beta_2)=0,\qquad
+X_1\tran(Y-X_1\hat\gamma)=0,
+\]
+以及
+\[
+X_1\tran(X_2-X_1\hat\delta)=0.
+\]
+最后一个式子说明
+\begin{equation}
+\label{eq:sol16-sample-inter-normal}
+X_1\tran X_2=X_1\tran X_1\hat\delta.
+\end{equation}
+由 long regression 的 normal equation，
+\begin{align*}
+X_1\tran Y
+&=X_1\tran X_1\hat\beta_1+X_1\tran X_2\hat\beta_2\\
+&=X_1\tran X_1\hat\beta_1+X_1\tran X_1\hat\delta\hat\beta_2\\
+&=X_1\tran X_1(\hat\beta_1+\hat\delta\hat\beta_2),
+\end{align*}
+其中第二步使用了 \cref{eq:sol16-sample-inter-normal}。而 short regression 的 normal equation 给出
+\[
+X_1\tran Y=X_1\tran X_1\hat\gamma.
+\]
+因为 $X_1\tran X_1$ nonsingular，
+\[
+\hat\gamma=\hat\beta_1+\hat\delta\hat\beta_2.
+\]
+
+\paragraph{Remark.}
+这个等式是 \cref{appendix::fwl-theorem} 中 Frisch--Waugh--Lovell theorem 的一个直接影子。FWL theorem 告诉我们，在控制 $X_1$ 后估计 $X_2$ 的系数，可以先把 $Y$ 和 $X_2$ 都对 $X_1$ residualize；而本题从反方向看：如果 short regression 没有放入 $X_2$，那么 $X_2$ 中可由 $X_1$ 预测的部分会被并入 $X_1$ 的 coefficient 中，偏移量正是 $\delta\beta_2$ 或 $\hat\delta\hat\beta_2$。
+\end{exercisesolution}

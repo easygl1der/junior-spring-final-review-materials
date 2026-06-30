@@ -1,0 +1,685 @@
+\documentclass[11pt]{ctexart}
+
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,bm,mathtools}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{natbib}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+\lstset{
+  language=R,
+  basicstyle=\small\ttfamily,
+  commentstyle=\color{gray},
+  showstringspaces=false
+}
+
+\newtheorem{assumption}{Assumption}
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{remark}{Remark}
+
+\newenvironment{problemblock}[1]{%
+  \subsection*{#1}
+  \addcontentsline{toc}{subsection}{#1}
+}{\medskip}
+
+\newenvironment{prep}{%
+  \paragraph{预备知识与可引用内容.}
+  \begin{enumerate}[leftmargin=2em,itemsep=0.35em]
+}{%
+  \end{enumerate}
+}
+
+\newenvironment{solutionbox}{%
+  \paragraph{我的解答.}
+  \begin{quote}
+  \textit{这里写 solution/proof。}
+  \vspace{2.2cm}
+  \end{quote}
+}{}
+
+\newcommand{\ri}[1]{\texttt{#1}}
+\newcommand{\pr}{\operatorname{pr}}
+\newcommand{\var}{\operatorname{var}}
+\newcommand{\cov}{\operatorname{cov}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\ind}{\perp\!\!\!\perp}
+\newcommand{\sumn}{\sum_{i=1}^n}
+\newcommand{\tran}{^{\mathsf T}}
+\newcommand{\at}{\mathrm{a}}
+\newcommand{\nt}{\mathrm{n}}
+\newcommand{\cp}{\mathrm{c}}
+\newcommand{\df}{\mathrm{d}}
+\newcommand{\CACE}{\textsc{cace}}
+\newcommand{\LATE}{\textsc{late}}
+\newcommand{\TSLS}{\textsc{tsls}}
+\newcommand{\ILS}{\textsc{ils}}
+\newcommand{\RR}{\textsc{rr}}
+
+\title{Homework 5 写作预备模板}
+\author{姓名：\underline{\hspace{3cm}}}
+\date{Due: May 27, 4:30 pm}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\section*{使用说明}
+这个文件只整理题面、出处、引用和预备知识；证明和实证分析部分留空，由我自己完成。
+主要来源为 Peng Ding 的 \emph{A First Course in Causal Inference} 第 21--23 章
+\citep{imbens1994identification,angrist1996identification}，以及作业 PDF 的 Problem Set 5。
+
+\section{统一符号与基本假设}
+
+\begin{definition}[Compliance type]
+令 \(Z_i\in\{0,1\}\) 为 assignment 或 IV，\(D_i\in\{0,1\}\) 为实际接受的处理，
+\(Y_i\) 为 outcome。关于 assignment 的潜在接受处理为 \(D_i(1),D_i(0)\)。
+由 \(U_i=\{D_i(1),D_i(0)\}\) 定义四类人：
+\[
+U_i=
+\begin{cases}
+\at, & D_i(1)=1,\ D_i(0)=1 \quad \text{always taker},\\
+\cp, & D_i(1)=1,\ D_i(0)=0 \quad \text{complier},\\
+\df, & D_i(1)=0,\ D_i(0)=1 \quad \text{defier},\\
+\nt, & D_i(1)=0,\ D_i(0)=0 \quad \text{never taker}.
+\end{cases}
+\]
+\end{definition}
+
+\begin{assumption}[Randomization]
+\[
+Z\ind \{D(1),D(0),Y(1),Y(0)\}.
+\]
+在 observational 版本中常替换为 conditional ignorability：
+\[
+Z\ind \{D(1),D(0),Y(1),Y(0)\}\mid X.
+\]
+\end{assumption}
+
+\begin{assumption}[Monotonicity]
+\[
+D_i(1)\ge D_i(0), \quad \text{equivalently } \pr(U_i=\df)=0.
+\]
+\end{assumption}
+
+\begin{assumption}[Exclusion restriction]
+在 assignment 潜在结果记号下，always takers 和 never takers 满足 \(Y_i(1)=Y_i(0)\)。
+在 double-index 记号下，排除限制写为
+\[
+Y_i(z,d)=Y_i(d),\quad z=0,1.
+\]
+\end{assumption}
+
+\begin{definition}[CACE/LATE]
+\[
+\tau_{\cp}
+=\E\{Y(1)-Y(0)\mid U=\cp\}
+=\E\{Y(1)-Y(0)\mid D(1)=1,D(0)=0\}.
+\]
+在 double-index 记号下也写为
+\[
+\tau_{\cp}=\E\{Y(d=1)-Y(d=0)\mid U=\cp\}.
+\]
+\end{definition}
+
+\begin{theorem}[CACE identification, Ding Chapter 21]
+在 randomization、monotonicity 和 exclusion restriction 下，
+\[
+\tau_{\cp}
+=
+\frac{\E(Y\mid Z=1)-\E(Y\mid Z=0)}
+{\E(D\mid Z=1)-\E(D\mid Z=0)}.
+\]
+对应样本估计量为 Wald/IV estimator：
+\[
+\hat\tau_{\cp}
+=
+\frac{\hat\tau_Y}{\hat\tau_D}.
+\]
+\end{theorem}
+
+\section{Peng Ding 书中习题}
+
+\begin{problemblock}{Chapter 21.1: Variance of the Wald estimator}
+\paragraph{题面.}
+Show that \(\var(\hat{\tau}_{\cp})=\infty\).
+
+\paragraph{出处.}
+Peng Ding, Chapter 21, Homework problems, ``Variance of the Wald estimator''
+\(\langle\)label: \ri{problem::infinite-var-iv}\(\rangle\).
+
+\begin{prep}
+  \item Wald estimator:
+  \[
+  \hat{\tau}_{\cp}=\frac{\hat{\tau}_Y}{\hat{\tau}_D},
+  \quad
+  \hat{\tau}_Y=\bar Y_1-\bar Y_0,\quad
+  \hat{\tau}_D=\bar D_1-\bar D_0.
+  \]
+  \item 书中提醒：即使 \(\tau_D>0\)，也可能有正概率出现
+  \(\hat{\tau}_D=0\)，所以 ratio estimator 的有限样本方差可以为无穷。
+  \item 可引用 weak IV 讨论：当 \(\tau_D\) 接近 \(0\) 时，
+  \(\hat{\tau}_{\cp}\) 有较差有限样本性质，Wald-type confidence interval 可能覆盖率差。
+  \item 参考引用：Wald estimator \citep{wald1940fitting}；CACE/LATE 框架
+  \citep{imbens1994identification,angrist1996identification}。
+\end{prep}
+
+\begin{solutionbox}
+\end{solutionbox}
+\end{problemblock}
+
+\begin{problemblock}{Chapter 21.6: Binary IV and ordinal treatment received}
+\paragraph{题面.}
+\citet{angrist1995two} considered binary \(Z\), ordinal treatment
+\(D\in\{0,1,\ldots,J\}\), and outcome \(Y\). Potential treatment received is
+\(D(1),D(0)\), and outcome has potential values \(Y(z,d)\).
+Extend the IV assumptions and prove the theorem below.
+
+\paragraph{Assumption to use.}
+\[
+Z\ind \{D(z),Y(z,d): z=0,1;\ d=0,1,\ldots,J\},
+\quad
+D(1)\ge D(0),
+\quad
+Y(z,d)=Y(d).
+\]
+
+\paragraph{The theorem to prove.}
+\[
+\frac{\E(Y\mid Z=1)-\E(Y\mid Z=0)}
+{\E(D\mid Z=1)-\E(D\mid Z=0)}
+=
+\sum_{j=1}^J w_j
+\E\{Y(j)-Y(j-1)\mid D(1)\ge j>D(0)\},
+\]
+where
+\[
+w_j=
+\frac{\pr\{D(1)\ge j>D(0)\}}
+{\sum_{j'=1}^J \pr\{D(1)\ge j'>D(0)\}}.
+\]
+
+\paragraph{出处.}
+Peng Ding, Chapter 21, Homework problems, ``Binary IV and ordinal treatment received''
+\(\langle\)label: \ri{para::iv-ordinal-treatment}\(\rangle\).
+
+\begin{prep}
+  \item 当 \(J=1\) 时，此 theorem 退化为 standard CACE/LATE identification。
+  \item 可先写
+  \[
+  D(z)=\sum_{j=0}^J j\,1\{D(z)=j\},
+  \quad
+  Y(D(z))=\sum_{j=0}^J Y(j)1\{D(z)=j\}.
+  \]
+  \item 书中提示使用 Abel's lemma / summation by parts：
+  \[
+  \sum_{j=0}^J f_j(g_{j+1}-g_j)
+  =
+  f_Jg_{J+1}-f_0g_0-\sum_{j=1}^J g_j(f_j-f_{j-1}).
+  \]
+  \item 引用：ordinal treatment IV result 来自 \citet{angrist1995two}。
+\end{prep}
+
+\begin{solutionbox}
+\end{solutionbox}
+\end{problemblock}
+
+\begin{problemblock}{Chapter 21.7: Data analysis: a flu shot encouragement design}
+\paragraph{题面.}
+The dataset \(\ri{fludata.txt}\) is from a randomized encouragement design of
+\citet{mcdonald1992effects}, also re-analyzed by \citet{hirano2000assessing}.
+Analyze the data with and without adjusting for covariates.
+
+\paragraph{数据变量.}
+\[
+\begin{array}{ll}
+\texttt{assign} & \text{binary encouragement to receive the flu shot},\\
+\texttt{receive} & \text{binary indicator for receiving the flu shot},\\
+\texttt{outcome} & \text{binary outcome for flu-related hospitalization},\\
+\texttt{age} & \text{age},\\
+\texttt{sex} & \text{sex},\\
+\texttt{race} & \text{race},\\
+\texttt{copd} & \text{chronic obstructive pulmonary disease},\\
+\texttt{dm} & \text{diabetes},\\
+\texttt{heartd} & \text{heart disease},\\
+\texttt{renal} & \text{renal disease},\\
+\texttt{liverd} & \text{liver disease}.
+\end{array}
+\]
+
+\paragraph{出处.}
+Peng Ding, Chapter 21, Homework problems, ``Data analysis: a flu shot encouragement design''
+\(\langle\)label: \ri{problem::flushot}\(\rangle\).
+
+\begin{prep}
+  \item Without covariates: use the Wald estimator
+  \[
+  \hat\tau_{\cp}
+  =
+  \frac{\bar Y_{Z=1}-\bar Y_{Z=0}}{\bar D_{Z=1}-\bar D_{Z=0}}.
+  \]
+  \item With covariates under CRE: use Lin-style adjustment separately for \(Y\) and \(D\),
+  then take the ratio:
+  \[
+  \hat{\tau}_{\cp,L}
+  =
+  \frac{\hat{\tau}_{Y,L}}{\hat{\tau}_{D,L}}.
+  \]
+  \item Recommended reporting: first stage \(\hat\tau_D\), ITT \(\hat\tau_Y\),
+  CACE estimate, standard error/confidence interval, and assumptions
+  (randomization, monotonicity, exclusion restriction).
+  \item Local data path:
+  \[
+  \ri{/Users/yitwah/homework/fludata.txt}.
+  \]
+\end{prep}
+
+\begin{solutionbox}
+\end{solutionbox}
+\end{problemblock}
+
+\begin{problemblock}{Chapter 22.2: Risk ratio for compliers}
+\paragraph{题面.}
+With a binary outcome, define the risk ratio for compliers:
+\[
+\RR_{\cp}
+=
+\frac{\pr\{Y(1)=1\mid U=\cp\}}
+{\pr\{Y(0)=1\mid U=\cp\}}.
+\]
+Show that under Assumptions randomization--exclusion restriction,
+\[
+\RR_{\cp}
+=
+\frac{\E(DY\mid Z=1)-\E(DY\mid Z=0)}
+{\E\{(D-1)Y\mid Z=1\}-\E\{(D-1)Y\mid Z=0\}}.
+\]
+
+\paragraph{出处.}
+Peng Ding, Chapter 22, Homework problems, ``Risk ratio for compliers''
+\(\langle\)label: \ri{hw::rr-compliers}\(\rangle\).
+
+\begin{prep}
+  \item Use Theorem 22.1, disentangling mixture means:
+  \[
+  \pi_{\nt}=\pr(D=0\mid Z=1),\quad
+  \pi_{\at}=\pr(D=1\mid Z=0),\quad
+  \pi_{\cp}=\E(D\mid Z=1)-\E(D\mid Z=0).
+  \]
+  \item The complier potential outcome means are identifiable:
+  \[
+  \mu_{1\cp}
+  =
+  \pi_{\cp}^{-1}\{\E(DY\mid Z=1)-\E(DY\mid Z=0)\},
+  \]
+  \[
+  \mu_{0\cp}
+  =
+  \pi_{\cp}^{-1}
+  [\E\{(1-D)Y\mid Z=0\}-\E\{(1-D)Y\mid Z=1\}].
+  \]
+  \item Since \((D-1)Y=-(1-D)Y\), the denominator in the target formula is
+  \(\E\{(1-D)Y\mid Z=0\}-\E\{(1-D)Y\mid Z=1\}\).
+  \item Citation: mixture identification follows the IV framework of
+  \citet{imbens1994identification,angrist1996identification}.
+\end{prep}
+
+\begin{solutionbox}
+\end{solutionbox}
+\end{problemblock}
+
+\begin{problemblock}{Chapter 22.7: Bounds on the average causal effect on the whole population}
+\paragraph{题面.}
+Using the double-index notation \(Y(d)\), define the average causal effect of the
+treatment received on the whole population:
+\[
+\delta=\E\{Y(d=1)-Y(d=0)\}.
+\]
+Let
+\[
+m_{du}=\E\{Y(d)\mid U=u\},\quad u=\at,\nt,\cp.
+\]
+Then
+\[
+\delta=\sum_{u=\at,\nt,\cp}\pi_u(m_{1u}-m_{0u}).
+\]
+Section 22 identifies
+\(\pi_{\at},\pi_{\nt},\pi_{\cp},m_{1\at},m_{0\nt},m_{1\cp},m_{0\cp}\),
+but \(m_{0\at}\) and \(m_{1\nt}\) are not identified. Prove the bounds below.
+
+\paragraph{The theorem to prove.}
+Under monotonicity and double-index exclusion restriction, with bounded outcome
+\(Y\in[\underline y,\overline y]\),
+\[
+\underline{\delta}\le \delta\le \overline{\delta},
+\]
+where
+\[
+\underline{\delta}
+=
+\delta'
+-\overline y\,\pr(D=1\mid Z=0)
++\underline y\,\pr(D=0\mid Z=1),
+\]
+\[
+\overline{\delta}
+=
+\delta'
+-\underline y\,\pr(D=1\mid Z=0)
++\overline y\,\pr(D=0\mid Z=1),
+\]
+and
+\[
+\delta'=\E(DY\mid Z=1)-\E(Y-DY\mid Z=0).
+\]
+
+\paragraph{出处.}
+Peng Ding, Chapter 22, Homework problems, ``Bounds on the average causal effect on the whole population''
+\(\langle\)label: \ri{para::bounds-ACE}\(\rangle\).
+
+\begin{prep}
+  \item Identified latent-type proportions:
+  \[
+  \pi_{\at}=\pr(D=1\mid Z=0),\quad
+  \pi_{\nt}=\pr(D=0\mid Z=1),\quad
+  \pi_{\cp}=\E(D\mid Z=1)-\E(D\mid Z=0).
+  \]
+  \item Identified terms in \(\delta\):
+  \[
+  \pi_{\at}m_{1\at},\quad
+  \pi_{\nt}m_{0\nt},\quad
+  \pi_{\cp}m_{1\cp},\quad
+  \pi_{\cp}m_{0\cp}.
+  \]
+  \item Unidentified terms are bounded by outcome support:
+  \[
+  m_{0\at}\in[\underline y,\overline y],
+  \quad
+  m_{1\nt}\in[\underline y,\overline y].
+  \]
+  \item Binary-outcome simplification:
+  \[
+  \underline{\delta}
+  =
+  \E(DY\mid Z=1)-\E(D+Y-DY\mid Z=0),
+  \]
+  \[
+  \overline{\delta}
+  =
+  \E(DY+1-D\mid Z=1)-\E(Y-DY\mid Z=0).
+  \]
+\end{prep}
+
+\begin{solutionbox}
+\end{solutionbox}
+\end{problemblock}
+
+\begin{problemblock}{Chapter 23.1: More algebra for TSLS}
+\paragraph{题面.}
+\begin{enumerate}[label=(\alph*),leftmargin=2em]
+  \item Show that \(\hat\Gamma\) in the first-stage OLS relation
+  \(\hat D_i=\hat\Gamma\tran Z_i\) equals
+  \[
+  \hat{\Gamma}
+  =
+  \left(\sumn Z_iZ_i\tran\right)^{-1}\sumn Z_iD_i\tran.
+  \]
+  \item Show that \(\hat\beta_{\TSLS}\) reduces to \(\hat\beta_{\mathrm{iv}}\)
+  if \(Z\) and \(D\) have the same dimension and
+  \[
+  n^{-1}\sumn Z_iZ_i\tran,
+  \quad
+  n^{-1}\sumn Z_iD_i\tran
+  \]
+  are both invertible.
+\end{enumerate}
+
+\paragraph{出处.}
+Peng Ding, Chapter 23, Homework problems, ``More algebra for TSLS''
+\(\langle\)label: \ri{prob::algebra-tsls}\(\rangle\).
+
+\begin{prep}
+  \item TSLS definition:
+  first regress \(D\) on \(Z\) to get \(\hat D_i\), then regress \(Y\) on \(\hat D\).
+  \item Explicit TSLS formula:
+  \[
+  \hat\beta_{\TSLS}
+  =
+  \left(\sumn \hat D_i\hat D_i\tran\right)^{-1}
+  \sumn \hat D_iY_i.
+  \]
+  \item First-stage orthogonality:
+  \[
+  D_i=\hat D_i+\check D_i,
+  \quad
+  \sumn \hat D_i\check D_i\tran=0.
+  \]
+  \item Just-identified IV estimator:
+  \[
+  \hat\beta_{\mathrm{iv}}
+  =
+  \left(\sumn Z_iD_i\tran\right)^{-1}\sumn Z_iY_i.
+  \]
+  \item References: TSLS \citep{theil1953estimation,basmann1957generalized}.
+\end{prep}
+
+\begin{solutionbox}
+\end{solutionbox}
+\end{problemblock}
+
+\begin{problemblock}{Chapter 23.2 optional: Equivalence between TSLS and ILS}
+\paragraph{题面.}
+Prove Theorem 23: with a single endogenous treatment and a single IV,
+\[
+\hat\beta_{1,\ILS}=\hat\beta_{1,\TSLS}.
+\]
+Remark in the book: use the FWL theorem.
+
+\paragraph{出处.}
+Peng Ding, Chapter 23, Homework problems, ``Equivalence between TSLS and ILS''
+\(\langle\)label: \ri{para::tsls-ils}\(\rangle\). This problem is optional in the homework PDF.
+
+\begin{prep}
+  \item Structural equations:
+  \[
+  \begin{cases}
+  Y_i=\beta_0+\beta_1D_i+\beta_2\tran X_i+\varepsilon_i,\\
+  D_i=\gamma_0+\gamma_1Z_i+\gamma_2\tran X_i+\varepsilon_{2i}.
+  \end{cases}
+  \]
+  \item Reduced form:
+  \[
+  \begin{cases}
+  Y_i=\Gamma_0+\Gamma_1Z_i+\Gamma_2\tran X_i+\varepsilon_{1i},\\
+  D_i=\gamma_0+\gamma_1Z_i+\gamma_2\tran X_i+\varepsilon_{2i}.
+  \end{cases}
+  \]
+  \item ILS estimator:
+  \[
+  \hat\beta_{1,\ILS}=\frac{\hat\Gamma_1}{\hat\gamma_1}.
+  \]
+  \item The theorem is noted by \citet[][Section A.3]{imbens2014instrumental}.
+\end{prep}
+
+\begin{solutionbox}
+\end{solutionbox}
+\end{problemblock}
+
+\begin{problemblock}{Chapter 23.3: Control function in the linear IV model}
+\paragraph{题面.}
+Define the control function estimator \(\hat\beta_{\textsc{cf}}\):
+\begin{enumerate}[label=(\arabic*),leftmargin=2em]
+  \item Run OLS of \(D\) on \(Z\), and obtain residuals \(\check D_i\).
+  \item Run OLS of \(Y\) on \(D\) and \(\check D\), and take the coefficient of \(D\).
+\end{enumerate}
+Show that
+\[
+\hat\beta_{\textsc{cf}}=\hat\beta_{\TSLS}.
+\]
+
+\paragraph{出处.}
+Peng Ding, Chapter 23, Homework problems, ``Control function in the linear instrumental variable model''
+\(\langle\)label: \ri{para::control-function-iv}\(\rangle\).
+
+\begin{prep}
+  \item Decompose first stage:
+  \[
+  D=\hat D+\check D.
+  \]
+  \item OLS orthogonality implies \(\hat D\) is orthogonal to \(\check D\).
+  \item Useful proof tools: FWL theorem, OLS orthogonality, and transformation of regressors.
+  \item References: \citet{hausman1978specification} pointed out this result;
+  \citet{wooldridge2015control} gives a broader discussion of control function methods.
+\end{prep}
+
+\begin{solutionbox}
+\end{solutionbox}
+\end{problemblock}
+
+\section{Problem Set 5 额外题}
+
+\begin{problemblock}{Problem 2: Wald and two-stage least squares}
+\paragraph{题面.}
+We derived the identification formula for CACE under randomization in class. Show that
+\[
+\CACE
+=
+\frac{\cov(Z_i,Y_i)}{\cov(Z_i,D_i)}.
+\]
+
+\begin{prep}
+  \item Starting point from Chapter 21:
+  \[
+  \CACE
+  =
+  \frac{\E(Y\mid Z=1)-\E(Y\mid Z=0)}
+  {\E(D\mid Z=1)-\E(D\mid Z=0)}.
+  \]
+  \item For binary \(Z\), with \(p=\pr(Z=1)\),
+  \[
+  \cov(Z,Y)=p(1-p)\{\E(Y\mid Z=1)-\E(Y\mid Z=0)\}.
+  \]
+  \[
+  \cov(Z,D)=p(1-p)\{\E(D\mid Z=1)-\E(D\mid Z=0)\}.
+  \]
+  \item This also matches the single-IV linear model formula in Chapter 23:
+  \[
+  \beta=\frac{\cov(Z,Y)}{\cov(Z,D)}.
+  \]
+  \item References: Wald estimator \citep{wald1940fitting};
+  IV/CACE framework \citep{imbens1994identification,angrist1996identification}.
+\end{prep}
+
+\begin{solutionbox}
+\end{solutionbox}
+\end{problemblock}
+
+\begin{problemblock}{Problem 3 optional: Weighting method for CACE in observational studies}
+\paragraph{题面.}
+Replace randomization by conditional ignorability:
+\[
+Z_i\ind \{Y_i(1),Y_i(0),D_i(1),D_i(0)\}\mid X_i,
+\]
+while monotonicity and exclusion restriction continue to hold. Define
+\[
+\kappa_{0i}
+=
+(1-D_i)
+\frac{(1-Z_i)-\pr(Z_i=0\mid X_i)}
+{\pr(Z_i=0\mid X_i)\pr(Z_i=1\mid X_i)},
+\]
+\[
+\kappa_{1i}
+=
+D_i
+\frac{Z_i-\pr(Z_i=1\mid X_i)}
+{\pr(Z_i=0\mid X_i)\pr(Z_i=1\mid X_i)}.
+\]
+Show that
+\[
+\E\{g(Y_i(0),X_i)\mid U_i=\cp\}
+=
+\frac{1}{\pr(U_i=\cp)}\E\{\kappa_{0i}g(Y,X)\},
+\]
+\[
+\E\{g(Y_i(1),X_i)\mid U_i=\cp\}
+=
+\frac{1}{\pr(U_i=\cp)}\E\{\kappa_{1i}g(Y,X)\}.
+\]
+
+\begin{prep}
+  \item Let \(e(X)=\pr(Z=1\mid X)\). Then
+  \(\pr(Z=0\mid X)=1-e(X)\).
+  \item Conditional ignorability allows replacing conditional potential-outcome expectations by observed conditional expectations within \(Z\)-groups.
+  \item Monotonicity and exclusion restriction keep the same latent compliance interpretation as Chapter 21.
+  \item This is the observational-study analogue of the mixture disentangling identities in Chapter 22.
+  \item Useful target identity:
+  \[
+  \pr(U=\cp)=\E\{D(1)-D(0)\}.
+  \]
+\end{prep}
+
+\begin{solutionbox}
+\end{solutionbox}
+\end{problemblock}
+
+\begin{problemblock}{Problem 4: Analysis of return to schooling}
+\paragraph{题面.}
+\citet{card1993using} used geographic variation in college proximity to estimate the return to schooling.
+Treatment is education, outcome is log wage, and the IV is college proximity.
+The homework asks:
+\begin{enumerate}[label=(\alph*),leftmargin=2em]
+  \item Dichotomize education and infer the CACE for units with
+  \(D(1)=1,D(0)=0\), first without covariates, then with covariates.
+  Discuss threshold choice and sensitivity.
+  \item Without dichotomizing education, use standard TSLS and compare results.
+\end{enumerate}
+
+\paragraph{出处.}
+Homework PDF Problem 4; same data-analysis prompt is present as a commented problem in
+Peng Ding Chapter 23 source. Reference: \citet{card1993using}.
+
+\begin{prep}
+  \item Causal quantity for dichotomized education:
+  \[
+  \tau_{\cp}(c)
+  =
+  \E\{Y(1)-Y(0)\mid D_c(1)=1,D_c(0)=0\},
+  \]
+  where \(D_c=1\{\text{education}\ge c\}\).
+  \item Without covariates:
+  \[
+  \hat\tau_{\cp}(c)
+  =
+  \frac{\bar Y_{Z=1}-\bar Y_{Z=0}}
+  {\bar D_{c,Z=1}-\bar D_{c,Z=0}}.
+  \]
+  \item With covariates: adjust both \(Y\) and dichotomized \(D_c\) for covariates,
+  then take the ratio of the adjusted effects.
+  \item TSLS with continuous education:
+  \[
+  \begin{cases}
+  \text{education}_i=\gamma_0+\gamma_1Z_i+\gamma_2\tran X_i+\varepsilon_{2i},\\
+  \log(\text{wage}_i)=\beta_0+\beta_1\text{education}_i+\beta_2\tran X_i+\varepsilon_i.
+  \end{cases}
+  \]
+  \item Report assumptions: relevance \(\gamma_1\ne0\), IV exogeneity, exclusion restriction,
+  monotonicity for the dichotomized CACE analysis, and model choice for TSLS.
+  \item The current folder does not contain \(\ri{card.csv}\) or \(\ri{code\_bk.txt}\);
+  add their local paths here before analysis:
+  \[
+  \ri{card.csv path: \underline{\hspace{6cm}}}
+  \]
+\end{prep}
+
+\begin{solutionbox}
+\end{solutionbox}
+\end{problemblock}
+
+\bibliographystyle{plainnat}
+\bibliography{causal/causal}
+
+\end{document}

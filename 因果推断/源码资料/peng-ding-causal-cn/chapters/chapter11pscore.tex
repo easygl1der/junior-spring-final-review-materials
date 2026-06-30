@@ -1,0 +1,630 @@
+
+\chapter{The Central Role of the Propensity Score in Observational Studies for Causal Effects}\label{chapter::pscore-key}
+\chaptermark{Propensity Score} 
+ 
+ 
+\citet{rosenbaum1983central} 提出了关键概念{\it propensity score}，并讨论了它在观测研究因果推断中的作用。这是统计学中被引用最多的论文之一，\citet{titterington2013biometrika} 将它列为过去 100 年中发表于 {\it Biometrika} 的被引用次数第二高的论文。近年来，它的引用次数增长得非常快。
+
+
+在 IID 抽样假设下，每个个体对应四个随机变量：$\{  X, Z, Y(1), Y(0) \} $。根据基本概率规则，我们可以将联合分布分解为
+\begin{eqnarray*}
+&&\pr \{  X, Z, Y(1), Y(0) \}  \\
+ &=& \pr(X)  
+\times   \pr\{ Y(1), Y(0) \mid X \}   
+\times  \pr\{  Z\mid X, Y(1), Y(0)  \} ,
+\end{eqnarray*}
+其中
+\begin{enumerate}
+\item
+ $\pr(X)$ 是协变量分布，
+ \item
+ $\pr\{ Y(1), Y(0) \mid X \}$ 是给定协变量 $X$ 后的结局分布，
+ \item
+ $\pr\{  Z\mid X, Y(1), Y(0)  \}$ 是给定协变量 $X$ 后的处理分布，也称为 treatment assignment mechanism。
+\end{enumerate}
+通常，我们并不想对协变量建模，因为它们是在处理和结局发生之前的背景信息。如果我们想超越结局模型，那么就必须关注 treatment assignment mechanism，这就引出了 propensity score 的定义。
+
+\begin{definition}
+[propensity score]\label{def::pscore}
+定义
+$$
+e(X, Y(1), Y(0)   ) = \pr\{  Z=1\mid X, Y(1), Y(0)  \}
+$$
+为{\it propensity score}。在 strong ignorability 下，有
+$$
+ e(X, Y(1), Y(0)   )  = \pr\{  Z=1\mid X, Y(1), Y(0)  \} = \pr(Z=1 \mid X),
+$$
+因此 propensity score 化简为
+$$
+e(X) = \pr(Z=1 \mid X),
+$$
+给定观测协变量后接受处理的条件概率。
+\end{definition} 
+
+ 
+\citet{rosenbaum1983central} 使用 $e(X) = \pr(Z=1 \mid X)$ 作为 propensity score 的定义，因为他们关注的是 strong ignorability 下的观测研究。有时，即使 strong ignorability 不成立，把 $e(X, Y(1), Y(0)   ) = \pr\{  Z=1\mid X, Y(1), Y(0)  \}$ 看作 propensity score 的一般定义也很有帮助。更多细节见 \cref{hw::principal-unobserved-cov}。
+
+沿着 \citet{rosenbaum1983central} 的思路，本章将说明，在 ignorability 下，$e(X)$ 是观测研究因果推断中的关键量。
+
+ 
+
+
+\section{The propensity score as a dimension reduction tool}
+
+\subsection{Theory}
+
+\begin{theorem}
+\label{thm::pscore-dimreduction}
+若 $Z\ind \{ Y(1), Y(0)  \} \mid X$，则
+$
+Z\ind \{ Y(1), Y(0)  \} \mid e(X).
+$
+\end{theorem}
+
+\cref{thm::pscore-dimreduction} 说明，如果在给定协变量 $X$ 后 strong ignorability 成立，那么在给定标量 propensity score $e(X)$ 后它也成立。
+Ignorability 原本要求对个体的许多背景特征 $X$ 条件化，但 \cref{thm::pscore-dimreduction} 表明，对 propensity score $e(X)$ 条件化即可去除由协变量 $X$ 引起的所有混杂。原始协变量 $X$ 可以很一般，也可以有很多维，但 propensity score $e(X)$ 是一个介于 $0$ 和 $1$ 之间的一维标量变量。因此，propensity score 降低了原始协变量的维度，同时仍然保持 ignorability。用统计术语来说，我们可以把 propensity score 看作一种{\it dimensional reduction} 工具。下面我们先证明 \cref{thm::pscore-dimreduction}，然后给出 propensity score 的降维性质的一个应用。
+
+
+
+
+
+\begin{myproof}{Theorem}{\cref{thm::pscore-dimreduction}}
+根据条件独立的定义，我们需要证明
+\begin{eqnarray}
+\pr\{ Z=1\mid Y(1), Y(0), e(X)  \} = \pr\{ Z=1\mid e(X)  \} .
+\label{eq::pscore-dimreduction}
+\end{eqnarray}
+\eqref{eq::pscore-dimreduction} 的左边等于
+\begin{eqnarray*}
+&&\pr\{ Z=1\mid Y(1), Y(0), e(X)  \}  \\
+&=& E\{ Z \mid Y(1), Y(0), e(X)  \}  \\
+&=& E\Big[   E\{ Z \mid Y(1), Y(0), e(X) , X  \}  \mid   Y(1), Y(0), e(X)    \Big]  \\
+&&\quad  \quad  \quad  \quad   \quad \quad \text{(tower property; see \cref{appendix::tower-property})} \\
+&=& E\Big[   E\{ Z \mid Y(1), Y(0),   X  \}  \mid   Y(1), Y(0), e(X)    \Big]  \\
+&=& E\Big\{    E(Z \mid  X  )  \mid   Y(1), Y(0), e(X)    \Big\}  \quad \text{(strong ignorability)} \\
+&=& E\Big\{   e(X) \mid   Y(1), Y(0), e(X)    \Big\} \\
+&=& e(X).
+\end{eqnarray*}
+\eqref{eq::pscore-dimreduction} 的右边等于
+\begin{eqnarray*}
+&& \pr\{ Z=1\mid e(X)  \} \\
+  &=&  E\{ Z \mid e(X)  \} \\
+ &=& E\Big[   E\{ Z \mid e(X), X  \}  \mid e(X)  \Big ] \quad \text{(tower property)} \\
+ &=& E\Big\{    E( Z \mid  X )  \mid e(X)  \Big \}   \\
+ &=& E\Big\{   e(X)  \mid e(X)  \Big \} \\
+ &=& e(X). 
+\end{eqnarray*}
+所以 \eqref{eq::pscore-dimreduction} 的左边等于右边。
+\end{myproof}
+
+
+\subsection{Propensity score stratification}
+\label{sec::pscore-stratification}
+
+
+
+
+\cref{thm::pscore-dimreduction} 引出了一种估计 causal effects 的简单方法：propensity score stratification。
+先从最简单的情形开始。假设 propensity score 已知，并且只取 $K$ 个可能值 $\{ e_1,\ldots, e_K \}$，其中 $K$ 远小于样本量 $n$。此时 \cref{thm::pscore-dimreduction} 化为
+$$
+Z\ind \{ Y(1), Y(0)  \} \mid e(X) = e_k  \quad (k=1,\ldots, K).
+$$
+因此，我们得到一个 SRE；也就是说，在 propensity score 的各个 strata 内，我们有 $K$ 个相互独立的 CRE。于是可以像分析按 $e(X)$ 分层的 SRE 一样分析观测数据。
+
+
+一般来说，propensity score 既未知，也不是离散的。我们通常为 $\pr(Z = 1\mid X)$ 拟合一个统计模型（例如给定 $X$ 时二元 $Z$ 的 logistic model），从而得到估计的 propensity score $\hat{e}(X)$。这个估计的 propensity score 可以有多达样本量那么多个取值，但我们可以把它离散化，用来近似上面的简单情形。比如，可以按 $K$ 个 quantiles 将估计的 propensity score 离散化，得到 $\hat{e}'(X)$：
+$
+\hat{e}'(X_i) = e_k,
+$
+其中 $e_k$ 是 $\hat{e}(X)$ 的第 $k/K$ 分位数；当 $ \hat{e}(X_i)$ 位于所有 $\hat{e}(X_i)$ 的第 $(k-1)/K$ 分位数和第 $k/K$ 分位数之间时，令其取该值。于是
+$$
+Z\ind \{ Y(1), Y(0)  \} \mid \hat{e}'(X) = e_k  \quad (k=1,\ldots, K).
+$$
+近似成立。因此，我们可以像分析按 $\hat{e}'(X)$ 分层的 SRE 一样分析观测数据。
+给定 $\hat{e}'(X)$ 后，ignorability 只近似成立。我们还可以进一步使用基于协变量的 regression adjustment 来去除 bias 并提高 efficiency。更具体地说，可以在每个 stratum 内得到 \citet{lin2013} 的 estimator，再通过加权平均构造最终 estimator（见 \cref{sec::covariate-SRE}）。
+
+
+ 
+
+
+
+
+当 propensity score 未知时，我们需要拟合统计模型来得到估计的 propensity score $\hat{e}(X)$。这会使最终 estimator 依赖于模型设定。不过，propensity score stratification estimator 只需要估计的 propensity scores 的排序正确，而不需要其精确数值；因此，与其他方法相比，它相对 robust。propensity score stratification 的这种 robustness 已经在许多数值例子中出现，但文献中仍缺少严格的量化结果。
+
+
+
+
+一个重要的实践问题是如何选择 $K$。如果 $K$ 太小，那么给定 $\hat{e}'(X)$ 后 ignorability 甚至不能近似成立。如果 $K$ 太大，那么估计 propensity score 的每个 stratum 内没有足够的个体，而且许多 strata 只包含 treated units 或只包含 control units。因此，这里存在一个 trade-off。沿用 \citet{cochran1968effectiveness} 的 heuristic，\citet{rosenbaum1983central} 和 \citet{rosenbaum1984reducing} 建议取 $K=5$；在许多情形下，这可以去除大量 bias。不过，在极大数据集中，固定 $K$ 的 propensity score stratification 会产生有 bias 的 estimators \citep{lunceford2004stratification}。因此，只要每个 stratum 中仍有足够的 treated units 和 control units，增大 $K$ 是合理的。\citet{wang2020robust} 建议用 greedy 方式选择 $K$，即取使 stratified estimator 良定义的最大 strata 数。不过，这一过程的严格理论尚未完全建立。
+
+
+
+
+另一个重要的实践问题是，如何计算基于 propensity score stratification 的 estimators 的 standard errors。有些研究者对离散化后的 propensity scores $\hat{e}'(X)$ 条件化，并报告基于 SRE 的 standard errors。这实际上忽略了估计 propensity scores 的不确定性。这样通常会高估真实 variance，因为文献中有一个令人意外的结果：使用估计的 propensity scores 会降低估计 average causal effect 的 asymptotic variance \citep{su2023estimated}。
+也有研究者对整个过程做 bootstrap，以纳入完整的不确定性。不过，由于这个 estimator 具有离散性，bootstrap 的理论仍不清楚。
+ 
+ 
+ 
+ \subsection{Application}\label{sec::application-pscore-stratification}
+
+
+为了说明 propensity score stratification 方法，我们再次考察 \cref{eg::chan-bmi-ATE}。
+\begin{lstlisting}
+> nhanes_bmi = read.csv("nhanes_bmi.csv")[, -1]
+> z = nhanes_bmi$School_meal
+> y = nhanes_bmi$BMI
+> x = as.matrix(nhanes_bmi[, -c(1, 2)])
+> x = scale(x)
+\end{lstlisting}
+\cref{eg::chan-bmi-ATE} 已经介绍过该数据集中的 covariates。treatment \ri{School_meal} 是是否参加 school meal plan 的 indicator，outcome \ri{BMI} 是 BMI。
+
+
+
+\begin{figure}
+\includegraphics[width = \textwidth]{figures/pscore_stratified_hist.pdf}
+\caption{基于 \ri{nhanes_bmi} 数据估计的 propensity scores 的直方图：白色表示 control group，灰色表示 treatment group}\label{fig::pscore_bmi}
+\end{figure}
+
+
+\cref{fig::pscore_bmi} 展示了不同 bins 数 $(K=5,10,30)$ 下估计 propensity scores 的直方图。
+基于 propensity score stratification，我们可以对不同的 $K \in \{5, 10, 20, 50, 80 \}$ 选择计算 point estimators 和 standard errors，如下所示（其中 \ri{Neyman_SRE} 函数在 \cref{chapter::stratification-poststratification} 中定义，用于分析 SRE）：
+\begin{lstlisting}
+> pscore = glm(z ~ x, family = binomial)$fitted.values
+> n.strata = c(5, 10, 20, 50, 80)
+> strat.res = sapply(n.strata, FUN = function(nn){
++   q.pscore = quantile(pscore, (1:(nn-1))/nn)
++   ps.strata = cut(pscore, breaks = c(0,q.pscore,1), 
++                   labels = 1:nn)
++   Neyman_SRE(z, y, ps.strata)})
+> 
+> rownames(strat.res) = c("est", "se")
+> colnames(strat.res) = n.strata
+> round(strat.res, 3)
+         5     10     20     50     80
+est -0.116 -0.178 -0.200 -0.265 -0.204
+se   0.283  0.282  0.279  0.272     NA
+\end{lstlisting}
+把 $K$ 从 $5$ 增加到 $50$ 会降低 standard error。不过，我们不能走到 $K=80$ 这样极端的情形，因为在某些只有一个 treated unit 或一个 control unit 的 strata 中，standard error 不是 well-defined。上述 estimators 显示，meal program 对 BMI 的 effect 为负，但并不显著。
+
+
+我们也可以把上面的 estimator 与三个简单 regression estimators 比较：一个是不调整任何 covariates 的 estimator，另外两个是 Fisher 和 Lin 的 estimators。
+\begin{lstlisting}
+> DiM = lm(y ~ z)
+> Fisher = lm(y ~ z + x)
+> Lin = lm(y ~ z + x + z*x)
+> res.regression = c(coef(DiM)[2], hccm(DiM)[2, 2]^0.5,
++                    coef(Fisher)[2], hccm(Fisher)[2, 2]^0.5,
++                    coef(Lin)[2], hccm(Lin)[2, 2]^0.5)
+> res.regression = matrix(res.regression,
++                         nrow = 2, ncol = 3)
+> rownames(res.regression) = c("est", "se")
+> colnames(res.regression) = c("naive", "fisher", "lin")
+> round(res.regression, 3)   
+    naive fisher    lin
+est 0.534  0.061 -0.017
+se  0.225  0.227  0.226
+\end{lstlisting} 
+由于 covariates 存在很大的 imbalance，naive difference in means 与其他方法差别很大。Fisher 的 estimator 仍给出正的 point estimate，尽管并不显著。Lin 的 estimator 和 propensity score stratification estimators 给出的结果在 qualitative sense 下相同。propensity score stratification estimators 在不同 $K$ 的选择下较为稳定。
+
+
+
+
+\section{Propensity score weighting}
+
+\subsection{Theory}
+
+\begin{theorem}
+\label{thm::pscore-weighting}
+若 $Z\ind \{ Y(1), Y(0)  \} \mid X$ 且 $0<e(X)<1$，则
+$$
+E\{  Y(1) \} =  E\left\{  \frac{ZY}{e(X)}  \right\},\quad
+E\{  Y(0) \} =  E\left\{  \frac{(1-Z)Y}{1-e(X)}  \right\} ,
+$$
+并且
+$$
+\tau = E\{  Y(1) -  Y(0) \} =  E\left\{  \frac{ZY}{e(X)} - \frac{(1-Z)Y}{1-e(X)}   \right\} .
+$$
+\end{theorem}
+
+
+在证明 \cref{thm::pscore-weighting} 之前，需要注意额外假设 $0<e(X)<1$。它称为 {\it overlap} 或 {\it positivity} condition。如果对某些 $X$ 的取值有 $e(X)=0$ 或 $1$，那么 \cref{thm::pscore-weighting} 中的公式会变成无穷大。这并不只是基于 propensity score weighting 的 identification formulas 才需要的条件。虽然 \cref{thm::identification-formula} 没有显式陈述这一点，但在 \eqref{eq::nonparametric-identification-tau} 中，$\tau$ 的 identification formula 里的 conditional expectations $E(Y\mid Z=1, X)$ 和 $ E(Y\mid Z=0, X)$ 只有在 $0< e(X) < 1$ 时才 well-defined。overlap condition 可以看作一种 technical condition，用来保证 Theorems \cref{thm::identification-formula} 和 \cref{thm::pscore-weighting} 中的公式 well-defined。它也会在观测研究的 causal inference 中引出一些哲学层面的问题。当 unit $i$ 满足 $e(X_i)=1$ 时，我们总能观测到其 treatment 下的 potential outcome $Y_i(1)$，但永远无法观测到其 control 下的 potential outcome $Y_i(0)$。在这种情况下，potential outcome $Y_i(0)$ 甚至可能不是 well-defined，从而使 unit $i$ 的 causal effect 定义变得 ambiguous。\citet{king2006dangers} 在 $e(X_i)=1$ 时把 $Y_i(0)$ 称为 {\it extreme counterfactual}，并讨论了它们在 causal inference 中的危险。如果 unit $i$ 满足 $e(X_i)=0$，也会出现类似问题。
+ 
+ 
+总之，$Z\ind \{ Y(1), Y(0)  \} \mid X$ 要求有足够的 covariates，以保证 treatment 与 potential outcomes 的 conditional independence；而 $0<e(X)<1$ 要求在给定 covariates 后，treatment 中仍保留 residual randomness。事实上，\citet{rosenbaum1983central} 对 strong ignorability 的定义同时包含这两个条件。在现代文献中，它们通常被分开陈述。
+ 
+
+
+ 
+
+\begin{myproof}{Theorem}{\cref{thm::pscore-weighting}}
+这里只证明关于 $E\{ Y(1) \}$ 的结果，因为关于 $E\{ Y(0) \}$ 的证明类似。我们有
+\begin{eqnarray*}
+&&E\left\{  \frac{ZY}{e(X)}  \right\} \\
+&=& E\left\{  \frac{ZY(1)}{e(X)}  \right\} \\
+&=& E\left[ E\left\{  \frac{ZY(1)}{e(X)}  \mid X \right\}  \right]  \quad \text{(tower property)} \\
+&=& E\left[  \frac{1}{e(X)}   E\left\{   ZY(1)  \mid X \right\}  \right]   \\
+&=& E\left[  \frac{1}{e(X)}   E( Z  \mid X ) E\left\{   Y(1)  \mid X \right\}  \right]  \quad \text{(strong ignorability)} \\\\
+&=& E\left[  \frac{1}{e(X)}   e(X) E\left\{   Y(1)  \mid X \right\}  \right] \\
+&=& E\left[ E\left\{   Y(1)  \mid X \right\}  \right] \\
+&=& E\{   Y(1) \}. 
+\end{eqnarray*}
+\end{myproof}
+
+
+
+\subsection{Inverse propensity score weighting estimators}\label{sec::ipw-estimators}
+
+\cref{thm::pscore-weighting} 引出下面这个 average causal effect 的 moment estimator：
+$$
+\hat{\tau}^\textup{ht} = \frac{1}{n} \sumn \frac{Z_i Y_i}{ \hat{e}(X_i) }
+- \frac{1}{n} \sumn \frac{ (1-Z_i) Y_i}{ 1 - \hat{e}(X_i) } ,
+$$
+其中 $\hat{e}(X_i)$ 是估计的 propensity score。这就是 inverse propensity score weighting (IPW) estimator，也称为 Horvitz--Thompson (HT) estimator。\citet{horvitz1952generalization} 在 survey sampling 中提出了它，\citet{rosenbaum1987model} 将其用于观测研究中的 causal inference。
+
+
+不过，estimator $\hat{\tau}^\textup{ht}$ 有许多问题。特别地，它对 outcome 的 location transformation 并不 invariant。
+\cref{prop::no-invariance-HT} 精确陈述了这一问题，其证明留给 \cref{hw::hajek-weights}。
+
+\begin{proposition}
+[lack of invariance for the HT estimator]
+\label{prop::no-invariance-HT}
+若用常数 $c$ 将 $Y_i$ 改为 $Y_i+c$，则 HT estimator $\hat{\tau}^\textup{ht}$ 变为 $\hat{\tau}^\textup{ht} + c (\hat{ 1 }_\textsc{T} - \hat{ 1 }_\textsc{C})$，其中
+$$
+\hat{ 1 }_\textsc{T}=   \frac{1}{n} \sumn \frac{Z_i }{ \hat{e}(X_i) } ,\quad
+\hat{ 1 }_\textsc{C} =\frac{1}{n} \sumn \frac{ (1-Z_i) }{ 1 - \hat{e}(X_i) }   
+$$
+可以看作常数 $1$ 的两个不同 estimates。
+\end{proposition}
+
+在 \cref{prop::no-invariance-HT} 中，我使用略显有趣的记号 $\hat{ 1 }_\textsc{T} $ 和 $ \hat{ 1 }_\textsc{C}$，是因为在使用真实 propensity score 时，这两项的 expectation 都是 1；更多细节见 \cref{hw::hajek-weights}。
+一般来说，在有限样本中 $\hat{ 1 }_\textsc{T} - \hat{ 1 }_\textsc{C}$ 不为零。
+由于给所有 outcomes 加上一个常数不应该改变 average causal effect，HT estimator 因为依赖于 $c$ 而不太合理。一个简单修正是分别用 $\hat{ 1 }_\textsc{T}  $ 和 $\hat{ 1 }_\textsc{C} $ 对 weights 做 normalizing，由此得到下面的 estimator：
+$$
+\hat{\tau}^\textup{hajek} = \frac{  \sumn \frac{Z_i Y_i}{ \hat{e}(X_i) }  }{  \sumn \frac{Z_i }{ \hat{e}(X_i) } }
+- \frac{  \sumn \frac{ (1-Z_i) Y_i}{ 1 - \hat{e}(X_i) }  }{  \sumn \frac{ 1-Z_i}{ 1 - \hat{e}(X_i) }  }.
+$$
+这就是 \citet{hajek1971comment} 在 varying probabilities 的 survey sampling 语境中提出的 Hajek estimator。可以验证，Hajek estimator 对 location transformation 是 invariant 的。也就是说，如果把 $Y_i$ 替换为 $Y_i + c$，则 $\hat{\tau}^\textup{hajek}$ 保持不变；见 \cref{hw::hajek-weights}。此外，许多数值研究发现，在有限样本中 $\hat{\tau}^\textup{hajek}$ 比 $\hat{\tau}^\textup{ht}$ 稳定得多。
+
+
+
+
+
+\subsection{A problem of IPW and a fundamental problem of causal inference}
+\label{sec::ipw-problem}
+
+
+许多 asymptotic analyses 要求 {\it strong overlap} condition：
+$$
+0<  \alpha_\textsc{L} \leq e(X) \leq  \alpha_\textsc{U} < 1,
+$$
+也就是说，真实 propensity score 要与 $0$ 和 $1$ 保持有界距离。不过，\citet{d2017overlap} 指出，这是一个相当强的假设，尤其是在 covariates 很多的时候。\cref{chapter::overlap} 将详细讨论这个问题。
+
+
+即使真实 propensity score 满足 strong overlap condition，估计的 propensity scores 仍可能接近 $0$ 或 $1$。
+一旦发生这种情况，weighting estimators 会爆炸到无穷大，从而在有限样本中表现得极不稳定。我们可以把估计的 propensity score truncate 为
+$$
+ \max\Big[  \alpha_\textsc{L},   \min\{   \hat{e}(X_i), \alpha_\textsc{U} \}   \Big] ,
+$$
+也可以通过删除 $\hat{e}(X_i)$ 落在区间 $[\alpha_\textsc{L},   \alpha_\textsc{U}  ]$ 之外的 units 来做 trimming。\citet{crump2009dealing} 建议取 $  \alpha_\textsc{L} = 0.1$ 和 $\alpha_\textsc{U} = 0.9 $，\citet{kurth2005results} 建议取 $  \alpha_\textsc{L} = 0.05$ 和 $\alpha_\textsc{U} = 0.95 $。\citet{yang2018asymptotic} 为 trimming 建立了一些 asymptotic theory。总体来说，虽然 trimming 往往能稳定 IPW estimators，但它也给流程注入了额外的 arbitrariness。
+
+
+
+
+ \subsection{Application}\label{sec::application-pscore-weighting}
+
+
+下面的函数可以计算 IPW estimators 及其 bootstrap standard errors。
+\begin{lstlisting}
+ipw.est = function(z, y, x, truncps = c(0, 1))
+{
+  ## fitted propensity score
+  pscore   = glm(z ~ x, family = binomial)$fitted.values
+  pscore   = pmax(truncps[1], pmin(truncps[2], pscore))
+  
+  ace.ipw0 = mean(z*y/pscore - (1 - z)*y/(1 - pscore))
+  ace.ipw  = mean(z*y/pscore)/mean(z/pscore) - 
+    mean((1 - z)*y/(1 - pscore))/mean((1 - z)/(1 - pscore))
+  
+  return(c(ace.ipw0, ace.ipw))     
+}
+
+
+ipw.boot = function(z, y, x, n.boot = 500, truncps = c(0, 1))
+{
+  point.est  = ipw.est(z, y, x, truncps)
+  
+  ## nonparametric bootstrap
+  n.sample   = length(z)
+  x          = as.matrix(x)
+  boot.est   = replicate(n.boot, {
+    id.boot = sample(1:n.sample, n.sample, replace = TRUE)
+    ipw.est(z[id.boot], y[id.boot], x[id.boot, ], truncps)
+  })
+  boot.se    = apply(boot.est, 1, sd)
+  
+  res = cbind(point.est, boot.se)
+  colnames(res) = c("est", "se")
+  rownames(res) = c("HT", "Hajek")
+  
+  return(res)
+}
+\end{lstlisting}
+
+再次考察 \cref{eg::chan-bmi-ATE}，我们可以基于估计 propensity scores 的不同 truncations 得到 IPW estimators。下面结果给出了两个 weighting estimators 及其 bootstrap standard errors，truncations 分别为 $(0,1)$、$(0.01, 0.99)$、$(0.05, 0.95)$ 和 $(0.1, 0.9)$：
+\begin{lstlisting}
+> trunc.list = list(trunc0 = c(0,1), 
++                   trunc.01 = c(0.01, 0.99), 
++                   trunc.05 = c(0.05, 0.95), 
++                   trunc.1 = c(0.1, 0.9))
+> trunc.est = lapply(trunc.list,
++                    function(t){
++                      est = ipw.boot(z, y, x, truncps = t)
++                      round(est, 3)
++                    })
+> trunc.est
+$trunc0
+         est    se
+HT    -1.516 0.496
+Hajek -0.156 0.258
+
+$trunc.01
+         est    se
+HT    -1.516 0.501
+Hajek -0.156 0.254
+
+$trunc.05
+         est    se
+HT    -1.499 0.501
+Hajek -0.152 0.255
+
+$trunc.1
+         est    se
+HT    -0.713 0.425
+Hajek -0.054 0.246
+\end{lstlisting}
+HT estimator 给出的结果与目前讨论过的所有其他 estimators 相差很远。除非把估计 propensity scores truncate 到 $(0.1, 0.9)$，否则 point estimates 看起来过大，并且为负且显著。这是一个展示 HT estimator 不稳定性的例子。
+
+
+
+\section{The balancing property of the propensity score}
+
+
+\subsection{Theory}
+
+
+
+\begin{theorem}
+\label{thm::pscoreASbscore}
+propensity score 满足
+$$
+Z\ind X \mid e(X) .
+$$ 
+此外，对任意函数 $h(\cdot)$，有
+\begin{eqnarray}
+E\left\{   \frac{Zh(X)}{e(X)}   \right\} = E\left\{   \frac{(1-Z)h(X)}{1-e(X)}   \right\}
+\label{eq::balancehX}
+\end{eqnarray}
+只要 \eqref{eq::balancehX} 两边的 moments 存在。
+\end{theorem}
+
+\cref{thm::pscoreASbscore} 不需要 ignorability assumption。它只涉及 treatment $Z$ 和 covariates $X$。
+\cref{thm::pscoreASbscore} 的第一部分说明，给定 propensity score 后，treatment indicator 与 covariates 独立。因此，在 propensity score 的同一水平内，treatment group 和 control group 的 covariate distributions 是 balanced 的。
+\cref{thm::pscoreASbscore} 的第二部分给出了基于 weighting form 的 covariate balance 的等价形式。
+下面给出 \cref{thm::pscoreASbscore} 的证明。
+
+
+\begin{myproof}{Theorem}{\cref{thm::pscoreASbscore}}
+首先证明 $Z\ind X \mid e(X)$，即
+\begin{eqnarray}
+\pr\{Z=1\mid X, e(X)\} = \pr\{Z=1\mid  e(X)\}.
+\label{eq::balance1}
+\end{eqnarray} 
+沿用 \cref{thm::pscore-dimreduction} 证明中的类似步骤，可以证明 \eqref{eq::balance1} 的左边等于
+$$
+\pr\{Z=1\mid X, e(X)\} = \pr( Z=1\mid X ) = e(X),
+$$
+而 \eqref{eq::balance1} 的右边等于
+\begin{eqnarray*}
+\pr\{Z=1\mid  e(X)\} &=& E\{  Z\mid  e(X) \}  \\
+&=& E\Big[ E\{  Z\mid X,  e(X) \} \mid e(X) \Big] \\
+&=& E\Big[ E\{  Z\mid X  \} \mid e(X) \Big] \\
+&=& E\Big[ e(X) \mid e(X) \Big] \\
+&=& e(X). 
+\end{eqnarray*}
+因此，\eqref{eq::balance1} 成立。
+
+其次证明 \eqref{eq::balancehX}。我们可以使用 \cref{thm::pscore-weighting} 证明中的类似步骤。不过，给定 \cref{thm::pscore-weighting} 后，有一个更简单的证明。若把 $h(X)$ 看作 outcome，则它的两个 potential outcomes 完全相同，并且 ignorability 成立：$Z\ind \{  h(X), h(X) \}  \mid X$。\eqref{eq::balancehX} 左右两边之差就是 $Z$ 对 $h(X)$ 的 average causal effect，而这个 effect 为零。
+\end{myproof}
+
+
+
+
+
+\subsection{Covariate balance check}
+\label{sec::balance-check-bmi}
+
+\cref{thm::pscoreASbscore} 的证明很简单，但它对 statistical analysis 有有用的启示。在接触 outcome data 之前，我们可以检查 propensity score model 的设定是否足以保证数据中的 covariate balance。\citet{rubin2007design} 将这看作观测研究的 design stage，\citet{rubin2008objective} 进一步指出，这会带来更客观的 causal inference，因为 design stage 不涉及 outcomes 的取值。\footnote{这在实践中是有用的建议，但如何量化 objectiveness 并不完全清楚。}
+
+
+在 propensity score stratification 中，我们有离散化后的估计 propensity score $\hat{e}'(X)$，并且近似有
+$$
+Z\ind X\mid \hat{e}'(X) = e_k\quad (k=1,\ldots, K).
+$$
+因此，我们可以检查在离散化估计 propensity score 的每个 stratum 内，treatment group 和 control group 的 covariate distributions 是否相同。
+
+
+在 propensity score weighting 中，我们可以把 $h(X)$ 看作 pseudo outcome，并估计 $h(X)$ 上的 average causal effect。由于 $h(X)$ 上的真实 average causal effect 为 $0$，estimate 不应该显著不同于 $0$。$h(X)$ 的一个 canonical 选择是 $X$。
+
+
+
+
+再次考察 \cref{eg::chan-bmi-ATE}。基于 $K=5$ 的 propensity score stratification，所有 covariates 在 treatment group 和 control group 之间都 well-balanced。Hajek estimator 也给出类似结果。唯一的例外是 \ri{Food_Stamp}，即 \cref{fig::balance-check} 中的第 7 个 covariate。
+\cref{fig::balance-check} 展示了 balance-checking 结果。
+
+\begin{figure}
+\centering
+\includegraphics[width = \textwidth]{figures/balance_PSstratification5.pdf}
+\includegraphics[width = \textwidth]{figures/balance_PShajek.pdf}
+\caption{Balance check：covariates 上 average causal effect 的 point estimates 和 95\% confidence intervals}\label{fig::balance-check}
+\end{figure}
+
+ 
+
+ 
+
+ 
+ 
+ \section{Homework Problems}
+ 
+ 
+ 
+ 
+\homeworksolutionref{11}
+ \paragraph{Another version of \cref{thm::pscore-dimreduction}} \label{hw::principal-unobserved-cov}
+证明
+\begin{equation}
+\label{eq::principal-covariate-ind}
+ Z\ind \{  Y(1), Y(0) , X\}  \mid e(X, Y(1), Y(0)   ) .
+\end{equation}  
+ 
+Remark:
+这个结果不需要假设 strong ignorability。它意味着
+ $$
+  Z\ind \{  Y(1), Y(0) \}  \mid  \{ X,   e(X, Y(1), Y(0)  \} .
+ $$
+\citet{rosenbaum2020modern} 和 \citet{rosenbaum2023propensity} 指出了 \eqref{eq::principal-covariate-ind} 中的结果，并把 $e(X, Y(1), Y(0)   ) $ 称为 {\it  principal unobserved covariate}。
+ 
+ 
+ 
+\paragraph{Another version of \cref{thm::pscore-dimreduction}} 
+
+\cref{thm::pscore-dimreduction} 陈述了 strong ignorability 下的一个结果。ignorability 下也有类似结果。
+也就是说，如果给定 covariates $X$ 后 ignorability 成立，那么给定标量 propensity score $e(X)$ 后它也成立。
+
+\begin{theorem}
+\label{thm::pscore-dimension-reduction-weak-ig}
+若对 $z=0,1$ 有 $Z\ind Y(z)  \mid X$，则
+$
+Z\ind Y(z)\mid e(X)
+$
+对 $z=0,1$ 成立。
+\end{theorem} 
+
+
+证明 \cref{thm::pscore-dimension-reduction-weak-ig}。
+
+
+
+ 
+ \paragraph{More results on the IPW estimators}
+\label{hw::hajek-weights} 
+ 
+这与 \cref{sec::ipw-estimators} 中关于 HT estimator 的讨论有关。首先，证明 \cref{prop::no-invariance-HT}。
+其次，证明
+ \begin{eqnarray*} 
+E\left\{ \frac{1}{n} \sumn \frac{Z_i }{e(X_i) } \right\} =1,\quad
+E\left\{  \frac{1}{n} \sumn \frac{ (1-Z_i) }{ 1 - e(X_i) }  \right\} = 1.
+\end{eqnarray*}
+第三，证明如果给每个 observed outcome $Y_i$ 加上常数 $c$，Hajek estimator
+$
+\hat{\tau}^\textup{hajek} 
+$
+保持不变。
+
+
+\paragraph{Re-analysis of \citet{Rosenbaum::1983JRSSB}}
+
+
+
+Table \cref{table::rr1983table1} 来自 \citet{Rosenbaum::1983JRSSB}。该研究关注 coronary artery bypass surgery 相对于 medical therapy 对 cardiac catheterization 后 6 个月 functional improvement 的 causal effect。他们首先基于 74 个 observed covariates 估计 propensity score，然后基于离散化后的估计 propensity score 形成 5 个 strata。由于 treatment 是 binary，outcome 也是 binary，他们用一张表呈现数据。
+基于 Table \cref{table::rr1983table1}，估计 average causal effect，并报告 average causal effect 的 95\% confidence interval。
+
+
+
+\begin{table}
+\caption{Table 1 of \citet{Rosenbaum::1983JRSSB}}\label{table::rr1983table1}
+\begin{tabular}{clcc}
+\hline 
+stratum by $\hat{e}(X)$ & treatment &  number of patients & proportion improved\\
+\hline 1 & Surgical & 26 & 0.54 \\
+& Medical & 277 & 0.35 \\
+2 & Surgical & 68 & 0.70 \\
+& Medical & 235 & 0.40 \\
+3 & Surgical & 98 & 0.70 \\
+& Medical & 205 & 0.35 \\
+4 & Surgical & 164 & 0.71 \\
+& Medical & 139 & 0.30 \\
+5 & Surgical & 234 & 0.70 \\
+& Medical & 69 & 0.39 \\
+\hline
+\end{tabular}
+\end{table}
+
+
+Remark:   如果感兴趣，可以在读完本书 Part \cref{part::challenges-os} 后阅读 \citet{Rosenbaum::1983JRSSB} 全文。这是 causal inference 中 sensitivity analysis 的一篇 canonical paper。
+
+ 
+
+
+\paragraph{Balancing score and propensity score: more theoretical results}
+\label{hw::balancingscore-rr1983}
+
+
+\citet{rosenbaum1983central} 还引入了 {\it balancing score} 的概念。
+
+\begin{definition}
+[balancing score]\label{def::balancing-score}
+  若
+  $$
+  Z\ind X\mid b(X).
+  $$
+  则 $b(X)$ 是一个 balancing score。
+\end{definition}
+
+在 Definition \cref{def::balancing-score} 中，$b(X)$ 可以是 scalar，也可以是 vector。一个显然的 balancing score 是 $b(X) = X$，但如果它没有对原始 covariates 做任何简化，就不太有用。由 \cref{thm::pscoreASbscore} 可知，propensity score 是一个特殊的 balancing score。更有意思的是，\citet{rosenbaum1983central} 证明了 propensity score 是最粗的 balancing score，如下面 \cref{thm::balancingscore} 所示；该定理把 \cref{thm::pscoreASbscore} 作为特殊情形包含在内。
+
+
+\begin{theorem}
+\label{thm::balancingscore}
+$b(X)$ 是 balancing score，当且仅当 $b(X)$ 比 $e(X)$ 更细；这里``更细''的含义是，对某个函数 $f(\cdot)$ 有 $e(X) = f(b(X))$。
+\end{theorem}
+
+
+\cref{thm::balancingscore} 与 subgroup analysis 有关。特别地，我们可能不仅关心 average causal effect $\tau$，也关心 subgroup effects。例如，我们可能想分别估计 boys 和 girls 中的 average causal effects。不失一般性，假设 $X$ 的第一个分量是 girls 的 indicator，而我们感兴趣的是估计
+$$
+\tau(x_1) = E\{ Y(1) - Y(0) \mid X_1 = x_1  \},\quad (x_1=1,0).
+$$
+\cref{thm::balancingscore} 意味着，在 ignorability 下，我们还有
+\begin{equation}
+\label{eq::subgroup-ignorability}
+Z\ind \{ Y(1) , Y(0) \} \mid e(X), X_1
+\end{equation}
+这是因为 $b(X) = \{e(X), X_1\}$ 比 $e(X)$ 更细，因此也是一个 balancing score。\eqref{eq::subgroup-ignorability} 中的 conditional independence 保证，在 $X_1$ 的每个水平内，给定 propensity score 后 ignorability 成立。因此，我们可以在 $X_1$ 的每个水平内基于 propensity score 做同样的分析，从而得到两个 subgroup effects 的 estimates。
+
+
+带着上述 motivation，证明 \cref{thm::balancingscore}。
+
+
+\paragraph{Some basics of subgroup effects}
+
+本题与 \cref{hw::balancingscore-rr1983} 有关，但也可以独立完成。
+
+考虑一个标准 observational study，其 covariates 为 $X = (X_1, X_2)$，其中 $X_1$ 表示一个 binary subgroup indicator（例如是否为 statistics major），$X_2$ 包含其余 covariates。感兴趣的参数是 subgroup causal effect：
+$$
+\tau(x_1) = E\{ Y(1) - Y(0) \mid X_1 = x_1  \},\quad (x_1=1,0).
+$$
+证明
+$$
+\tau(x_1) =  E\left\{   \frac{  1(X_1 = x_1) ZY}{ e(X) }   - \frac{  1(X_1 = x_1) (1-Z)Y}{ 1 -  e(X) }    \right\} \Big /  \pr(X_1 = x_1)
+$$
+并给出 $\tau(x_1) $ 对应的 HT 和 Hajek estimators。
+
+
+
+ \paragraph{Recommended reading}
+ 
+ 
+本章标题与 \citet{rosenbaum1983central} 经典论文的标题相同。本章多数结果直接来自他们的原始论文。
+
+
+\citet{rubin2007design} 和 \citet{rubin2008objective} 强调了观测研究中 design stage 对更客观 causal inference 的重要性。
+ 

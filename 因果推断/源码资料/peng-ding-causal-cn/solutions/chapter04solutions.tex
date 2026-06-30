@@ -1,0 +1,371 @@
+\chapter{Solutions to Chapter 4: Neymanian Repeated Sampling Inference in Completely Randomized Experiments}
+\label{sol:chapter04}
+
+\begin{exercisesolution}{Proof of Lemma \ref{lemma::variancecovariancetau}}{finite population variance 的代数恒等式}
+记
+\[
+\tau_i=Y_i(1)-Y_i(0),\qquad
+\tau=\bar Y(1)-\bar Y(0).
+\]
+于是
+\[
+\tau_i-\tau
+=\{Y_i(1)-\bar Y(1)\}-\{Y_i(0)-\bar Y(0)\}.
+\]
+两边平方并对 finite population 求和，得到
+\begin{eqnarray*}
+S^2(\tau)
+&=&(n-1)^{-1}\sum_{i=1}^n(\tau_i-\tau)^2\\
+&=&(n-1)^{-1}\sum_{i=1}^n\{Y_i(1)-\bar Y(1)\}^2
++(n-1)^{-1}\sum_{i=1}^n\{Y_i(0)-\bar Y(0)\}^2\\
+&&\quad
+-2(n-1)^{-1}\sum_{i=1}^n
+\{Y_i(1)-\bar Y(1)\}\{Y_i(0)-\bar Y(0)\}\\
+&=&S^2(1)+S^2(0)-2S(1,0).
+\end{eqnarray*}
+移项即得
+\[
+2S(1,0)=S^2(1)+S^2(0)-S^2(\tau),
+\]
+这就是 \cref{lemma::variancecovariancetau}。
+
+\emph{Remark / 用途：} 这个恒等式把 unobservable covariance $S(1,0)$、unobservable effect heterogeneity $S^2(\tau)$ 和两个 marginal variances 连接起来。它是 Neyman variance formula 能在 \cref{eq::neyman23var} 与 \cref{eq::neyman23var-equivalent} 两种形式之间转换的原因。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Alternative proof of Theorem \ref{thm::neyman1923}}{用 sample means 的 variance 和 covariance 证明}
+把 treatment group 看成从 $n$ 个 units 中抽取 $n_1$ 个 units 的 simple random sample。由 simple random sampling 的均值方差公式，
+\[
+\var\{\hat{\bar Y}(1)\}
+=\left(1-\frac{n_1}{n}\right)\frac{S^2(1)}{n_1}
+=\frac{n_0}{nn_1}S^2(1).
+\]
+同理，control group 是大小为 $n_0$ 的 complementary simple random sample，所以
+\[
+\var\{\hat{\bar Y}(0)\}
+=\frac{n_1}{nn_0}S^2(0).
+\]
+
+下面计算 covariance。令
+\[
+\hat{\bar Y}(1)=\frac{1}{n_1}\sum_{i=1}^n Z_iY_i(1),\qquad
+\hat{\bar Y}(0)=\frac{1}{n_0}\sum_{i=1}^n (1-Z_i)Y_i(0).
+\]
+在 CRE 中
+\[
+\cov(Z_i,1-Z_i)=-\var(Z_i),\qquad
+\cov(Z_i,1-Z_j)=-\cov(Z_i,Z_j)\quad (i\neq j).
+\]
+直接使用 simple random sampling 的 covariance 公式，或者利用 complementary samples 的性质，可得
+\[
+\cov\{\hat{\bar Y}(1),\hat{\bar Y}(0)\}
+=-\frac{1}{n}S(1,0).
+\]
+因此
+\begin{eqnarray*}
+\var(\hat\tau)
+&=&\var\{\hat{\bar Y}(1)-\hat{\bar Y}(0)\}\\
+&=&\var\{\hat{\bar Y}(1)\}+\var\{\hat{\bar Y}(0)\}
+-2\cov\{\hat{\bar Y}(1),\hat{\bar Y}(0)\}\\
+&=&\frac{n_0}{nn_1}S^2(1)+\frac{n_1}{nn_0}S^2(0)+\frac{2}{n}S(1,0),
+\end{eqnarray*}
+这就是 \cref{eq::neyman23var-equivalent}。再由 \cref{lemma::variancecovariancetau}，
+\[
+\var(\hat\tau)
+=\frac{S^2(1)}{n_1}+\frac{S^2(0)}{n_0}-\frac{S^2(\tau)}{n},
+\]
+得到 \cref{eq::neyman23var}。
+
+\emph{Remark / 用途：} 这个证明比正文证明更接近 survey sampling 直觉：treated mean 和 control mean 不是 independent samples 的均值，而是 complementary samples 的均值，所以它们之间有 covariance。这个 covariance 正是 CRE variance formula 与 classical IID two-sample formula 的差别之一。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Neymanian inference and OLS}{difference in means、usual SE、EHW 与 HC2}
+考虑 regression
+\[
+Y_i=\alpha+\beta Z_i+\varepsilon_i
+\]
+带 intercept。OLS normal equations 要求每个 treatment group 内 residuals 的和为零。因此 fitted values 在 control group 和 treatment group 内分别等于 group sample means：
+\[
+\hat\alpha=\hat{\bar Y}(0),\qquad
+\hat\alpha+\hat\beta=\hat{\bar Y}(1).
+\]
+于是
+\[
+\hat\beta=\hat{\bar Y}(1)-\hat{\bar Y}(0)=\hat\tau,
+\]
+这证明了 \cref{eq::ols-difference-in-means}。
+
+接下来计算 usual OLS variance estimator。残差平方和为
+\[
+\textsc{SSE}
+=\sum_{Z_i=1}\{Y_i-\hat{\bar Y}(1)\}^2
++\sum_{Z_i=0}\{Y_i-\hat{\bar Y}(0)\}^2
+=(n_1-1)\hat S^2(1)+(n_0-1)\hat S^2(0).
+\]
+Usual OLS 使用
+\[
+\hat\sigma^2=\frac{\textsc{SSE}}{n-2}.
+\]
+又
+\[
+\sum_{i=1}^n(Z_i-\bar Z)^2=\frac{n_1n_0}{n}.
+\]
+因此 treatment coefficient 的 usual OLS variance estimator 是
+\begin{eqnarray*}
+\hat V_{\textsc{ols}}
+&=&\frac{\hat\sigma^2}{\sum_i(Z_i-\bar Z)^2}\\
+&=&\frac{n}{(n-2)n_1n_0}
+\{(n_1-1)\hat S^2(1)+(n_0-1)\hat S^2(0)\}\\
+&=&
+\frac{n(n_1-1)}{(n-2)n_1n_0}\hat S^2(1)
++\frac{n(n_0-1)}{(n-2)n_1n_0}\hat S^2(0),
+\end{eqnarray*}
+即 \cref{eq::ols-se}。
+
+下面计算 EHW robust variance。设计矩阵行向量为 $x_i=(1,Z_i)\tran$，且
+\[
+(X\tran X)^{-1}
+=\frac{1}{n_1n_0}
+\begin{pmatrix}
+n_1&-n_1\\
+-n_1&n
+\end{pmatrix}.
+\]
+对 $\beta$ 这一行，treated unit 的 weight 为 $1/n_1$，control unit 的 weight 为 $-1/n_0$。HC0 型 EHW variance 因而等于
+\[
+\sum_{Z_i=1}\frac{\hat e_i^2}{n_1^2}
++\sum_{Z_i=0}\frac{\hat e_i^2}{n_0^2}
+=\frac{n_1-1}{n_1^2}\hat S^2(1)
++\frac{n_0-1}{n_0^2}\hat S^2(0),
+\]
+也就是 \cref{eq::ols-ehw}。
+
+最后看 HC2。Leverage 在 treated group 中为 $h_i=1/n_1$，在 control group 中为 $h_i=1/n_0$。HC2 把每个 $\hat e_i^2$ 除以 $1-h_i$。因此 treated 部分变为
+\[
+\frac{1}{n_1^2}\sum_{Z_i=1}\frac{\hat e_i^2}{1-1/n_1}
+=\frac{1}{n_1^2}\frac{n_1}{n_1-1}(n_1-1)\hat S^2(1)
+=\frac{\hat S^2(1)}{n_1},
+\]
+control 部分类似，为 $\hat S^2(0)/n_0$。所以 HC2 variance estimator 正好是
+\[
+\hat V=\frac{\hat S^2(1)}{n_1}+\frac{\hat S^2(0)}{n_0}.
+\]
+
+\emph{Remark / 用途：} 这个练习解释了为什么 randomized experiments 中常说“difference in means 可以用 OLS 实现，但 standard error 要用 robust SE”。Coefficient 本身完全一样；差别在 variance estimator。HC2 与 Neyman conservative variance 完全吻合，是一个很有用的实务事实。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Treatment effect heterogeneity}{variance equality 与 covariance sign}
+若 $S^2(\tau)=0$，则所有 individual treatment effects 都相同，即 $\tau_i=\tau$。于是
+\[
+Y_i(1)=Y_i(0)+\tau
+\]
+对所有 $i$ 成立。给所有 units 的 potential outcomes 加同一个常数不会改变 finite population variance，因此
+\[
+S^2(1)=S^2(0).
+\]
+反过来不成立。取 $n=2$，
+\[
+(Y_i(0))_{i=1}^2=(0,1),\qquad
+(Y_i(1))_{i=1}^2=(1,0).
+\]
+则 $S^2(1)=S^2(0)$，但 individual effects 为 $(1,-1)$，所以 $S^2(\tau)>0$。
+
+下面证明第二个结论。因为
+\[
+Y_i(1)=Y_i(0)+\tau_i,
+\]
+有限总体方差满足
+\[
+S^2(1)=S^2(0)+S^2(\tau)+2S(Y(0),\tau),
+\]
+其中
+\[
+S(Y(0),\tau)=(n-1)^{-1}\sum_{i=1}^n\{Y_i(0)-\bar Y(0)\}(\tau_i-\tau).
+\]
+如果 $S^2(1)<S^2(0)$，则
+\[
+S^2(\tau)+2S(Y(0),\tau)<0.
+\]
+由于 $S^2(\tau)\geq0$，必有
+\[
+S(Y(0),\tau)<0.
+\]
+
+反过来也不成立。取 $n=3$，
+\[
+(Y_i(0))_{i=1}^3=(-1,0,1),\qquad
+(\tau_i)_{i=1}^3=(4,0,-1).
+\]
+则 $Y_i(1)=Y_i(0)+\tau_i$ 给出
+\[
+(Y_i(1))_{i=1}^3=(3,0,0).
+\]
+直接计算，$S^2(0)=1$，而 $S^2(1)=3$，所以 $S^2(1)>S^2(0)$。另一方面，$\tau$ 的均值为 $1$，于是
+\[
+S(Y(0),\tau)=\frac{1}{2}\{(-1)(3)+0(-1)+1(-2)\}=-\frac{5}{2}<0.
+\]
+这给出了所需 counterexample。
+
+\emph{Remark / 用途：} 这道题说明，marginal variances 的比较只能提供非常有限的 heterogeneity 信息。没有 effect heterogeneity 会推出两个 potential outcome distributions 有相同 variance；但相同 variance 并不意味着 individual effects constant。
+\end{exercisesolution}
+
+\begin{exercisesolution}{A better bound of the variance formula}{Cauchy--Schwarz 上界与模拟代码}
+由 \cref{eq::neyman23var-equivalent}，
+\[
+\var(\hat\tau)
+=\frac{n_0}{nn_1}S^2(1)+\frac{n_1}{nn_0}S^2(0)+\frac{2}{n}S(1,0).
+\]
+由 Cauchy--Schwarz inequality，
+\[
+S(1,0)\leq S(1)S(0).
+\]
+因此
+\begin{eqnarray*}
+\var(\hat\tau)
+&\leq&
+\frac{n_0}{nn_1}S^2(1)+\frac{n_1}{nn_0}S^2(0)+\frac{2}{n}S(1)S(0)\\
+&=&\frac{1}{n}\left\{
+\sqrt{\frac{n_0}{n_1}}S(1)+
+\sqrt{\frac{n_1}{n_0}}S(0)
+\right\}^2,
+\end{eqnarray*}
+即 \cref{hw::cs-bound-neyman}。
+
+等号成立当且仅当 Cauchy--Schwarz 取等号，也就是 centered vectors
+\[
+\{Y_i(1)-\bar Y(1)\}_{i=1}^n
+\quad\text{and}\quad
+\{Y_i(0)-\bar Y(0)\}_{i=1}^n
+\]
+线性相关且方向相同。换言之，存在 $a\geq0$ 使得
+\[
+Y_i(1)-\bar Y(1)=a\{Y_i(0)-\bar Y(0)\}
+\]
+对所有 $i$ 成立。若 $S(0)=0$ 或 $S(1)=0$，则退化情形也按同一条件理解。
+
+要重复正文 simulation 并加入 $\hat V'$，可以在原 simulation 中增加如下计算：
+\begin{lstlisting}
+vhat.neyman <- var(y[z == 1])/n1 + var(y[z == 0])/n0
+vhat.cs <- (sqrt(n0/n1) * sd(y[z == 1]) +
+            sqrt(n1/n0) * sd(y[z == 0]))^2 / n
+
+ci.neyman <- tauhat + c(-1, 1) * qnorm(0.975) * sqrt(vhat.neyman)
+ci.cs     <- tauhat + c(-1, 1) * qnorm(0.975) * sqrt(vhat.cs)
+\end{lstlisting}
+然后在 repeated simulations 中比较 empirical coverage 和 average length。通常 $\hat V'$ 不小于 $\hat V$，所以 confidence interval 更长、coverage 更保守；但它使用了一个比直接丢掉 $S^2(\tau)/n$ 更精细的 upper bound，其理论含义更清楚。
+
+\emph{Remark / 用途：} 这个练习说明 Neyman conservative variance 不是唯一的保守选择。Sharper bounds 理论上可以利用更多结构，但实务中 $\hat V$ 简单、稳定、和 robust OLS 标准误兼容，所以仍是默认工具。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Vector version of \citet{Neyman:1923}}{多 outcome 的 covariance matrix}
+令
+\[
+\bar{\boldsymbol V}(z)=n^{-1}\sum_{i=1}^n\boldsymbol V_i(z),\qquad z=0,1,
+\]
+并定义 finite population covariance matrices
+\[
+\boldsymbol S^2(z)
+=(n-1)^{-1}\sum_{i=1}^n
+\{\boldsymbol V_i(z)-\bar{\boldsymbol V}(z)\}
+\{\boldsymbol V_i(z)-\bar{\boldsymbol V}(z)\}\tran,
+\]
+以及 effect vector 的 covariance matrix
+\[
+\boldsymbol S^2(\tau)
+=(n-1)^{-1}\sum_{i=1}^n
+\{\boldsymbol V_i(1)-\boldsymbol V_i(0)-\tau_{\boldsymbol V}\}
+\{\boldsymbol V_i(1)-\boldsymbol V_i(0)-\tau_{\boldsymbol V}\}\tran.
+\]
+
+在 CRE 下，
+\[
+E(\bar{\boldsymbol V}_1)=\bar{\boldsymbol V}(1),\qquad
+E(\bar{\boldsymbol V}_0)=\bar{\boldsymbol V}(0),
+\]
+所以
+\[
+E(\widehat\tau_{\boldsymbol V})=\tau_{\boldsymbol V}.
+\]
+对任意固定 vector $a\in\mathbb R^K$，把 scalar outcome 取为 $a\tran \boldsymbol V$，应用 \cref{thm::neyman1923}，得到
+\[
+\var\{a\tran \widehat\tau_{\boldsymbol V}\}
+=
+a\tran\left\{
+\frac{\boldsymbol S^2(1)}{n_1}
++\frac{\boldsymbol S^2(0)}{n_0}
+-\frac{\boldsymbol S^2(\tau)}{n}
+\right\}a.
+\]
+由于这对所有 $a$ 都成立，
+\[
+\cov(\widehat\tau_{\boldsymbol V})
+=
+\frac{\boldsymbol S^2(1)}{n_1}
++\frac{\boldsymbol S^2(0)}{n_0}
+-\frac{\boldsymbol S^2(\tau)}{n}.
+\]
+
+可观测的 conservative covariance estimator 是
+\[
+\widehat{\boldsymbol V}
+=
+\frac{\widehat{\boldsymbol S}^2(1)}{n_1}
++\frac{\widehat{\boldsymbol S}^2(0)}{n_0},
+\]
+其中 $\widehat{\boldsymbol S}^2(1)$ 和 $\widehat{\boldsymbol S}^2(0)$ 是 treated 和 control observed vector outcomes 的 sample covariance matrices。它的 conservativeness 应理解为 positive semidefinite order:
+\[
+E(\widehat{\boldsymbol V})-\cov(\widehat\tau_{\boldsymbol V})
+=\frac{\boldsymbol S^2(\tau)}{n}\succeq 0.
+\]
+
+\emph{Remark / 用途：} 多 outcome 版本允许同时处理多个 endpoint，例如收入、就业、健康指标。它也自然导向 joint tests 和 simultaneous confidence regions，而不是对每个 outcome 分别做多个 univariate analyses。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Inference in the BRE}{unconditional Bernoulli assignment 与 conditional CRE}
+在 BRE 中，assignment mechanism 是
+\[
+\pr(\boldsymbol Z=\boldsymbol z)
+=\prod_{i=1}^n \pi^{z_i}(1-\pi)^{1-z_i}.
+\]
+因此，在 sharp null $\HF$ 下，FRT 可以直接使用这个 Bernoulli randomization distribution：固定 observed outcomes，反复从 IID Bernoulli$(\pi)$ 生成 $\boldsymbol Z'$，并计算 $T(\boldsymbol Z',\boldsymbol Y)$。这给出 unconditional BRE FRT。
+
+如果实际实验是 BRE，也常常可以使用 CRE FRT，但解释是 conditional 的：给定 realized treated count $n_1$，BRE 的 conditional distribution 正是在所有含 $n_1$ 个 treated units 的 assignment vectors 上均匀分布，也就是 CRE。因此 CRE FRT 是在条件于 realized $n_1$ 后 valid。若不条件于 $n_1$，严格说应使用 BRE 的 Bernoulli assignment distribution。
+
+下面讨论 Neymanian point estimation。常用 difference-in-means
+\[
+\hat\tau=\frac{\sum_i Z_iY_i}{\sum_i Z_i}
+-\frac{\sum_i(1-Z_i)Y_i}{\sum_i(1-Z_i)}
+\]
+在 $n_1=0$ 或 $n_0=0$ 时未定义；这也是题目 remark 中说它没有 finite variance 的根源之一。在 $0<n_1<n$ 条件下，它对 $\tau$ unbiased；无条件地，若随意给 degenerate events 指定数值，一般会引入有限样本 bias。不过当 $n\to\infty$ 且 $0<\pi<1$ 时，$\pr(0<n_1<n)\to1$，并且 $n_1/n\to\pi$，所以 $\hat\tau$ consistent。
+
+一个严格 finite-sample unbiased estimator 是 Horvitz--Thompson estimator：
+\[
+\hat\tau_{\textsc{ht}}
+=\frac{1}{n}\sum_{i=1}^n
+\left\{
+\frac{Z_iY_i}{\pi}
+-\frac{(1-Z_i)Y_i}{1-\pi}
+\right\}.
+\]
+因为 observed outcome 满足 $Y_i=Z_iY_i(1)+(1-Z_i)Y_i(0)$，所以
+\[
+E\left(\frac{Z_iY_i}{\pi}\right)=Y_i(1),\qquad
+E\left(\frac{(1-Z_i)Y_i}{1-\pi}\right)=Y_i(0).
+\]
+于是 $E(\hat\tau_{\textsc{ht}})=\tau$。
+
+HT estimator 的 variance 为
+\[
+\var(\hat\tau_{\textsc{ht}})
+=\frac{1}{n^2}\sum_{i=1}^n
+\frac{\{(1-\pi)Y_i(1)+\pi Y_i(0)\}^2}{\pi(1-\pi)}.
+\]
+相比之下，ratio estimator $\hat\tau$ 的 asymptotic variance 是
+\[
+\frac{1-\pi}{\pi}S^2(1)
++\frac{\pi}{1-\pi}S^2(0)
++2S(1,0),
+\]
+这里是 $\sqrt n(\hat\tau-\tau)$ 的 limiting variance。HT estimator 的 corresponding asymptotic variance 还包含由 potential outcome levels 的 means 引入的额外项；直观上，HT 不利用 realized group sizes 做 normalization，因此通常比 ratio difference-in-means less efficient。Ratio estimator 牺牲严格 finite-sample unbiasedness，换来更好的 large-sample stability。
+
+\emph{Remark / 用途：} BRE 与 CRE 的差别是“是否固定 treated count”。FRT 层面，BRE 可以 unconditional，也可以 conditional on $n_1$ 化为 CRE。Neymanian estimation 层面，HT 提供 finite-sample unbiasedness；difference-in-means 更接近实践默认选择，因为它 consistent 且通常更有效。
+\end{exercisesolution}

@@ -1,0 +1,336 @@
+\chapter{Solutions to Chapter 1: Correlation, Association, and the Yule--Simpson Paradox}
+\label{sol:chapter01}
+
+\begin{exercisesolution}{Independence in two-by-two tables}{two-by-two table 中四个 association measures 的等价性}
+回忆 \cref{prop::2x2-independence} 的记号：令 $p_{zy}=\pr(Z=z,Y=y)$，并把 $Z=1$ 与 $Z=0$ 看作两个处理或暴露水平，把 $Y=1$ 看作事件发生。记
+\[
+p_{1+}=p_{11}+p_{10},\quad
+p_{0+}=p_{01}+p_{00},\quad
+p_{+1}=p_{11}+p_{01},\quad
+p_{+0}=p_{10}+p_{00}.
+\]
+在条件概率和比值均有定义的情形下，$Z\ind Y$ 等价于
+\[
+p_{11}=\pr(Z=1)\pr(Y=1)=p_{1+}p_{+1}.
+\]
+将右边展开并把 $p_{+1}=p_{11}+p_{01}$ 代入，可得
+\[
+p_{11}= (p_{11}+p_{10})(p_{11}+p_{01}).
+\]
+利用总概率 $p_{11}+p_{10}+p_{01}+p_{00}=1$，上式等价于
+\[
+p_{11}p_{00}=p_{10}p_{01}.
+\]
+这就是 two-by-two table 中 independence 的交叉乘积判据。
+
+下面证明 \cref{prop::2x2-independence} 的第 (1) 部分。首先，
+\[
+\RD=0
+\quad\Longleftrightarrow\quad
+\frac{p_{11}}{p_{11}+p_{10}}
+=
+\frac{p_{01}}{p_{01}+p_{00}} .
+\]
+交叉相乘得到
+\[
+p_{11}(p_{01}+p_{00})=p_{01}(p_{11}+p_{10}),
+\]
+两边消去 $p_{11}p_{01}$，得到
+\[
+p_{11}p_{00}=p_{10}p_{01}.
+\]
+因此 $\RD=0$ 等价于 $Z\ind Y$。
+
+其次，
+\[
+\RR=1
+\quad\Longleftrightarrow\quad
+\frac{p_{11}/(p_{11}+p_{10})}{p_{01}/(p_{01}+p_{00})}=1,
+\]
+在分母有定义时，这与上面的 $\RD=0$ 条件完全相同，所以也等价于 independence。最后，
+\[
+\OR=1
+\quad\Longleftrightarrow\quad
+\frac{p_{11}p_{00}}{p_{10}p_{01}}=1
+\quad\Longleftrightarrow\quad
+p_{11}p_{00}=p_{10}p_{01},
+\]
+也等价于 $Z\ind Y$。这证明了第 (1) 部分。若表中存在零单元，$\RR$ 或 $\OR$ 可能未定义；此时通常要么限制在比值有定义的情形，要么使用极限或连续性修正。本书后续主要使用正概率情形下的代数直觉。
+
+再证明第 (2) 部分。假设所有 $p_{zy}>0$。由上面的计算，
+\[
+\RD>0
+\quad\Longleftrightarrow\quad
+\frac{p_{11}}{p_{11}+p_{10}}
+>
+\frac{p_{01}}{p_{01}+p_{00}}
+\quad\Longleftrightarrow\quad
+p_{11}p_{00}>p_{10}p_{01}.
+\]
+同理，
+\[
+\RR>1
+\quad\Longleftrightarrow\quad
+\frac{p_{11}/(p_{11}+p_{10})}{p_{01}/(p_{01}+p_{00})}>1
+\quad\Longleftrightarrow\quad
+p_{11}p_{00}>p_{10}p_{01},
+\]
+而
+\[
+\OR>1
+\quad\Longleftrightarrow\quad
+\frac{p_{11}p_{00}}{p_{10}p_{01}}>1
+\quad\Longleftrightarrow\quad
+p_{11}p_{00}>p_{10}p_{01}.
+\]
+因此在正概率条件下，$\RD>0$、$\RR>1$ 与 $\OR>1$ 等价。负方向也类似：$\RD<0$、$\RR<1$ 与 $\OR<1$ 等价。
+
+\emph{Remark / 用途：} 这个练习说明，在 two-by-two table 中，risk difference、risk ratio 与 odds ratio 虽然数值尺度不同，但关于 association 方向的判断由同一个交叉乘积 $p_{11}p_{00}-p_{10}p_{01}$ 控制。这是后面理解 exact test、epidemiology measures 以及 propensity score 分层表格的基本代数工具。
+\end{exercisesolution}
+
+\begin{exercisesolution}{More examples of the Yule--Simpson Paradox}{一个数值构造与一个现实例子}
+先给出一个完全数值化的二乘二乘二表。令 $X=1$ 与 $X=0$ 表示两个 strata，$Z=1$ 与 $Z=0$ 表示两个 treatment levels，$Y=1$ 表示成功。
+
+在 $X=1$ stratum 中，
+\[
+\begin{array}{lcc}
+\hline
+&Y=1&Y=0\\ \hline
+Z=1&8&2\\
+Z=0&70&30\\
+\hline
+\end{array}
+\]
+所以
+\[
+\widehat{\pr}(Y=1\mid Z=1,X=1)=8/10=0.8,\quad
+\widehat{\pr}(Y=1\mid Z=0,X=1)=70/100=0.7.
+\]
+在 $X=0$ stratum 中，
+\[
+\begin{array}{lcc}
+\hline
+&Y=1&Y=0\\ \hline
+Z=1&30&70\\
+Z=0&2&8\\
+\hline
+\end{array}
+\]
+所以
+\[
+\widehat{\pr}(Y=1\mid Z=1,X=0)=30/100=0.3,\quad
+\widehat{\pr}(Y=1\mid Z=0,X=0)=2/10=0.2.
+\]
+在两个 strata 内，$Z=1$ 的成功率都比 $Z=0$ 高，conditional risk differences 分别为 $0.1$ 和 $0.1$。
+
+但是合并两个 strata 后，
+\[
+\begin{array}{lcc}
+\hline
+&Y=1&Y=0\\ \hline
+Z=1&38&72\\
+Z=0&72&38\\
+\hline
+\end{array}
+\]
+因此
+\[
+\widehat{\pr}(Y=1\mid Z=1)=38/110\approx 0.345,\quad
+\widehat{\pr}(Y=1\mid Z=0)=72/110\approx 0.655.
+\]
+边际上看，$Z=1$ 的成功率反而远低于 $Z=0$。这就是 Yule--Simpson Paradox：所有 strata 内的 conditional association 都为正，但 marginal association 为负。
+
+这个构造的机制很清楚。$X=1$ 是高成功率 stratum，且大多数 $Z=0$ units 位于这个 stratum；$X=0$ 是低成功率 stratum，且大多数 $Z=1$ units 位于这个 stratum。因此，$Z$ 与 $X$ 的 composition imbalance 反转了边际比较。
+
+现实例子可以使用本章的 kidney-stone data，或 Berkeley graduate school admission data。以 Berkeley graduate school admission 为例，整体录取率看起来显示男性申请者录取率高于女性申请者；但按 department 分层后，很多 department 内并没有同方向的性别差异，甚至方向会反过来。关键原因是 department 同时影响 admission probability，也与申请者性别构成相关。换言之，department 是一个强烈的 stratifying variable 或 confounder；聚合数据把不同 department 的 base rates 混在一起，制造了 misleading marginal association。
+
+\emph{Remark / 用途：} 这个练习的作用不是说“分层一定正确、边际一定错误”，而是提醒我们 causal question 必须先明确目标总体和比较方式。Yule--Simpson Paradox 是后面讨论 confounding、adjustment、standardization 和 propensity score 的第一块直觉基石。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Correlation and partial correlation}{三维 Normal 中 partial correlation 的公式与符号反转}
+设
+\[
+\begin{pmatrix}
+X\\Y\\Z
+\end{pmatrix}
+\sim
+\textsc{N}\left(0,
+\begin{pmatrix}
+1&\rho_{XY}&\rho_{XZ}\\
+\rho_{XY}&1&\rho_{YZ}\\
+\rho_{XZ}&\rho_{YZ}&1
+\end{pmatrix}
+\right).
+\]
+对 multivariate Normal vector，conditional distribution $(Y,Z)\mid X$ 仍为 Normal。由 multivariate Normal 的条件方差公式，
+\[
+\var(Y\mid X)=\var(Y)-\cov(Y,X)\var(X)^{-1}\cov(X,Y)
+=1-\rho_{YX}^2,
+\]
+\[
+\var(Z\mid X)=1-\rho_{ZX}^2,
+\]
+并且
+\[
+\cov(Y,Z\mid X)
+=\cov(Y,Z)-\cov(Y,X)\var(X)^{-1}\cov(X,Z)
+=\rho_{YZ}-\rho_{YX}\rho_{ZX}.
+\]
+因此 conditional distribution $(Y,Z)\mid X$ 中 $Y$ 与 $Z$ 的 correlation，也就是 partial correlation，等于
+\[
+\rho_{YZ\mid X}
+=
+\frac{\cov(Y,Z\mid X)}
+{\sqrt{\var(Y\mid X)}\sqrt{\var(Z\mid X)}}
+=
+\frac{\rho_{YZ}-\rho_{YX}\rho_{ZX}}
+{\sqrt{1-\rho_{YX}^2}\sqrt{1-\rho_{ZX}^2}} .
+\]
+这就是题目要求的公式。
+
+现在给出一个数值例子。取
+\[
+\rho_{YX}=0.8,\quad \rho_{ZX}=0.8,\quad \rho_{YZ}=0.5.
+\]
+则 marginal correlation 为正：$\rho_{YZ}=0.5>0$。但是
+\[
+\rho_{YZ\mid X}
+=\frac{0.5-0.8\times 0.8}{\sqrt{1-0.8^2}\sqrt{1-0.8^2}}
+=\frac{-0.14}{0.6\times 0.6}
+\approx -0.389<0.
+\]
+这个 correlation matrix 是正定的，因为其 determinant 为
+\[
+1+2(0.8)(0.8)(0.5)-0.8^2-0.8^2-0.5^2
+=1+0.64-0.64-0.64-0.25=0.11>0.
+\]
+所以它确实定义了一个合法的三维 Normal distribution。
+
+这个例子与 Yule--Simpson Paradox 的逻辑完全平行。边际上 $Y$ 与 $Z$ 正相关，是因为它们都与 $X$ 强正相关；一旦固定 $X$，剩余的 conditional association 变成负的。在线性 Gaussian 情形下，partial correlation 正是“控制 $X$ 后的 association”的标准度量。
+
+\emph{Remark / 用途：} 这个练习把离散表格中的 Yule--Simpson Paradox 转化为连续变量和 Normal linear model 中的现象。它解释了为什么 multiple regression coefficient 和 marginal regression coefficient 可能符号相反，也为后面理解 covariate adjustment 与 confounding 打基础。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Specification searches}{LaLonde observational data 中的 $2^{10}$ 个 regression specifications}
+这个问题要求系统枚举所有 covariate subsets，并观察 treatment coefficient 对 model specification 的敏感性。\cref{section:correlatioandregressionintro} 已经展示了两个极端 specification：不控制 covariates 时，\ri{treat} 的 coefficient 为负；控制所有 covariates 时，coefficient 接近正值。这说明 observational data 中 regression adjustment 的结论可能依赖 specification choice。
+
+本地工程中没有找到 \ri{cps1re74.csv}，所以下面的解答给出可复现的 R 分析框架，而不伪造数值输出。若把数据文件放到编译或运行目录，代码会枚举全部 $2^{10}=1024$ 个 specifications。
+
+\begin{lstlisting}
+dat <- read.table("cps1re74.csv", header = TRUE)
+
+## Reproduce the variables used in the chapter if needed.
+dat$u74 <- as.numeric(dat$re74 == 0)
+dat$u75 <- as.numeric(dat$re75 == 0)
+
+outcome <- "re78"
+treat   <- "treat"
+covars  <- setdiff(names(dat), c(outcome, treat))
+
+## Check that there are exactly 10 covariates.
+stopifnot(length(covars) == 10)
+
+all_subsets <- unlist(
+  lapply(0:length(covars), function(k) {
+    combn(covars, k, simplify = FALSE)
+  }),
+  recursive = FALSE
+)
+
+fit_one <- function(xs) {
+  rhs <- c(treat, xs)
+  form <- as.formula(paste(outcome, "~", paste(rhs, collapse = " + ")))
+  fit <- lm(form, data = dat)
+  tab <- summary(fit)$coef
+  out <- tab[treat, c("Estimate", "Std. Error", "t value", "Pr(>|t|)")]
+  data.frame(
+    covariates = paste(xs, collapse = "+"),
+    k = length(xs),
+    estimate = out[["Estimate"]],
+    se = out[["Std. Error"]],
+    t = out[["t value"]],
+    p = out[["Pr(>|t|)"]],
+    sign = ifelse(out[["Estimate"]] > 0, "positive", "negative"),
+    significant = out[["Pr(>|t|)"]] < 0.05
+  )
+}
+
+results <- do.call(rbind, lapply(all_subsets, fit_one))
+
+table(results$sign, results$significant)
+summary(results$estimate)
+
+## Useful diagnostics:
+results[order(results$estimate), ][1:10, ]
+results[order(-results$estimate), ][1:10, ]
+
+## Visualize specification sensitivity.
+plot(results$k, results$estimate,
+     xlab = "Number of covariates",
+     ylab = "Coefficient on treat")
+abline(h = 0, lty = 2)
+\end{lstlisting}
+
+报告结果时，至少应包括以下几项。第一，treatment coefficient 的最小值、最大值、中位数与四分位数。第二，显著为正、显著为负、不显著的 specifications 数量。第三，导致最负和最正 estimates 的 covariate subsets。第四，coefficient 是否随 covariate 数量增加而系统移动。
+
+这个练习也提醒我们：在 observational studies 中，仅仅说“我控制了一些 covariates”是不够的。不同 covariate set 可能对应不同的 identifying assumptions，也可能暴露 model dependence。Specification search 本身不能证明 causal effect，但能诊断结论对 researcher degrees of freedom 的敏感性。
+
+\emph{Remark / 用途：} 这个练习是通向后面 observational studies 的桥。它说明 regression adjustment 在非随机数据中既有用又危险：有用是因为 covariates 可以减少 confounding；危险是因为如果没有明确的 causal design 和 identification argument，模型选择会显著影响结论。
+\end{exercisesolution}
+
+\begin{exercisesolution}{More on racial discrimination}{按 gender 分组重新分析 resume callback data}
+\cref{sec::twobytwotables-withresume} 重新分析了 \citet{bertrand2004emily} 的 resume experiment。原始实验随机分配 Black-sounding 或 White-sounding names 到虚构简历上，研究 perceived race 对 callback 的影响。题目要求分别对男性和女性做 subgroup analyses。
+
+本地工程中没有找到 \ri{resume.csv}，所以下面给出可复现的 R 分析框架，不伪造数值结果。实际运行时，需要确认数据中 gender 变量的名称；常见可能是 \ri{sex}、\ri{gender} 或由 first name 推断出的变量。
+
+\begin{lstlisting}
+resume <- read.csv("resume.csv")
+
+## Inspect variable names before running subgroup analyses.
+names(resume)
+table(resume$race, resume$call)
+
+## Replace "sex" by the actual gender variable name if needed.
+gender_var <- "sex"
+stopifnot(gender_var %in% names(resume))
+
+risk_difference <- function(tab) {
+  ## tab rows: race; columns: callback indicator 0/1 or no/yes.
+  tab <- as.matrix(tab)
+  p <- prop.table(tab, margin = 1)
+  ## Adjust this column selection if callback is coded differently.
+  y1 <- colnames(p)[ncol(p)]
+  rd <- p["white", y1] - p["black", y1]
+  list(table = tab, row_prop = p, rd = rd)
+}
+
+out <- lapply(split(resume, resume[[gender_var]]), function(d) {
+  tab <- table(d$race, d$call)
+  ans <- risk_difference(tab)
+  fit <- glm(call ~ race, data = d, family = binomial())
+  list(
+    n = nrow(d),
+    table = ans$table,
+    row_prop = ans$row_prop,
+    risk_difference = ans$rd,
+    logit_summary = summary(fit)$coef
+  )
+})
+
+out
+
+## Optional: test effect modification by gender.
+fit_interaction <- glm(call ~ race * get(gender_var),
+                       data = resume, family = binomial())
+summary(fit_interaction)
+\end{lstlisting}
+
+分析时应报告每个 gender subgroup 内 Black-sounding 和 White-sounding names 的 callback rates，以及二者的 risk difference。因为 \citet{bertrand2004emily} 是 randomized experiment，race label 的随机分配使得 subgroup 内的 race comparison 仍有明确 causal interpretation，前提是 subgroup 是 treatment assignment 前定义的变量。
+
+如果两个 gender subgroups 中 White-sounding names 的 callback rate 都更高，那么说明 racial discrimination 的 evidence 在两个 subgroup 中方向一致。如果 effect size 在男性和女性简历之间明显不同，则可能存在 effect modification：perceived race 的影响会随 gender presentation 改变。此时应进一步报告 interaction model，但不要只依赖 interaction 的 $p$-value；subgroup sample size、baseline callback rate 和 practical magnitude 同样重要。
+
+还要注意，subgroup analysis 与 post-treatment selection 不同。这里 gender 是简历上的预处理属性或实验设计中的固定属性，不是 callback 之后产生的变量。因此按 gender 分组不会破坏 randomization。不过，若做很多 subgroup searches，就会产生 multiple testing 与 selective reporting 问题。
+
+\emph{Remark / 用途：} 这个练习把 two-by-two table 的 association measures 带回 randomized experiment。它训练的是一个非常实用的工作流：先做总体 causal comparison，再检查预先定义 subgroup 中的 effect heterogeneity，并区分 subgroup heterogeneity、multiple testing 和 confounding。
+\end{exercisesolution}
+

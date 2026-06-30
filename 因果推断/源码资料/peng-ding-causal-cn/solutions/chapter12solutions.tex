@@ -1,0 +1,513 @@
+\chapter{Solutions to Chapter 12: The Doubly Robust or the Augmented Inverse Propensity Score Weighting Estimator for the Average Causal Effect}
+\label{sol:chapter12}
+
+\begin{exercisesolution}{A sanity check}{离散协变量的 saturated adjustment}
+本题的要点是：当 $X$ 是离散协变量，并且 propensity score 和 outcome means 都用层内经验分布非参数估计时，所有 estimators 都退化为同一个层内比较的加权平均。设
+\[
+S_k=\{i:X_i=k\},\qquad n_{[k]}=|S_k|,\qquad
+n_{[k]1}=\sum_{i\in S_k}Z_i,\qquad n_{[k]0}=n_{[k]}-n_{[k]1}.
+\]
+以下推导默认 empirical overlap 成立，即每个进入分析的 stratum 都满足
+\[
+n_{[k]1}>0,\qquad n_{[k]0}>0.
+\]
+否则 $\hat{\bar Y}_{[k]}(1)$ 或 $\hat{\bar Y}_{[k]}(0)$ 本身就没有定义，HT 和 doubly robust estimators 中的权重也会出现零分母。
+
+记
+\[
+\hat e_{[k]}=\frac{n_{[k]1}}{n_{[k]}},\qquad
+\hat{\bar Y}_{[k]}(1)=\frac{1}{n_{[k]1}}\sum_{i\in S_k}Z_iY_i,\qquad
+\hat{\bar Y}_{[k]}(0)=\frac{1}{n_{[k]0}}\sum_{i\in S_k}(1-Z_i)Y_i.
+\]
+stratified estimator 是
+\[
+\hat\tau_{\mathrm{strat}}
+=\sum_{k=1}^K\frac{n_{[k]}}{n}
+\{\hat{\bar Y}_{[k]}(1)-\hat{\bar Y}_{[k]}(0)\}.
+\]
+outcome regression estimator 使用 saturated outcome model，因此
+\[
+\hat\mu_1(X_i)=\hat{\bar Y}_{[k]}(1),\qquad
+\hat\mu_0(X_i)=\hat{\bar Y}_{[k]}(0)
+\quad \text{if }X_i=k.
+\]
+于是
+\begin{align*}
+\hat\tau^{\mathrm{reg}}
+&=\frac{1}{n}\sum_{i=1}^n\{\hat\mu_1(X_i)-\hat\mu_0(X_i)\} \\
+&=\sum_{k=1}^K\frac{n_{[k]}}{n}
+\{\hat{\bar Y}_{[k]}(1)-\hat{\bar Y}_{[k]}(0)\}
+=\hat\tau_{\mathrm{strat}}.
+\end{align*}
+
+HT estimator 也给出同一个量。对 treatment potential outcome mean，
+\begin{align*}
+\frac{1}{n}\sum_{i=1}^n\frac{Z_iY_i}{\hat e(X_i)}
+&=\frac{1}{n}\sum_{k=1}^K
+\sum_{i\in S_k}\frac{Z_iY_i}{n_{[k]1}/n_{[k]}} \\
+&=\sum_{k=1}^K\frac{n_{[k]}}{n}
+\left(\frac{1}{n_{[k]1}}\sum_{i\in S_k}Z_iY_i\right) \\
+&=\sum_{k=1}^K\frac{n_{[k]}}{n}\hat{\bar Y}_{[k]}(1).
+\end{align*}
+同理，
+\[
+\frac{1}{n}\sum_{i=1}^n\frac{(1-Z_i)Y_i}{1-\hat e(X_i)}
+=\sum_{k=1}^K\frac{n_{[k]}}{n}\hat{\bar Y}_{[k]}(0).
+\]
+因此 $\hat\tau^{\mathrm{HT}}=\hat\tau_{\mathrm{strat}}$。
+
+Hajek estimator 只是把上面两个 HT means 分别除以估计的总权重。可是
+\begin{align*}
+\frac{1}{n}\sum_{i=1}^n\frac{Z_i}{\hat e(X_i)}
+&=\frac{1}{n}\sum_{k=1}^K
+\frac{n_{[k]1}}{n_{[k]1}/n_{[k]}}
+=\frac{1}{n}\sum_{k=1}^K n_{[k]}=1,
+\end{align*}
+且同样有
+\[
+\frac{1}{n}\sum_{i=1}^n\frac{1-Z_i}{1-\hat e(X_i)}=1.
+\]
+所以 $\hat\tau^{\mathrm{Hajek}}=\hat\tau^{\mathrm{HT}}=\hat\tau_{\mathrm{strat}}$。
+
+最后看 \cref{def::dr:ace} 中的 doubly robust estimator。由于 saturated outcome mean 正是层内样本均值，
+\[
+\sum_{i\in S_k}Z_i\{Y_i-\hat{\bar Y}_{[k]}(1)\}=0,\qquad
+\sum_{i\in S_k}(1-Z_i)\{Y_i-\hat{\bar Y}_{[k]}(0)\}=0.
+\]
+因此 doubly robust estimator 中的两个 residual weighting terms 分别为零：
+\[
+\frac{1}{n}\sum_{i=1}^n
+\frac{Z_i\{Y_i-\hat\mu_1(X_i)\}}{\hat e(X_i)}=0,\qquad
+\frac{1}{n}\sum_{i=1}^n
+\frac{(1-Z_i)\{Y_i-\hat\mu_0(X_i)\}}{1-\hat e(X_i)}=0.
+\]
+于是
+\[
+\hat\tau^{\mathrm{dr}}
+=\hat\tau^{\mathrm{reg}}
+=\hat\tau_{\mathrm{strat}}
+=\hat\tau^{\mathrm{HT}}
+=\hat\tau^{\mathrm{Hajek}}.
+\]
+
+\paragraph{Remark.}
+这个 sanity check 说明，doubly robust estimator 并不是在所有场景中都给出一个全新的数值。当 adjustment 完全 saturated 且 overlap 充足时，所有合理的非参数 estimators 都在做同一件事：先在每个 $X=k$ 层内比较 treated 和 control，再按 empirical covariate distribution 加权平均。差异只会在模型化、维度较高、或 overlap 不充分时出现。
+\end{exercisesolution}
+
+\begin{exercisesolution}{An alternative form of the doubly robust estimator for $\tau$}{Robins 型 ratio residual augmentation}
+题目中的 estimator 可以看作对 \cref{eq::explain-ipw-efficiency-basic} 的 Hájek-type stabilization。记
+\[
+m_1(X)=\mu_1(X,\beta_1),\qquad e_\alpha(X)=e(X,\alpha),
+\]
+并定义
+\[
+A_1=E\left\{\frac{Z\{Y-m_1(X)\}}{e_\alpha(X)}\right\},
+\qquad
+B_1=E\left\{\frac{Z}{e_\alpha(X)}\right\}.
+\]
+则
+\[
+\tilde\mu_1^{\mathrm{dr2}}
+=\frac{A_1}{B_1}+E\{m_1(X)\}.
+\]
+
+先假设 propensity score model 正确，即 $e_\alpha(X)=e(X)$。由 consistency 和 ignorability，
+\begin{align*}
+A_1
+&=E\left[
+E\left\{\frac{Z\{Y(1)-m_1(X)\}}{e(X)}\mid X\right\}
+\right] \\
+&=E\left[
+\frac{E(Z\mid X)}{e(X)}
+E\{Y(1)-m_1(X)\mid X\}
+\right] \\
+&=E\{\mu_1(X)-m_1(X)\}.
+\end{align*}
+同时
+\[
+B_1=E\left\{\frac{E(Z\mid X)}{e(X)}\right\}=1.
+\]
+因此
+\[
+\tilde\mu_1^{\mathrm{dr2}}
+=E\{\mu_1(X)-m_1(X)\}+E\{m_1(X)\}
+=E\{\mu_1(X)\}
+=E\{Y(1)\}.
+\]
+
+再假设 outcome model 正确，即 $m_1(X)=\mu_1(X)$，但不要求 $e_\alpha(X)=e(X)$。条件于 $X$，
+\[
+E\{Y(1)-m_1(X)\mid X\}=E\{Y(1)-\mu_1(X)\mid X\}=0.
+\]
+所以
+\[
+A_1
+=E\left[
+\frac{E(Z\mid X)}{e_\alpha(X)}
+E\{Y(1)-\mu_1(X)\mid X\}
+\right]=0.
+\]
+只要 $B_1$ 有限且非零，就有
+\[
+\tilde\mu_1^{\mathrm{dr2}}=E\{\mu_1(X)\}=E\{Y(1)\}.
+\]
+这证明了 $\tilde\mu_1^{\mathrm{dr2}}$ 的 double robustness。
+
+对 $E\{Y(0)\}$，完全平行的形式是
+\[
+\tilde{\mu}_0^{\mathrm{dr2}}
+=
+\frac{
+E\left[   \frac{(1-Z)\{ Y-\mu_0(X,\beta_0) \}}{1-e(X,\alpha)} \right]
+}{
+E\left[   \frac{1-Z}{1-e(X,\alpha)} \right]
+}
++ E\{\mu_0(X,\beta_0)\}.
+\]
+若 $e(X,\alpha)=e(X)$，则分母为 $1$，分子等于
+\[
+E\{\mu_0(X)-\mu_0(X,\beta_0)\}.
+\]
+若 $\mu_0(X,\beta_0)=\mu_0(X)$，则分子为零。两种情况下都得到
+\[
+\tilde{\mu}_0^{\mathrm{dr2}}=E\{Y(0)\}.
+\]
+
+样本对应量如下。令
+\[
+\hat e_i=e(X_i,\hat\alpha),\qquad
+\hat m_{1i}=\mu_1(X_i,\hat\beta_1),\qquad
+\hat m_{0i}=\mu_0(X_i,\hat\beta_0).
+\]
+定义
+\[
+\hat\mu_1^{\mathrm{dr2}}
+=
+\frac{
+\sumn Z_i(Y_i-\hat m_{1i})/\hat e_i
+}{
+\sumn Z_i/\hat e_i
+}
++\frac{1}{n}\sumn \hat m_{1i},
+\]
+以及
+\[
+\hat\mu_0^{\mathrm{dr2}}
+=
+\frac{
+\sumn (1-Z_i)(Y_i-\hat m_{0i})/(1-\hat e_i)
+}{
+\sumn (1-Z_i)/(1-\hat e_i)
+}
++\frac{1}{n}\sumn \hat m_{0i}.
+\]
+于是 $\tau$ 的 alternative doubly robust estimator 为
+\[
+\hat\tau^{\mathrm{dr2}}
+=\hat\mu_1^{\mathrm{dr2}}-\hat\mu_0^{\mathrm{dr2}}.
+\]
+
+\paragraph{Remark.}
+\cref{def::dr:ace} 中的 AIPW form 使用 unnormalized residual IPW correction；本题的 Robins form 对 residual correction 做 normalization。这个 normalization 与 HT 到 Hajek 的关系类似：它不改变大样本的一阶识别逻辑，却常常改善有限样本中权重总量偏离 $1$ 带来的不稳定性。
+\end{exercisesolution}
+
+\begin{exercisesolution}{An upper bound of the bias of the doubly robust estimator}{乘积偏差与 Cauchy--Schwarz}
+\cref{thm::doublyrobust} 的证明已经给出 $E\{Y(1)\}$ 的 bias 的精确乘积形式。记
+\[
+\Delta_e(X)=\frac{e(X)-e(X,\alpha)}{e(X,\alpha)},\qquad
+\Delta_{\mu,1}(X)=\mu_1(X)-\mu_1(X,\beta_1).
+\]
+则
+\[
+\tilde{\mu}_1^{\mathrm{dr}}-E\{Y(1)\}
+=E\{\Delta_e(X)\Delta_{\mu,1}(X)\}.
+\]
+由 \cref{sec::cauchy-schwarz-inequality} 的 Cauchy--Schwarz inequality，
+\[
+\left|E\{\Delta_e(X)\Delta_{\mu,1}(X)\}\right|
+\leq
+\sqrt{E\{\Delta_e(X)^2\}E\{\Delta_{\mu,1}(X)^2\}}.
+\]
+代回 $\Delta_e$ 和 $\Delta_{\mu,1}$ 的定义，得到
+\[
+ |   \tilde{\mu}_1^\textup{dr} - E\{  Y(1) \}  |  \leq
+\sqrt{
+E\left[   \frac{ \{  e(X) - e(X,\alpha)\}^2  }{  e(X,\alpha)^2 }  \right] \times
+E\left[  \left\{  \mu_1(X) -  \mu_1(X, \beta_1)   \right\}^2 \right]
+}.
+\]
+这正是题目要求的上界。
+
+对 $E\{Y(0)\}$，从 \cref{eq::dr-aug-out0} 出发，
+\begin{align*}
+\tilde{\mu}_0^{\mathrm{dr}}-E\{Y(0)\}
+&=E\left[
+\frac{(1-Z)\{Y(0)-\mu_0(X,\beta_0)\}}{1-e(X,\alpha)}
+-\{Y(0)-\mu_0(X,\beta_0)\}
+\right] \\
+&=E\left[
+\frac{e(X,\alpha)-Z}{1-e(X,\alpha)}
+\{Y(0)-\mu_0(X,\beta_0)\}
+\right].
+\end{align*}
+条件于 $X$ 并使用 ignorability，
+\[
+\tilde{\mu}_0^{\mathrm{dr}}-E\{Y(0)\}
+=E\left[
+\frac{e(X,\alpha)-e(X)}{1-e(X,\alpha)}
+\{\mu_0(X)-\mu_0(X,\beta_0)\}
+\right].
+\]
+因此
+\[
+ |   \tilde{\mu}_0^\textup{dr} - E\{  Y(0) \}  |  \leq
+\sqrt{
+E\left[   \frac{ \{  e(X) - e(X,\alpha)\}^2  }{  \{1-e(X,\alpha)\}^2 }  \right] \times
+E\left[  \left\{  \mu_0(X) -  \mu_0(X, \beta_0)   \right\}^2 \right]
+}.
+\]
+分子中的 $e(X)-e(X,\alpha)$ 换成 $e(X,\alpha)-e(X)$ 不影响平方项。
+
+\paragraph{Remark.}
+这个 bound 把 ``double robustness'' 的直觉量化了：bias 不是 propensity score error 或 outcome regression error 的线性和，而被一个乘积型项控制。因此只要任一 nuisance model 足够好，bias 就会小；但如果两个模型都在 overlap 差的区域错得厉害，分母中的 $e(X,\alpha)$ 或 $1-e(X,\alpha)$ 会放大误差，这就是本章后面讨论的 doubly fragile 现象。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Data analysis of Example \cref{eg::job-training-obs}}{\ri{cps1re74.csv} 的 doubly robust 分析框架}
+本题要求使用目前为止讨论过的方法分析 \ri{cps1re74.csv}。本地工程中没有找到该数据文件，因此这里不伪造新的数值输出；下面给出完整可复现的分析框架。若把 \ri{cps1re74.csv} 放在运行目录，代码会报告 unadjusted difference in means、additive OLS、Lin regression adjustment、outcome regression、HT、Hajek 和 doubly robust estimators，并给出 bootstrap standard errors。
+
+这个数据集已经在 \cref{eg::job-training-obs} 中作为 LaLonde observational counterpart 出现，也在 \cref{section:correlatioandregressionintro} 中展示过 model specification sensitivity。这里的新增内容是把 \cref{sec::ipw-estimators} 和 \cref{def::dr:ace} 的 estimators 放在同一张表里比较。
+
+\begin{lstlisting}
+library(sandwich)
+
+hc2_se_z <- function(fit, name = "z") {
+  sqrt(vcovHC(fit, type = "HC2")[name, name])
+}
+
+OS_est <- function(z, y, x, out.family = gaussian(),
+                   truncps = c(0, 1)) {
+  x <- as.matrix(x)
+  psdat <- data.frame(z = z, x)
+  outdat <- data.frame(y = y, x)
+
+  pscore <- glm(z ~ ., data = psdat,
+                family = binomial())$fitted.values
+  pscore <- pmax(truncps[1], pmin(truncps[2], pscore))
+
+  outcome1 <- glm(y ~ ., data = outdat, weights = z,
+                  family = out.family)$fitted.values
+  outcome0 <- glm(y ~ ., data = outdat, weights = 1 - z,
+                  family = out.family)$fitted.values
+
+  ace.reg <- mean(outcome1 - outcome0)
+
+  y.treat <- mean(z * y / pscore)
+  y.control <- mean((1 - z) * y / (1 - pscore))
+  one.treat <- mean(z / pscore)
+  one.control <- mean((1 - z) / (1 - pscore))
+
+  ace.ht <- y.treat - y.control
+  ace.hajek <- y.treat / one.treat - y.control / one.control
+
+  r.treat <- mean(z * (y - outcome1) / pscore)
+  r.control <- mean((1 - z) * (y - outcome0) / (1 - pscore))
+  ace.dr <- ace.reg + r.treat - r.control
+
+  c(reg = ace.reg, HT = ace.ht, Hajek = ace.hajek, DR = ace.dr)
+}
+
+OS_ATE <- function(z, y, x, n.boot = 1000,
+                   out.family = gaussian(),
+                   truncps = c(0, 1)) {
+  point.est <- OS_est(z, y, x, out.family, truncps)
+  n <- length(z)
+  x <- as.matrix(x)
+
+  boot.est <- replicate(n.boot, {
+    id <- sample.int(n, n, replace = TRUE)
+    OS_est(z[id], y[id], x[id, , drop = FALSE],
+           out.family, truncps)
+  })
+
+  boot.se <- apply(boot.est, 1, sd)
+  out <- rbind(est = point.est, se = boot.se)
+  round(out, 3)
+}
+
+summarize_ps <- function(z, x) {
+  x <- as.matrix(x)
+  ps <- glm(z ~ ., data = data.frame(z = z, x),
+            family = binomial())$fitted.values
+  c(min = min(ps),
+    q01 = quantile(ps, 0.01),
+    q05 = quantile(ps, 0.05),
+    median = median(ps),
+    q95 = quantile(ps, 0.95),
+    q99 = quantile(ps, 0.99),
+    max = max(ps))
+}
+
+dat <- read.table("cps1re74.csv", header = TRUE)
+dat$u74 <- as.numeric(dat$re74 == 0)
+dat$u75 <- as.numeric(dat$re75 == 0)
+
+z <- dat$treat
+y <- dat$re78
+x <- as.matrix(dat[, c("age", "educ", "black",
+                       "hispan", "married", "nodegree",
+                       "re74", "re75", "u74", "u75")])
+
+fit.unadj <- lm(y ~ z)
+fit.add <- lm(y ~ z + x)
+xc <- scale(x, center = TRUE, scale = FALSE)
+fit.lin <- lm(y ~ z * xc)
+
+reg.tab <- rbind(
+  unadjusted = c(est = coef(fit.unadj)["z"],
+                 se = hc2_se_z(fit.unadj, "z")),
+  additive_OLS = c(est = coef(fit.add)["z"],
+                   se = hc2_se_z(fit.add, "z")),
+  Lin = c(est = coef(fit.lin)["z"],
+          se = hc2_se_z(fit.lin, "z"))
+)
+round(reg.tab, 3)
+
+summarize_ps(z, x)
+
+OS_ATE(z, y, x, n.boot = 1000,
+       out.family = gaussian(), truncps = c(0, 1))
+OS_ATE(z, y, x, n.boot = 1000,
+       out.family = gaussian(), truncps = c(0.01, 0.99))
+OS_ATE(z, y, x, n.boot = 1000,
+       out.family = gaussian(), truncps = c(0.05, 0.95))
+OS_ATE(z, y, x, n.boot = 1000,
+       out.family = gaussian(), truncps = c(0.10, 0.90))
+\end{lstlisting}
+
+报告结果时应至少包括三类信息。第一，列出 point estimates 和 standard errors，比较 \cref{eq::iden-outreg} 的 outcome regression route、\cref{eq::iden-ipw} 的 weighting route，以及 \cref{def::dr:ace} 的 doubly robust route。第二，报告 estimated propensity scores 的分布，特别是接近 $0$ 或 $1$ 的 observations；这决定了 HT estimator 是否会被极端权重主导。第三，比较不截断与不同 truncation levels 下的 estimates。若 HT 大幅变化而 Hajek 和 DR 相对稳定，说明主要问题来自权重总量和 tail behavior；若 DR 也剧烈变化，则说明 outcome model 和 propensity score model 可能同时依赖强 extrapolation。
+
+\paragraph{Remark.}
+LaLonde job training example 的教学价值正在于 model dependence。\cref{section:correlatioandregressionintro} 已经显示，短回归和长回归甚至可以给出相反符号；本章的 doubly robust analysis 不会自动消除这个困难。它提供的是一种把 outcome modeling 和 treatment modeling 结合起来的诊断框架：如果两条路线相互支持，结论更可信；如果两条路线冲突，应该把冲突本身作为主要发现报告。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Analyzing a dataset from the Karolinska Institute}{二元结局下的 DR risk difference 分析框架}
+本题的数据文件 \ri{karolinska.txt} 也没有出现在当前本地工程中，因此这里同样不编造数值。下面的代码直接使用题目给出的变量定义，并把 outcome 作为 binary outcome 处理。目标 estimand 是在 ignorability 和 overlap 下的 average causal effect on the risk scale：
+\[
+\tau=E\{Y(1)-Y(0)\},
+\]
+其中 $Z=1$ 表示在 large volume hospital 诊断，$Y$ 是题目代码定义的二元结局。
+
+\begin{lstlisting}
+library(sandwich)
+
+hc2_se_z <- function(fit, name = "z") {
+  sqrt(vcovHC(fit, type = "HC2")[name, name])
+}
+
+OS_est <- function(z, y, x, out.family = binomial(),
+                   truncps = c(0, 1)) {
+  x <- as.matrix(x)
+  psdat <- data.frame(z = z, x)
+  outdat <- data.frame(y = y, x)
+
+  pscore <- glm(z ~ ., data = psdat,
+                family = binomial())$fitted.values
+  pscore <- pmax(truncps[1], pmin(truncps[2], pscore))
+
+  outcome1 <- glm(y ~ ., data = outdat, weights = z,
+                  family = out.family)$fitted.values
+  outcome0 <- glm(y ~ ., data = outdat, weights = 1 - z,
+                  family = out.family)$fitted.values
+
+  ace.reg <- mean(outcome1 - outcome0)
+
+  y.treat <- mean(z * y / pscore)
+  y.control <- mean((1 - z) * y / (1 - pscore))
+  one.treat <- mean(z / pscore)
+  one.control <- mean((1 - z) / (1 - pscore))
+
+  ace.ht <- y.treat - y.control
+  ace.hajek <- y.treat / one.treat - y.control / one.control
+
+  r.treat <- mean(z * (y - outcome1) / pscore)
+  r.control <- mean((1 - z) * (y - outcome0) / (1 - pscore))
+  ace.dr <- ace.reg + r.treat - r.control
+
+  c(reg = ace.reg, HT = ace.ht, Hajek = ace.hajek, DR = ace.dr)
+}
+
+OS_ATE <- function(z, y, x, n.boot = 2000,
+                   out.family = binomial(),
+                   truncps = c(0, 1)) {
+  point.est <- OS_est(z, y, x, out.family, truncps)
+  n <- length(z)
+  x <- as.matrix(x)
+
+  boot.est <- replicate(n.boot, {
+    id <- sample.int(n, n, replace = TRUE)
+    OS_est(z[id], y[id], x[id, , drop = FALSE],
+           out.family, truncps)
+  })
+
+  boot.se <- apply(boot.est, 1, sd)
+  out <- rbind(est = point.est, se = boot.se)
+  round(out, 3)
+}
+
+balance_table <- function(z, x) {
+  x <- as.data.frame(x)
+  ans <- lapply(names(x), function(v) {
+    xv <- x[[v]]
+    c(mean1 = mean(xv[z == 1]),
+      mean0 = mean(xv[z == 0]),
+      diff = mean(xv[z == 1]) - mean(xv[z == 0]))
+  })
+  out <- do.call(rbind, ans)
+  rownames(out) <- names(x)
+  round(out, 3)
+}
+
+karolinska <- read.table("karolinska.txt", header = TRUE)
+z <- karolinska$hvdiag
+y <- 1 - (karolinska$year.survival == 1)
+x <- as.matrix(karolinska[, c(3, 4, 5)])
+
+table(z)
+table(y, z)
+balance_table(z, x)
+
+fit.unadj <- lm(y ~ z)
+fit.add <- lm(y ~ z + x)
+xc <- scale(x, center = TRUE, scale = FALSE)
+fit.lin <- lm(y ~ z * xc)
+
+reg.tab <- rbind(
+  unadjusted = c(est = coef(fit.unadj)["z"],
+                 se = hc2_se_z(fit.unadj, "z")),
+  additive_LPM = c(est = coef(fit.add)["z"],
+                   se = hc2_se_z(fit.add, "z")),
+  Lin_LPM = c(est = coef(fit.lin)["z"],
+              se = hc2_se_z(fit.lin, "z"))
+)
+round(reg.tab, 3)
+
+ps <- glm(z ~ x, family = binomial())$fitted.values
+round(c(min = min(ps),
+        q05 = quantile(ps, 0.05),
+        median = median(ps),
+        q95 = quantile(ps, 0.95),
+        max = max(ps)), 3)
+
+OS_ATE(z, y, x, n.boot = 2000,
+       out.family = binomial(), truncps = c(0, 1))
+OS_ATE(z, y, x, n.boot = 2000,
+       out.family = binomial(), truncps = c(0.05, 0.95))
+OS_ATE(z, y, x, n.boot = 2000,
+       out.family = binomial(), truncps = c(0.10, 0.90))
+\end{lstlisting}
+
+这份分析应该按如下逻辑解释。首先，\ri{table(y, z)} 给出 crude risk difference；它是未调整的 descriptive contrast，不应直接等同于 causal effect。其次，linear probability model 的 additive adjustment 和 Lin-style interacted adjustment 给出 regression adjustment benchmark。第三，\ri{OS\_ATE} 中的 \ri{reg}、\ri{HT}、\ri{Hajek} 和 \ri{DR} 四列分别对应 outcome regression、Horvitz--Thompson weighting、Hajek weighting 和 doubly robust estimator。由于样本量只有 $158$，bootstrap standard errors 对重抽样中的 separation 或极端 propensity scores 会很敏感；因此必须同时报告 propensity score diagnostics 和 truncation sensitivity。
+
+\paragraph{Remark.}
+Karolinska example 与 \ri{cps1re74.csv} 的不同在于：这里 treatment groups 在人数上刚好是 $79$ 对 $79$，但这并不意味着 covariate balance 已经成立。large volume hospital 的诊断地点可能与年龄、rural status 和性别相关，而这些 covariates 又可能影响一年生存。因此本题的核心不是追求某一个单独 estimator，而是检查 adjusted estimates 是否在 outcome-regression route、weighting route 和 doubly robust route 之间保持一致。若三者差异很大，最诚实的结论应是 observational identification 对模型和 overlap 仍然敏感。
+\end{exercisesolution}

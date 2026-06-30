@@ -1,0 +1,516 @@
+
+\chapter{Matching in  Observational Studies}\label{chapter::matching-obs}
+ 
+匹配在经验研究中有很长的历史。W. Cochran 和 D. Rubin 在统计因果推断中推广了这一方法。  \citet{cochran1973controlling} 是一篇早期综述论文。\citet{rubin2006matched} 收录了 Rubin 在这一主题上的贡献。
+本章还讨论 \citet{abadie2006large, abadie2008failure, abadie2011bias} 基于匹配估计量渐近分析所作的现代贡献。
+
+ 
+
+\section{A simple starting point: many more control units}
+\label{sec::ideal-matching-mpe}
+
+\begin{figure}[ht]
+\centering 
+\includegraphics[width = \textwidth]{figures/matchingonetoone.pdf}
+\caption{Illustration of matching in observational studies}\label{fig::matching-causal}
+\end{figure}
+
+
+Figure \ref{fig::matching-causal} 展示了 treatment-control observational studies 中匹配的基本思想。
+考虑一个简单情形：control units 的数量 $n_0$ 远大于 treated units 的数量 $ n_1$。对 treated group 中的 unit $i=1,\ldots, n_1$，我们在 control group 中寻找一个 unit $m(i)$，使得 $X_i = X_{m(i)}$。在理想情形下，我们有精确匹配。因此，一个 matched pair 内的两个 units 有相同的 propensity score $e(X_i) = e(X_{m(i)})$。于是，在一个 unit 接受 treatment 而另一个接受 control 这一事件条件下，unit $i$ 接受 treatment 且 unit $m(i)$ 接受 control 的概率为
+$$
+\pr( Z_i = 1, Z_{m(i)} = 0 \mid  Z_i +Z_{m(i)} = 1, X_i, X_{m(i)} )  = 1/2
+$$
+这是由对称性论证得到的。\footnote{严格论证为
+\begin{eqnarray*}
+&&\pr( Z_i = 1, Z_{m(i)} = 0 \mid  Z_i +Z_{m(i)} = 1, X_i, X_{m(i)} ) \\
+&=& \frac{ \pr( Z_i = 1, Z_{m(i)} = 0 \mid   X_i, X_{m(i)} ) }{ \pr( Z_i = 1, Z_{m(i)} = 0 \mid   X_i, X_{m(i)} )   + \pr( Z_i = 0, Z_{m(i)} = 1 \mid   X_i, X_{m(i)} ) } \\
+&=& \frac{  e(X_i)  \{ 1 - e(X_{m(i)}) \}  }{ e(X_i)  \{ 1 - e(X_{m(i)}) \}   + \{1-e(X_i)\} e(X_{m(i)}) } \\
+&=& \frac{1}{2}.
+\end{eqnarray*}
+}
+也就是说，在给定 covariates 以及每一对中恰有一个 treated unit 和一个 control unit 这一事件的条件下，treatment assignment 与 MPE 完全相同。因此，我们可以把精确匹配的 observational study 当作 MPE 来分析，使用 Chapter \ref{chapter::mpe} 中的 FRT 或 Neymanian approach。这给出了关于 treated units 上 causal effect 的推断。
+
+
+我们也可以为每个 treated unit 寻找多个 control units。一般地，我们可以为 treated unit $i$ 寻找 $M_i$ 个 matched control units。当 $M_i$ 可变时，这称为 {\it variable-ratio matching} \citep{ming2000substantial, ming2001note, pimentel2015variable}。在完美匹配下，treatment assignment mechanism 与 Section \ref{sec::general-matched-experiment} 中讨论的一般 matched experiment 相同。我们可以使用该节的分析结果来分析 matched observational study。
+
+
+\citet{rosenbaum2002design} 提倡上述分析策略。然而，在大多数 observational studies 中，$X_i = X_{m(i)}$ 并不对所有 units 成立。上述关于 FRT 的推理不再成立。最近，\citet{guo2022statistical} 报告了 FRT 中非精确匹配后果的负面结果。这对这种策略提出了警示。
+ 
+
+
+\section{A more complicated but realistic scenario}
+
+即使 control group 很大，我们通常也没有精确匹配。我们能够达到的是 $X_i \approx X_{m(i)}  $，或者在某个 distance metric 下 $X_i -X_{m(i)} $ 很小。因此，我们只有近似匹配。例如，我们定义
+$$
+m(i) = \arg\min_{k:Z_k = 0} d(X_i ,X_k), 
+$$
+其中 $d(X_i ,X_k)$ 度量 $X_i$ 和 $X_k$ 之间的距离。一些标准的距离选择包括 Euclidean distance
+$$
+d(X_i ,X_k) =  (X_i - X_k)\tran ( X_i - X_k),
+$$
+以及 Mahalanobis distance
+%\footnote{We define $\|v\|_2^2 = \sum_{j=1}^p v_j^2$ for a vector $v = (v_1, \ldots, v_p)\tran$. It denotes the squared length of the vector $v$.}
+$$
+d(X_i ,X_k) =(X_i - X_k)\tran \Omega^{-1} (X_i - X_k)
+$$
+其中 $\Omega$ 是来自整个 population 或仅来自 control group 的 $X_i$ 的 sample covariance matrix。
+
+
+下面我回顾匹配中的一些微妙问题。综述论文见 \citet{stuart2010matching}。
+\begin{enumerate}
+\item
+(one-to-one or one-to-$M$ matching)
+上面的讨论集中在 one-to-one matching。我们也可以把讨论扩展到 one-to-$M$ matching。
+
+
+\item
+我关注 matching with replacement，但一些实践者更偏好 matching without replacement。如果 control units 的池子很大，这两种方法在最终结果上不会相差太多。Matching with replacement 在计算上更方便，而 matching without replacement 涉及计算量很大的 discrete optimization。Matching with replacement 通常给出质量更高的匹配，但它会因同一个 unit 被多次使用而引入依赖。相比之下，matching without replacement 的优点是 matched units 之间的独立性以及后续数据分析的简单性。
+
+
+\item
+由于 matched pairs 内仍有残余的 covariate imbalance，分析数据时使用 covariate adjustment 至关重要。在这种情形下，covariate adjustment 不仅是为了提高效率，也是为了 bias correction。
+
+\item
+如果 $X$ 是 ``high dimensional''，那么对 treated group 中某些 unit $i$ 以及 control group 中所有可选 units，$d(X_i ,X_k)$ 都很可能太大。如果发生这种情况，我们可能不得不丢弃一些很难找到匹配的 units。这样做实际上改变了感兴趣的 study population。
+
+
+\item
+上述问题很难避免。例如，如果 $X_i \sim \text{N}(0, I_p), X_k \sim\text{N}(0, I_p) ,$ 且 $X_i \ind X_k$，则
+$$
+(X_i - X_k)\tran (X_i - X_k) \sim    2 \chi^2_p
+$$ 
+其均值为 $2p$，方差为 $8p$（见 Chapter \ref{subsection::chi2-t-distribution}）。
+理论表明，当 $p$ 很大时，不完美匹配会在 causal effect estimation 中造成很大的 bias。
+这说明如果 $p$ 很大，我们必须在匹配之前做一些 dimension reduction。
+\citet{rosenbaum1983central} 建议使用基于 propensity score 的匹配。给定 estimated propensity score，我们寻找使 $ |  \hat{e}(X_i) -  \hat{e}(X_{m(i)})  |$ 或 $| \logit\{ \hat{e}(X_i)\} - \logit\{ \hat{e}(X_{m(i)}) \} | $ 较小的 unit pairs $\{ i, m(i)\}$\footnote{定义 $\logit(w) = \log \frac{w}{1-w}$。logit function 是从 $[0,1]$ 到 $(-\infty, \infty)$ 的映射。}，也就是说，我们得到一个一维匹配问题。
+\end{enumerate}
+
+ 
+
+\section{Matching estimator for the average causal effect}
+
+在一系列论文中，Abadie and Imbens (AI) 严格刻画了 matching estimator 的渐近性质，并为 average causal effect 提出了相应的大样本置信区间。
+他们采用 observational studies 的标准设定，即 $\{ X_i , Z_i ,Y_i(1), Y_i(0)  \}_{i=1}^n \iidsim \{ X, Z, Y(1), Y(0) \}$。
+
+\subsection{Point estimation and bias correction}
+
+AI 关注 $1$-$M$ matching with replacement。对 treated unit $i$，我们可以简单地将 treatment 下的 potential outcome 填补为 $\hat{Y}_i(1) = Y_i$，并将 control 下的 potential outcome 填补为
+$$
+\hat{Y}_i(0) = M^{-1} \sum_{k\in J_i} Y_k,
+$$
+其中 $J_i$ 是 control group 中与 unit $i$ 匹配的 units 集合。例如，我们可以对 control group 中所有 $k$ 计算 $d(X_i, X_k)$，然后把 $J_i$ 定义为使 $d(X_i, X_k)$ 取最小 $M$ 个值的 $k$ 的指标集合。
+
+
+
+
+对 control unit $i$，我们简单地将 control 下的 potential outcome 填补为 $\hat{Y}_i(0) = Y_i$，并将 treatment 下的 potential outcome 填补为
+$$
+\hat{Y}_i(1) = M^{-1} \sum_{k\in J_i} Y_k,
+$$
+其中 $J_i$ 是 treatment group 中与 unit $i$ 匹配的 units 集合。
+
+matching estimator 为
+$$
+\hat{\tau}^\textup{m} = n^{-1} \sumn \{\hat{Y}_i(1) -\hat{Y}_i(0) \}.
+$$
+
+AI 表明，$\hat{\tau}^\textup{m}$ 有不可忽略的 bias，尤其是在 $X$ 是多维且 control units 的数量与 treated units 的数量相当时。通过一些技术推导，他们提出如下 bias 估计量：
+$$
+\hat{B} = n^{-1} \sumn  \hat{B}_i
+$$
+其中
+$$
+\hat{B}_i = (2Z_i - 1) M^{-1} \sum_{k\in J_i} \{  \hat{\mu}_{1-Z_i}(X_i) -  \hat{\mu}_{1-Z_i}(X_k)     \}
+$$
+其中 $\{  \hat{\mu}_1(X_i), \hat{\mu}_0(X_i) \}$ 是例如由 OLS 拟合得到的 predicted outcomes。
+对 $Z_i  =1$ 的 treated unit，estimated bias 为
+$$
+\hat{B}_i = M^{-1} \sum_{k\in J_i} \{  \hat{\mu}_{0}(X_i) -  \hat{\mu}_{0}(X_k)     \}
+$$
+它校正由 covariates 不匹配导致的 predicted control potential outcomes 差异；对 $Z_i = 0$ 的 control unit，estimated bias 为
+ $$
+\hat{B}_i =  - M^{-1} \sum_{k\in J_i} \{  \hat{\mu}_{1}(X_i) -  \hat{\mu}_{1}(X_k)     \}
+$$
+它校正由 covariates 不匹配导致的 predicted treated potential outcomes 差异。
+
+
+最终的 bias-corrected matching estimator 为
+$$
+\hat{\tau}^\textup{mbc} = \hat{\tau}^\textup{m}  - \hat{B},
+$$
+ 它有如下 linear expansion。
+ 
+ \begin{proposition}
+ \label{prop::matching-expansion-ate} 我们有
+ \begin{eqnarray}\label{eq::linearATE}
+\hat{\tau}^\textup{mbc}  
+= n^{-1} \sumn \hat{\psi}_i
+\end{eqnarray} 
+其中
+ $$
+  \hat{\psi}_i = \hat{\mu}_1(X_i) -  \hat{\mu}_0(X_i) + (2Z_i - 1) (1+K_i/M) \{   Y_i - \hat{\mu}_{Z_i}(X_i)  \}
+ $$
+ 其中 $K_i$ 是 unit $i$ 被用作匹配对象的次数。
+ \end{proposition}
+ 
+ 
+ 
+Proposition  \ref{prop::matching-expansion-ate} 中的 linear expansion 来自简单但繁琐的代数。我把它的证明留作 Problem \ref{para::linear-bcm-ate}。这个 linear expansion 启发了一个简单的 variance estimator
+$$
+\hat{V}^\textup{mbc}  = \frac{1}{n^2} \sumn (  \hat{\psi}_i - \hat{\tau}^\textup{mbc}  )^2,
+$$
+这是把 $\hat{\tau}^\textup{mbc}  $ 看作 $  \hat{\psi}_i $ 的 sample average 得到的。\citet{abadie2008failure} 首先表明，通过对原始数据重抽样得到的简单 bootstrap 不能用于估计 matching estimators 的方差，但他们提出的方差估计过程并不容易实现。\citet{otsu2017bootstrap} 建议对 linear expansion 中的 $  \hat{\psi}_i $ 做 bootstrap。然而，\citet{otsu2017bootstrap} 的 bootstrap 本质上给出的就是 variance estimator $\hat{V}^\textup{mbc}  $，而这个估计量计算简单。
+
+
+ 
+\subsection{Connection with the doubly robust estimators}
+ \label{sec::connection-dr-att}
+ 
+Bias-corrected matching estimators 和 doubly robust estimators 密切相关。二者都等于 outcome regression estimator
+再加上一些基于 residuals 的修正
+$$ 
+ \hat{R}_i = 
+ \begin{cases}
+ Y_i - \hat{\mu}_1(X_i)  & \text{ if } Z_i=1;\\
+ Y_i - \hat{\mu}_0(X_i)    & \text{ if } Z_i=0.
+\end{cases} 
+ $$
+  对 average causal effect $\tau$，回忆 outcome regression estimator
+$$
+\hat{\tau}^{\textup{reg}} =  n^{-1} \sumn \{ \hat{\mu}_1(X_i) -  \hat{\mu}_0(X_i)\} 
+$$
+以及 doubly robust estimator
+$$
+\hat{\tau}^\textup{dr}  =  \hat{\tau}^{\textup{reg}} 
++ n^{-1} \sumn \left\{  \frac{Z_i \hat{R}_i }{ \hat{e}(X_i)} -  \frac{ (1-Z_i) \hat{R}_i}{ 1-  \hat{e}(X_i) } \right\} .
+$$
+进一步地，我们可以验证 $\hat{\tau}^\textup{mbc} $ 具有与 $\hat{\tau}^\textup{dr}  $ 类似的形式。
+\begin{proposition}
+\label{prop::mbc-dr}
+$\tau$ 的 bias-corrected matching estimator 等于
+$$
+\hat{\tau}^\textup{mbc}   =\hat{\tau}^{\textup{reg}} 
++ n^{-1} \sumn \left\{ \left(1+{ K_i\over M} \right)  Z_i \hat{R}_i  - \left( 1+{ K_i\over M} \right) (1-Z_i)  \hat{R}_i \right\} .
+$$
+\end{proposition}
+
+我把 Proposition \ref{prop::mbc-dr} 的证明留作 Problem \ref{para::dr-mbc-form}。由 Proposition \ref{prop::mbc-dr}，我们可以把 matching 看作估计 propensity score 的非参数方法，并把所得的 bias-corrected matching estimator 看作 doubly robust estimator。例如，$1+K_i /  M$ 应当接近 $1/\hat{e}(X_i)$。当一个 treated unit 的 $e(X_i)$ 很小时，基于 estimated propensity score 的权重 $1/\hat{e}(X_i)$ 会很大；与此同时，它会匹配到许多 control units，从而导致较大的 $K_i$，也就导致较大的 $1+K_i /  M$。然而，这种联系也提出了一个关于 matching 的明显问题。当 $M$ 固定时，用于 $1/e(X_i)$ 的估计量 $1+K_i /  M$ 会非常嘈杂。允许 $M$ 随 sampling size 增长，很可能改善基于 matching 的 propensity score 非参数估计量，从而改善 matching 和 bias-corrected matching estimators 的渐近性质。\citet{lin2023estimation} 给出了形式化理论，说明一旦允许 $M$ 以适当速率增长，bias-corrected matching estimator $\hat{\tau}^\textup{mbc}   $ 可以达到与 doubly robust estimator 类似的性质。
+
+
+ 
+ 
+ \section{Matching estimator for the average causal effect on the treated}
+
+ 
+对 average causal effect on the treated
+$$
+\tau_\textsc{T} = E(Y\mid Z=1) - E\{  Y(0)  \mid Z=1\},
+$$ 
+我们只需要为所有 treated units 填补缺失的 control 下 potential outcomes，由此得到如下估计量
+$$
+\hat{\tau}_\textsc{T}^\textup{m} = n_1^{-1} \sumn Z_i \{  Y_i - \hat{Y}_i(0) \}.
+$$
+当 $X$ 是多维时，它同样有 bias。
+\citet{otsu2017bootstrap} 建议用如下方式估计它的 bias：
+$$  
+\hat{B}_\textsc{T} = n_1^{-1} \sumn Z_i  \hat{B}_{\textsc{T},i} 
+$$
+其中
+$$
+\hat{B}_{\textsc{T},i} = M^{-1} \sum_{k \in J_i} \{  \hat{\mu}_0(X_i) -  \hat{\mu}_0(X_k)     \}
+$$
+校正 $Z_i = 1$ 的 treated unit 因 covariates 不匹配而产生的 bias。
+
+
+最终的 bias-corrected estimator 为
+$$
+\hat{\tau}_\textsc{T}^\textup{mbc} = \hat{\tau}_\textsc{T}^\textup{m} - \hat{B}_\textsc{T},
+$$ 
+它有如下 linear expansion。
+
+\begin{proposition}\label{prop::linear-expansion-att}
+我们有
+\begin{eqnarray}\label{eq::linearATT}
+\hat{\tau}_\textsc{T}^\textup{mbc}  =   n_1^{-1} \sumn \hat{\psi}_{\textsc{T}, i},
+\end{eqnarray}
+其中
+$$
+\hat{\psi}_{\textsc{T}, i} =   Z_i \{ Y_i - \hat{\mu}_0(X_i) \}
+- (1-Z_i) K_i/M \{ Y_i - \hat{\mu}_0(X_i) \} . 
+$$
+\end{proposition}
+
+我把证明留作 Problem \ref{para::linear-bcm-ate}。
+受 \citet{otsu2017bootstrap} 启发，我们可以把 $\hat{\tau}_\textsc{T}^\textup{mbc}  $ 看作 $\hat{\psi}_{\textsc{T}, i}$ 的 sample average 乘以 $n/n_1$，因此一个直观的 variance estimator 为
+$$
+\hat{V}_\textsc{T}^\textup{mbc} =  \left( \frac{n}{n_1} \right)^2 \frac{1}{n^2} \sumn (\hat{\psi}_{\textsc{T}, i} - \hat{\tau}_\textsc{T}^\textup{mbc} n_1/n)^2 = \frac{1}{n_1^2} \sumn (\hat{\psi}_{\textsc{T}, i} - \hat{\tau}_\textsc{T}^\textup{mbc} n_1/n )^2.
+$$
+
+ 
+ 类似 Section \ref{sec::connection-dr-att} 中的讨论，我们可以把 doubly robust 和 bias-corrected matching estimators 与 outcome regression estimator 作比较。
+ 对 average causal effect on the treated units $\tau_\textsc{T}$，回忆 outcome regression estimator
+$$
+\hat{\tau}^{\textup{reg}}_\textsc{T} = n_1^{-1} \sumn Z_i \{ Y_i - \hat{\mu}_0(X_i) \} ,
+$$
+以及 doubly robust estimator
+$$
+\hat{\tau}_\textsc{T}^\textup{dr} =  \hat{\tau}^{\textup{reg}}_\textsc{T} 
+- n_1^{-1} \sumn \frac{  \hat{e}(X_i) }{ 1- \hat{e}(X_i) }  (1-Z_i)  \hat{R}_i .
+$$
+进一步地，我们可以验证 $\hat{\tau}_\textsc{T}^\textup{mbc} $ 具有与 $\hat{\tau}_\textsc{T}^\textup{dr} $ 类似的形式。
+\begin{proposition}
+\label{prop::mbc-dr-att}
+$\tau_\textsc{T}$ 的 bias correction matching estimator 等于
+$$
+\hat{\tau}_\textsc{T}^\textup{mbc}   = \hat{\tau}^{\textup{reg}}_\textsc{T} 
+ - n_1^{-1} \sumn { K_i\over M}  (1-Z_i)  \hat{R}_i.
+$$
+\end{proposition}
+
+
+我把 Proposition \ref{prop::mbc-dr-att} 的证明留作 Problem \ref{para::dr-mbc-form-att}。Proposition \ref{prop::mbc-dr-att} 表明，matching 本质上使用 $K_i/M$ 来估计给定 covariates 时 treatment 的 odds。
+
+
+
+
+\section{A case study}
+\label{sec::matching-application}
+
+
+
+\subsection{Experimental data}
+现在我使用 \citet{sekhon2011multivariate} 的 \ri{Matching} package 重新考察 LaLonde 数据。我们已经多次对 dataset \ri{lalonde} 使用这个 package，现在将使用它的核心函数 \ri{Match}。实验部分给出如下结果：
+\begin{lstlisting}
+> library("car")
+> library("Matching")
+> 
+> ## Chapter 15.5.1
+> ## experimental data
+> data("lalonde")
+> y = lalonde$re78
+> z = lalonde$treat
+> x = as.matrix(lalonde[, c("age", "educ", "black",
++                           "hisp", "married", "nodegr",
++                           "re74", "re75")])
+> 
+> ## analysis the randomized experiment
+> neymanols = lm(y ~ z)
+> fisherols = lm(y ~ z + x)
+> xc = scale(x)
+> linols = lm(y ~ z*xc)
+> resols = c(neymanols$coef[2],
++            fisherols$coef[2],
++            linols$coef[2],
++            sqrt(hccm(neymanols, type = "hc2")[2, 2]),
++            sqrt(hccm(fisherols, type = "hc2")[2, 2]),
++            sqrt(hccm(linols, type = "hc2")[2, 2]))
+> resols = matrix(resols, 3, 2)
+> rownames(resols) = c("neyman", "fisher", "lin")
+> colnames(resols) = c("est", "se")
+> resols 
+            est       se
+neyman 1794.343 670.9967
+fisher 1676.343 677.0493
+lin    1621.584 694.7217
+\end{lstlisting} 
+所有 regression estimators 都显示 job training program 有正的显著结果。我们可以把这些数据当作基于 1-1 matching 的 observational study 来分析，得到如下结果：
+\begin{lstlisting}
+> matchest.adj = Match(Y = y, Tr = z, X = x, BiasAdjust = TRUE)
+> summary(matchest.adj)
+
+Estimate...  2119.7 
+AI SE......  876.42 
+T-stat.....  2.4185 
+p.val......  0.015583 
+
+Original number of observations..............  445 
+Original number of treated obs...............  185 
+Matched number of observations...............  185 
+Matched number of observations  (unweighted).  268
+\end{lstlisting} 
+point estimator 和 standard error 都增大了，但从定性上看，结论保持不变。
+
+
+\subsection{Observational data}
+接着我重新考察这组数据的 observational counterpart：
+\begin{lstlisting}
+> dat <- read.table("cps1re74.csv", header = TRUE)
+> dat$u74 <- as.numeric(dat$re74==0)
+> dat$u75 <- as.numeric(dat$re75==0)
+> y = dat$re78
+> z = dat$treat
+> x = as.matrix(dat[, c("age", "educ", "black",
++                           "hispan", "married", "nodegree",
++                           "re74", "re75", "u74", "u75")])
+ \end{lstlisting} 
+如果使用简单的 OLS estimators，结果会远离 experimental benchmark，并且对 regression specification 很敏感：
+\begin{lstlisting}
+> neymanols = lm(y ~ z)
+> fisherols = lm(y ~ z + x)
+> xc = scale(x)
+> linols = lm(y ~ z*xc)
+> resols = c(neymanols$coef[2],
++            fisherols$coef[2],
++            linols$coef[2],
++            sqrt(hccm(neymanols, type = "hc2")[2, 2]),
++            sqrt(hccm(fisherols, type = "hc2")[2, 2]),
++            sqrt(hccm(linols, type = "hc2")[2, 2]))
+> resols = matrix(resols, 3, 2)
+> rownames(resols) = c("neyman", "fisher", "lin")
+> colnames(resols) = c("est", "se")
+> resols 
+             est        se
+neyman -8506.495  583.4426
+fisher  1067.546  628.4389
+lin    -4265.801 3211.7718
+  \end{lstlisting} 
+  然而，如果使用 1-1 matching，结果几乎恢复到基于 experimental data 的结果：
+  \begin{lstlisting}
+> matchest = Match(Y = y, Tr = z, X = x, BiasAdjust = TRUE)
+> summary(matchest)
+
+Estimate...  1747.8 
+AI SE......  916.59 
+T-stat.....  1.9068 
+p.val......  0.056543 
+
+Original number of observations..............  16177 
+Original number of treated obs...............  185 
+Matched number of observations...............  185 
+Matched number of observations  (unweighted).  248
+   \end{lstlisting} 
+   
+忽略 matched data 中的 ties，我们也可以使用 matched-pairs analysis，它同样给出与基于 experimental data 的结果相似的结果：
+  \begin{lstlisting}
+> diff = y[matchest$index.treated] - 
++           y[matchest$index.control]
+> round(summary(lm(diff ~ 1))$coef[1, ], 2)
+  Estimate Std. Error    t value   Pr(>|t|) 
+   1581.44     558.55       2.83       0.01 
+> 
+> diff.x = x[matchest$index.treated, ] - 
++               x[matchest$index.control, ]
+> round(summary(lm(diff ~ diff.x))$coef[1, ], 2)
+  Estimate Std. Error    t value   Pr(>|t|) 
+   1842.06     578.37       3.18       0.00 
+   \end{lstlisting} 
+   
+   
+   
+   \subsection{Covariate balance checks}
+   
+此外，我们可以使用简单 OLS 检查 covariate balance。匹配之前，covariates 高度不平衡，这由许多 coefficients 后面的星号体现出来。
+  \begin{lstlisting}
+> lm.before = lm(z ~ x)
+> summary(lm.before) 
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.18508 -0.01057  0.00303  0.01018  1.01355 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  1.404e-03  6.326e-03   0.222   0.8243    
+xage        -4.043e-04  8.512e-05  -4.750 2.05e-06 ***
+xeduc        3.220e-04  4.073e-04   0.790   0.4293    
+xblack       1.070e-01  2.902e-03  36.871  < 2e-16 ***
+xhispan      6.377e-03  3.103e-03   2.055   0.0399 *  
+xmarried    -1.525e-02  2.023e-03  -7.537 5.06e-14 ***
+xnodegree    1.345e-02  2.523e-03   5.331 9.89e-08 ***
+xre74        7.601e-07  1.806e-07   4.208 2.59e-05 ***
+xre75       -1.231e-07  1.829e-07  -0.673   0.5011    
+xu74         4.224e-02  3.271e-03  12.914  < 2e-16 ***
+xu75         2.424e-02  3.399e-03   7.133 1.02e-12 *** 
+      \end{lstlisting} 
+      
+      
+      然而，匹配之后，covariates 已经很好地平衡，这由所有 coefficients 都没有星号体现出来。
+      
+      
+   \begin{lstlisting}
+> lm.after = lm(z ~ x, 
++               subset = c(matchest$index.treated, 
++                          matchest$index.control))
+> summary(lm.after) 
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.66864 -0.49161 -0.03679  0.50378  0.65122 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)  
+(Intercept)  6.003e-01  2.427e-01   2.474   0.0137 *
+xage         3.199e-03  3.427e-03   0.933   0.3511  
+xeduc       -1.501e-02  1.634e-02  -0.918   0.3590  
+xblack       6.141e-05  7.408e-02   0.001   0.9993  
+xhispan      1.391e-02  1.208e-01   0.115   0.9084  
+xmarried    -1.328e-02  6.729e-02  -0.197   0.8437  
+xnodegree   -3.023e-02  7.144e-02  -0.423   0.6723  
+xre74        6.754e-06  9.864e-06   0.685   0.4939  
+xre75       -9.848e-06  1.279e-05  -0.770   0.4417  
+xu74         2.179e-02  1.027e-01   0.212   0.8321  
+xu75        -2.642e-02  8.327e-02  -0.317   0.7512
+         \end{lstlisting} 
+         
+         
+
+\section{Discussion}
+
+
+当 covariates 很多时，基于原始 covariates 的 matching 可能遭受 curse of dimensionality。     \citet{rosenbaum1983central} 建议使用基于 estimated propensity score 的 matching。    \citet{abadie2016matching} 为这一策略提供了形式化理论。
+         
+         
+         
+\section{Homework Problems}
+
+\homeworksolutionref{15}
+\paragraph{Linear expansions of the bias-corrected estimators}\label{para::linear-bcm-ate}
+
+
+ 证明 Propositions \ref{prop::matching-expansion-ate} 和 \ref{prop::linear-expansion-att}。
+ 
+ 
+ 
+\paragraph{Doubly robust form of the bias-corrected matching estimator for $\tau$}\label{para::dr-mbc-form}
+
+证明 Proposition \ref{prop::mbc-dr}。
+
+
+\paragraph{Doubly robust form of the bias-corrected matching estimator for $\tau_\textsc{t}$}\label{para::dr-mbc-form-att}
+
+证明 Proposition \ref{prop::mbc-dr-att}。
+ 
+
+\paragraph{Revisit Example \ref{eg::chan-bmi-ATE}}
+
+
+使用 matching estimator 分析 Example \ref{eg::chan-bmi-ATE} 中的 dataset。把结果与先前结果比较。
+你应当检查匹配前后的 covariate balance。你也可以为 matching estimator 选择不同的匹配数量。此外，你甚至可以把各种 estimators 应用于 matched data。
+你的结果对这些选择敏感吗？
+
+ 
+
+
+\paragraph{Revisit Chapter \ref{sec::matching-application}}
+
+
+Chapter \ref{sec::matching-application} 使用 matching 分析了 LaLonde observational study。Matching 表现很好，因为它给出的 estimator 接近 experimental gold standard。使用 outcome regression、propensity score stratification、两个 IPW 以及 doubly robust estimators 重新分析这些数据。把结果与 matching estimator 以及来自 experimental gold standard 的 estimator 比较。
+
+注意，你有许多选择。例如，stratification 的 strata 数量，以及基于 estimated propensity scores 修剪数据的 threshold。你可以考虑拟合不同的 propensity score 和 outcome models，例如，包含 basic covariates 的一些 quadratic terms。你甚至可以把这些 estimators 应用于 matched data。
+
+这是一个经典 dataset，已有数百篇论文使用过它。你可以阅读一些参考文献 \citep{dehejia1999causal, hainmueller2012entropy}，也可以在数据分析中发挥创造性。
+
+
+
+\paragraph{Data re-analyses}
+
+\citet{ho2007matching} 是 political science 中一篇有影响力的论文，作者基于它开发了一个 \ri{R} package \ri{MatchIt} \citep{ho2011matchit}。\citet{ho2007matching} 分析了两个 datasets，二者都可以从 Harvard Dataverse 获取。
+
+使用目前讨论过的方法重新分析这两个 datasets。只要能够说明理由，你也可以尝试其他方法。
+
+
+
+ 
+
+ 

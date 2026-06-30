@@ -1,0 +1,307 @@
+ 
+\chapter{Application of the Instrumental Variable Method: Mendelian Randomization}
+ \label{chapter::iv-mr}
+
+
+
+
+\citet{katan1986apoupoprotein} 关注的是一类观察性研究：这些研究显示，低血清胆固醇水平与癌症风险有关。可是，如前所述，观察性研究会受到 unmeasured confounding 的影响。因此，很难把观察到的关联解释为因果关系。在 \citet{katan1986apoupoprotein} 研究的这个具体问题中，甚至还可能是癌症早期阶段反过来导致低血清胆固醇水平。若只使用标准的流行病学研究，要区分血清胆固醇水平对癌症的因果效应并不容易。\citet{katan1986apoupoprotein} 认为，Apolipoprotein E genes 与血清胆固醇水平有关，但不会直接影响癌症状态。因此，如果低血清胆固醇水平会导致癌症，那么在带有和不带有会造成不同血清胆固醇水平的 genotype 的人群之间，我们应当观察到癌症风险的差异。用因果推断的语言来说，\citet{katan1986apoupoprotein} 提出把 Apolipoprotein E genes 用作 IVs。
+
+
+\citet{katan1986apoupoprotein} 并没有进行任何数据分析，而只是提出了一个概念性设计；这个设计不仅可以处理 {\it unmeasured confounding}，也可以处理 {\it reverse causality}。此后，随着现代 genome-wide association studies 的发展，人们开展了更复杂、更精细的研究。这些研究在流行病学研究中把 genetic information 作为 exposures 的 IVs，用来估计 exposures 对 outcomes 的因果效应。它们共同的动机来自 {\it Mendel's second law}，也就是 {\it random assortment} 定律；该定律说明，一个性状的遗传独立于其他性状的遗传。因此，使用 genetic information 作为 IV 的方法称为 {\it Mendelian Randomization} (MR)。
+
+
+\section{Background and motivation}
+
+从图形上看，\cref{fig::mr-dag} 给出了 treatment $D$、outcome $Y$、unmeasured confounder $U$ 以及 genetic IVs $G_1, \ldots, G_p$ 之间的因果图。在许多 MR 研究中，genetic IVs 是 single nucleotide polymorphisms (SNPs)。由于 pleiotropy，\footnote{Pleiotropy 指一个 gene 影响两个或更多看似无关的 phenotypic traits。} genetic IVs 可能对我们关心的 outcome 有直接效应，因此 \cref{fig::mr-dag} 也允许 exclusion restriction assumption 被违反。
+
+\begin{figure}
+\centering
+\includegraphics[width = 0.8 \textwidth]{figures/mr_dag.pdf}
+\caption{MR 的因果图}\label{fig::mr-dag}
+\end{figure}
+
+
+
+标准 linear IV model 假设 IVs 对 outcome 没有直接效应。下面的 \cref{def::linear-iv-model-mr} 同时给出 structural form 和 reduced form。
+
+\begin{definition}
+[linear IV model]\label{def::linear-iv-model-mr}
+标准 linear IV model
+\begin{eqnarray}
+Y  &=& \beta_0 +  \beta D + \beta_u U + \varepsilon_Y , \\
+D  &=& \gamma_0 +   \gamma_1 G_1 + \cdots + \gamma_p G_p + \gamma_u U + \varepsilon_D ,
+\end{eqnarray}
+具有 reduced form
+\begin{eqnarray}
+Y  &=&\beta_0 +  \beta  \gamma_0 + \beta \gamma_1 G_1 + \cdots + \beta  \gamma_p G_p  + (\beta_u + \beta_0 \gamma_u )U + \varepsilon_Y , \\
+D  &=& \gamma_0 +  \gamma_1 G_1 + \cdots + \gamma_p G_p + \gamma_u U + \varepsilon_D ,
+\end{eqnarray}
+\end{definition}
+
+
+
+下面的 \cref{def::linear-model-invalid-iv-mr} 允许 exclusion restriction 被违反。此时，$G_1, \ldots, G_p$ 不是 valid IVs。
+
+
+\begin{definition}
+[linear model with possibly invalid IVs]\label{def::linear-model-invalid-iv-mr}
+linear model
+\begin{eqnarray}
+Y  &=& \beta_0 + \beta D + \alpha_1 G_1 + \cdots + \alpha_p G_p  + \beta_u U + \varepsilon_Y ,   \\
+D  &=& \gamma_0 + \gamma_1 G_1 + \cdots + \gamma_p G_p + \gamma_u U + \varepsilon_D ,
+\end{eqnarray}
+具有 reduced form
+\begin{eqnarray}
+Y  &=& ( \beta_0 +\beta  \gamma_0 ) +  (\alpha_1 + \beta \gamma_1)  G_1 + \cdots + (\alpha_p +  \beta  \gamma_p) G_p \nonumber  \\
+&&+  ( \beta_u + \beta \gamma_u )  U + \varepsilon_Y ,   \\
+D  &=& \gamma_0 +  \gamma_1 G_1 + \cdots + \gamma_p G_p + \gamma_u U + \varepsilon_D .
+\end{eqnarray}
+\end{definition}
+
+\cref{def::linear-iv-model-mr,def::linear-model-invalid-iv-mr} 与 \cref{chapter::iv-econometric} 中的 linear IV model 略有不同：这里显式地包含 confounder $U$。不过，这个小差异并不会从根本上改变讨论。
+
+
+在带有 exclusion restriction 的 \cref{def::linear-iv-model-mr} 中，我们有
+$$
+\Gamma_j = \beta \gamma_j,\quad (j=1,\ldots,p).
+$$
+在没有 exclusion restriction 的 \cref{def::linear-model-invalid-iv-mr} 中，我们有
+$$
+\Gamma_j = \alpha_j +   \beta \gamma_j,\quad (j=1,\ldots,p). 
+$$
+
+
+
+如果有 individual data，那么在 \cref{def::linear-iv-model-mr} 的 linear IV model 下，我们可以应用经典 TSLS estimator 来估计 $\beta$。然而，大多数 MR 研究并没有 individual data，而是拥有来自多个 genome-wide association studies 的 summary statistics。一个典型的、基于 summary statistics 的 MR 研究具有如下数据结构。
+
+
+\begin{assumption}
+[MR study with summary statistics]\label{assume::MR-summary}
+(a)
+我们有 treatment 对 genetic IVs 回归得到的 regression coefficients $\hat{\gamma}_1   , \ldots, \hat{\gamma}_p$，以及对应的 standard errors $\se_{D1}, \ldots, \se_{Dp}$。假设
+\begin{eqnarray}
+\label{eq::small-gammas}
+\hat{\gamma}_1  \rightarrow \gamma_1 , \ldots, \hat{\gamma}_p \rightarrow \gamma_p
+\end{eqnarray}
+依概率收敛，并忽略 standard errors 本身的不确定性。
+
+(b)
+我们有 outcome 对 genetic IVs 回归得到的 regression coefficients $\hat{\Gamma}_1   , \ldots, \hat{\Gamma}_p$，以及对应的 standard errors $\se_{Y1}, \ldots, \se_{Yp}$。假设
+\begin{eqnarray}
+\label{eq::big-gammas}
+\hat{\Gamma}_1 \rightarrow \Gamma_1 , \ldots, \hat{\Gamma}_p \rightarrow \Gamma_p
+\end{eqnarray}
+依概率收敛，并忽略 standard errors 本身的不确定性。
+
+(c)
+假设 $\hat{\gamma}_1   , \ldots, \hat{\gamma}_p, \hat{\Gamma}_1   , \ldots, \hat{\Gamma}_p$ jointly Normal 且相互独立。
+\end{assumption}
+
+
+%\begin{eqnarray}
+%\label{eq::small-gammas}
+%\hat{\gamma}_1  \rightarrow \gamma_1 , \ldots, \hat{\gamma}_p \rightarrow \gamma_p
+%\end{eqnarray}
+%in probability with standard errors
+%\begin{eqnarray}
+%\label{eq::small-gammas-se}
+%\se_{D1}, \ldots, \se_{Dp},
+%\end{eqnarray}
+%and the regression coefficients of the outcome on  the  genetic IVs:
+%\begin{eqnarray}
+%\label{eq::big-gammas}
+%\hat{\Gamma}_1 \rightarrow \Gamma_1 , \ldots, \hat{\Gamma}_p \rightarrow \Gamma_p
+%\end{eqnarray}
+%in probability with standard errors
+%\begin{eqnarray}
+%\label{eq::big-gammas-se}
+%\se_{Y1}, \ldots, \se_{Yp}.
+%\end{eqnarray}
+
+regression coefficients 的 asymptotic Normality 可以由 CLT 来说明。在大样本下，standard errors 是 true standard errors 的准确估计。因此，唯一微妙的假设是这些 regression coefficients 的 joint independence。$\hat{\gamma}_j$'s 与 $\hat{\Gamma}_j$'s 之间的独立性通常是合理的，因为它们往往基于不同样本计算得到。
+
+如果 $G_j$'s 相互独立，并且 $D$ 的 true linear model 带有 homoskedastic error terms，那么 $\hat{\gamma}_j$'s 之间的独立性可以是合理的；见 \cref{section::linear-model-var}。然而，如果 linear model 的 error term 是 heteroskedastic 的，这个假设就会变得棘手。没有 $G_j$'s 的独立性时，也很难为这种独立性辩护。如果 regression coefficients 来自 nonlinear models，那么要说明独立性就更困难。$\hat{\Gamma}_j$'s 之间的独立性可以用类似论证得到。
+
+本章关注如何基于 \cref{assume::MR-summary} 中的 summary statistics 对 $\beta$ 做 statistical inference。
+
+
+
+\section{MR based on summary statistics}
+
+
+\subsection{Fixed-effect estimator}\label{sec::mr-fixed-effect}
+
+
+在 \cref{def::linear-iv-model-mr} 下，$\alpha_j = 0$，这意味着对所有 $j$ 都有 $\beta = \Gamma_j / \gamma_j$。一个简单方法基于所谓的 {\it meta-analysis} \citep{bowden2018improving}：也就是说，把共同参数 $\beta$ 的多个估计 $\hat{\beta}_j =  \hat \Gamma_j / \hat\gamma_j$ 组合起来；这个共同参数也称为 fixed effect。使用 delta method（见 \cref{thm::delta-method}），ratio estimator $\hat{\beta}_j$ 有近似平方 standard error
+$$
+\se_j^2 = (\se_{Yj}^2 + \hat{\beta}_j^2\se_{Dj}^2  )    / \hat\gamma_j^2.
+$$
+因此，用来估计 $\beta$ 的最佳 linear combination 是基于方差倒数的 Fisher weighting（见 \cref{hw::fisher-weighting}）：
+$$
+\hat{\beta}_{\text{fisher}0} =  \frac{ \sum_{j=1}^p  \hat{\beta}_j  / \se_j^2  }{ \sum_{j=1}^p 1  / \se_j^2 }
+$$
+其方差为 $(\sum_{j=1}^p 1  / \se_j^2)^{-1} $。如果忽略由 $\se_{Dj}$ 刻画的、来自 $\hat\gamma_j$ 的不确定性，则该 estimator 化为
+$$
+\hat{\beta}_{\text{fisher}1} =  \frac{ \sum_{j=1}^p  \hat{\beta}_j  \hat\gamma_j^2 /  \se_{Yj}^2 }{ \sum_{j=1}^p   \hat\gamma_j^2 /  \se_{Yj}^2 }
+=\frac{ \sum_{j=1}^p  \hat \Gamma_j   \hat\gamma_j /  \se_{Yj}^2 }{ \sum_{j=1}^p   \hat\gamma_j^2 /  \se_{Yj}^2 },
+$$
+其方差为 $( \sum_{j=1}^p   \hat\gamma_j^2 /  \se_{Yj}^2 )^{-1}$。基于 $\hat{\beta}_{\text{fisher}1} $ 的 inference 是 suboptimal 的，尽管它在实践中使用更广 \citep{bowden2018improving}。
+$\hat{\beta}_{\text{fisher}0}$ 和 $\hat{\beta}_{\text{fisher}1}$ 都称为 {\it fixed-effect estimators}。
+
+
+现在关注 suboptimal 但更简单的 estimator $\hat{\beta}_{\text{fisher}1}$。在 \cref{def::linear-model-invalid-iv-mr} 下，可以证明
+$$
+\hat{\beta}_{\text{fisher}1}  \rightarrow 
+\frac{ \sum_{j=1}^p   \Gamma_j    \gamma_j /  \se_{Yj}^2 }{ \sum_{j=1}^p    \gamma_j^2 /  \se_{Yj}^2 }
+= \beta + \frac{ \sum_{j=1}^p   \alpha_j    \gamma_j /  \se_{Yj}^2 }{ \sum_{j=1}^p    \gamma_j^2 /  \se_{Yj}^2 }
+$$
+依概率收敛。
+如果对所有 $j$ 都有 $\alpha_j = 0$，那么 $\hat{\beta}_{\text{fisher}1} $ 是 consistent 的。即使这个条件不成立，只要 $\alpha_j$ 与 $\gamma_j$ 在权重 $1/  \se_{Yj}^2$ 下的内积为零，$\hat{\beta}_{\text{fisher}1}$ 仍然可能是 consistent 的。当我们有许多 genetic instruments，并且由 $\alpha_j$ 捕捉的 exclusion restriction violation 是来自均值为零分布的独立随机抽取时，这个条件成立。
+
+
+\subsection{Egger regression}
+
+
+从 \cref{def::linear-iv-model-mr} 开始。
+对于 true parameters，我们有
+$$
+\Gamma_j = \beta \gamma_j \quad (j=1,\ldots, p);
+$$
+对于 estimates，上述恒等式只近似成立：
+$$
+\hat \Gamma_j \approx  \beta \hat \gamma_j \quad (j=1,\ldots, p).
+$$
+这看起来像一个经典 least-squares 问题：用 $\{\hat \gamma_j \}_{j=1}^p$ 解释 $\{\hat \Gamma_j \}_{j=1}^p$。我们可以把 $\hat \Gamma_j$ 对 $\hat \gamma_j$ 做 WLS，模型可以带 intercept，也可以不带 intercept，并且可以用 $w_j$ 加权，从而估计 $\beta$。下面的结果来自 \cref{sec::appendix-wls} 回顾过的 WLS 代数性质。
+
+
+没有 intercept 时，$\hat \gamma_j$ 的 coefficient 为
+$$
+\hat{\beta}_{\text{egger}1}  = \frac{  \sum_{j=1}^p  \hat \gamma_j  \hat \Gamma_j w_j     }{ \sum_{j=1}^p  \hat \gamma_j ^2 w_j },
+$$
+如果 $w_j =  1/\se_{Yj}^2$，它就化为 $\hat{\beta}_{\text{fisher}1} $。这个 WLS 称为 {\it Egger regression}。
+它比 \cref{sec::mr-fixed-effect} 中的 fixed-effect estimators 更一般。
+带有 intercept 时，$\hat \gamma_j$ 的 coefficient 为
+$$
+\hat{\beta}_{\text{egger}0}  =  \frac{  \sum_{j=1}^p  (\hat \gamma_j  - \hat \gamma_w) (\hat \Gamma_j - \hat \Gamma_w) w_j     }
+{ \sum_{j=1}^p  (\hat \gamma_j  - \hat \gamma_w) ^2 w_j }
+$$
+其中 $\hat \gamma_w = \sum_{j=1}^p \hat \gamma_j w_j /  \sum_{j=1}^p   w_j  $ 和 $\hat \Gamma_w = \sum_{j=1}^p \hat \Gamma_j w_j /  \sum_{j=1}^p   w_j  $ 分别是 $\hat \gamma_j$'s 和 $\hat \Gamma_j$'s 的 weighted averages。
+
+
+
+
+
+即使不在 \cref{def::linear-model-invalid-iv-mr} 下假设所有 $\gamma_j$'s 都为零，我们也有
+$$
+\hat{\beta}_{\text{egger}0} \rightarrow 
+\frac{  \sum_{j=1}^p  (  \gamma_j  -   \gamma_w) ( \Gamma_j -   \Gamma_w) w_j     }
+{ \sum_{j=1}^p  (  \gamma_j  -  \gamma_w) ^2 w_j }
+=\beta + \frac{  \sum_{j=1}^p  (  \gamma_j  -   \gamma_w) ( \alpha_j -   \alpha_w) w_j     }
+{ \sum_{j=1}^p  (  \gamma_j  -  \gamma_w) ^2 w_j }
+$$
+依概率收敛，其中 $\gamma_w, \Gamma_w$ 和 $\alpha_w$ 是 true parameters 对应的 weighted averages。因此，只要 $\alpha_j$ 对 $\gamma_j$ 的 WLS coefficient 为零，$\hat{\beta}_{\text{egger}0} $ 就是 $\beta$ 的 consistent estimator。这个条件弱于对所有 $j$ 都有 $\alpha_j=0$。如果 $\gamma_j$ 和 $\alpha_j$ 是独立随机变量的 realizations，这个较弱的假设就成立；它称为 Instrument Strength Independent of Direct Effect (InSIDE) assumption \citep{bowden2015mendelian}。更有意思的是，Egger regression 的 intercept 为
+$$
+\hat{\alpha}_{\text{egger}0}  = \hat \Gamma_w - \hat{\beta}_{\text{egger}0}  \hat \gamma_w,
+$$
+在 InSIDE assumption 下，它收敛到
+$$
+\Gamma_w -  \beta  \gamma_w = \alpha_w
+$$
+依概率收敛。因此，intercept 估计的是 direct effects 的 weighted average。
+
+
+\section{An example}
+\label{sec::mr-examples}
+
+首先，下面的函数可以实现 Fisher weighting。
+ \begin{lstlisting}
+fisher.weight = function(est, se)
+{
+  n = sum(est/se^2)
+  d = sum(1/se^2)
+  res = c(n/d, sqrt(1/d))
+  names(res) = c("est", "se")
+  res
+}
+\end{lstlisting}
+
+我使用 \ri{mr.raps} package \citep{zhao2020statistical} 中的 \ri{bmi.sbp} data，来说明基于不同 variance estimates 的 Fisher weighting。基于 $\hat{\beta}_{\text{fisher}0} $ 和 $\hat{\beta}_{\text{fisher}1} $ 的结果很接近。
+ \begin{lstlisting}
+> bmisbp = read.csv("mr_bmisbp.csv")
+> bmisbp$iv      = with(bmisbp, beta.outcome/beta.exposure)
+> bmisbp$se.iv   = with(bmisbp, se.outcome/beta.exposure)
+> bmisbp$se.iv1  = with(bmisbp,
++                       sqrt(se.outcome^2 + iv^2*se.exposure^2)/beta.exposure)
+> fisher.weight(bmisbp$iv, bmisbp$se.iv)
+       est         se 
+0.31727680 0.05388827 
+> fisher.weight(bmisbp$iv, bmisbp$se.iv1)
+       est         se 
+0.31576007 0.05893783
+\end{lstlisting}
+
+
+带 intercept 和不带 intercept 的 Egger regressions 也给出非常相近的结果。不过，它们的 standard errors 与基于 Fisher weighting 的 standard errors 相差很大。
+\begin{lstlisting}
+> mr.egger = lm(beta.outcome ~ 0 + beta.exposure,
++               data = bmisbp,
++               weights = 1/se.outcome^2)
+> summary(mr.egger)$coef
+               Estimate Std. Error  t value    Pr(>|t|)
+beta.exposure 0.3172768  0.1105994 2.868704 0.004681659
+> 
+> mr.egger.w = lm(beta.outcome ~ beta.exposure,
++                 data = bmisbp,
++                 weights = 1/se.outcome^2)
+> summary(mr.egger.w)$coef 
+                  Estimate  Std. Error    t value    Pr(>|t|)
+(Intercept)   0.0001133328 0.002079418 0.05450217 0.956603931
+beta.exposure 0.3172989306 0.110948506 2.85987564 0.004811017
+ \end{lstlisting}
+ 
+ 
+\cref{fig::bmi-sdp-egger} 展示了 raw data，以及带 intercept 的 fitted Egger regression line。
+ 
+\begin{figure}
+\centering
+\includegraphics[width = \textwidth]{figures/MR_bmi_sdp.pdf}
+\caption{与方差倒数成比例的 scatter plot，以及 Egger regression line}\label{fig::bmi-sdp-egger}
+\end{figure} 
+
+ 
+\section{Critiques of the analysis based on MR}
+
+
+
+
+MR 是 IV 思想的一个应用。它依赖很强的假设。下面从 conceptual、biological 和 technical 三个角度给出三组批评。
+
+
+
+从 conceptual 角度看，在大多数基于 MR 的研究中，treatments 从 potential outcomes 的角度并没有被良好定义。例如，treatments 往往被定义为 cholesterol level 或 BMI。它们是 composite variables，可能对应复杂且不唯一的 hypothetical experiments。对这些 treatments 来说，SUTVA 往往不成立。回忆 \cref{chapter::potential-outcomes} 中的讨论。
+
+
+从 biological 角度看，IV analysis 的基本假设未必成立。Mendel's second law 保证不同 traits 的遗传相互独立。然而，它并不保证 candidate IVs 独立于 treatment 和 outcome 之间的 hidden confounders。这些 IVs 可能对 confounders 有直接效应；也可能存在某些 unmeasured genes 同时影响 IVs 和 confounders。Mendel's second law 也不能保证 exclusion restriction assumption。除了通过我们关心的 treatment 这条路径之外，IVs 还可能有通向 outcome 的其他 causal pathways。
+
+
+从 technical 角度看，MR 的 statistical assumptions 相当强。显然，linear IV model 是很强的 modeling assumption。$\hat\gamma_j$'s 和 $\hat\Gamma_j$'s 的独立性也很强。数据收集过程中的其他问题会进一步复杂化对 IV assumptions 的解释。例如，treatments 和 outcomes 往往带有 measurement errors；genome-wide association studies 也常常基于 case-control design，其样本是以 outcomes 为条件抽取的（见 \cref{sec::case-control}）。
+
+ 
+\citet{vanderweele2014methodological} 是一篇很好的 review paper，讨论了 MR 中的 methodological challenges。
+
+ 
+ 
+\section{Homework Problems}
+
+\homeworksolutionref{25}
+\paragraph{Data analysis}\label{para::data-bmi-bmi}
+分析 \ri{R} package \ri{mr.raps} 中的 \ri{bmi.bmi} data。更多细节见该 package 以及 \citet[][Section 7.2]{zhao2020statistical}。
+
+
+ 
+ \paragraph{Recommended reading}
+
+\citet{davey2003mendelian} 回顾了 MR 的 potentials and limitations。
+
+

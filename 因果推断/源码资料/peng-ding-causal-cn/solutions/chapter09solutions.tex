@@ -1,0 +1,225 @@
+\chapter{Solutions to Chapter 9: Bridging Finite and Super Population Causal Inference}
+\label{sol:chapter09}
+
+\begin{exercisesolution}{OLS decomposition of the observed outcome under the CRE}{由两个 potential-outcome projections 合成 observed-outcome projection}
+本题的核心是一个简单但很有用的代数事实：在 CRE 的 superpopulation 视角下，observed outcome
+\[
+Y=ZY(1)+(1-Z)Y(0)
+\]
+把两个 potential outcomes 的线性投影拼接在同一个 fully interacted regression 里。由 \cref{eq::ols-decomposition-y1,eq::ols-decomposition-y0}，
+\[
+Y(1)=\gamma_1+\beta_1\tran X+\varepsilon(1),
+\qquad
+Y(0)=\gamma_0+\beta_0\tran X+\varepsilon(0),
+\]
+其中 OLS projection 的 normal equations 给出
+\[
+\mathbb{E}\varepsilon(1)=0,\quad
+\mathbb{E}\{X\varepsilon(1)\}=0,\qquad
+\mathbb{E}\varepsilon(0)=0,\quad
+\mathbb{E}\{X\varepsilon(0)\}=0.
+\]
+把这两个分解代入 observed outcome，可得
+\begin{eqnarray*}
+Y
+&=&Z\{\gamma_1+\beta_1\tran X+\varepsilon(1)\}
+ +(1-Z)\{\gamma_0+\beta_0\tran X+\varepsilon(0)\}\\
+&=&\gamma_0+(\gamma_1-\gamma_0)Z
+  +\beta_0\tran X+(\beta_1-\beta_0)\tran XZ
+  +Z\varepsilon(1)+(1-Z)\varepsilon(0).
+\end{eqnarray*}
+因此只要定义
+\[
+\alpha_0=\gamma_0,\qquad
+\alpha_Z=\gamma_1-\gamma_0,\qquad
+\alpha_X=\beta_0,\qquad
+\alpha_{ZX}=\beta_1-\beta_0,
+\]
+以及
+\[
+\varepsilon=Z\varepsilon(1)+(1-Z)\varepsilon(0),
+\]
+就得到题目中的 observed-outcome decomposition
+\[
+Y=\alpha_0+\alpha_ZZ+\alpha_X\tran X+\alpha_{ZX}\tran XZ+\varepsilon.
+\]
+
+剩下要说明的是：这不仅是一个代数恒等式，而且确实是 population OLS projection。记 regressors 为
+\[
+W=(1,\ Z,\ X\tran,\ ZX\tran)\tran.
+\]
+OLS projection 的判别条件是 normal equations
+\[
+\mathbb{E}(W\varepsilon)=0.
+\]
+在 \cref{def::cre-superpopulation} 的 CRE 条件下，$Z\ind\{Y(1),Y(0),X\}$，从而 $Z$ 与 $\varepsilon(1),\varepsilon(0),X$ 独立。于是
+\[
+\mathbb{E}\varepsilon
+=\mathbb{E}\{Z\varepsilon(1)\}
+ +\mathbb{E}\{(1-Z)\varepsilon(0)\}
+=\mathbb{E}Z\,\mathbb{E}\varepsilon(1)
+ +\mathbb{E}(1-Z)\,\mathbb{E}\varepsilon(0)
+=0.
+\]
+同理，
+\[
+\mathbb{E}(Z\varepsilon)
+=\mathbb{E}\{Z\varepsilon(1)\}
+=\mathbb{E}Z\,\mathbb{E}\varepsilon(1)
+=0,
+\]
+因为 $Z(1-Z)=0$。对 covariate regressors，也有
+\begin{eqnarray*}
+\mathbb{E}(X\varepsilon)
+&=&\mathbb{E}\{ZX\varepsilon(1)\}
+  +\mathbb{E}\{(1-Z)X\varepsilon(0)\}\\
+&=&\mathbb{E}Z\,\mathbb{E}\{X\varepsilon(1)\}
+  +\mathbb{E}(1-Z)\,\mathbb{E}\{X\varepsilon(0)\}
+=0,
+\end{eqnarray*}
+以及
+\[
+\mathbb{E}(ZX\varepsilon)
+=\mathbb{E}\{ZX\varepsilon(1)\}
+=\mathbb{E}Z\,\mathbb{E}\{X\varepsilon(1)\}
+=0.
+\]
+这些正交条件说明
+\[
+(\alpha_0,\alpha_Z,\alpha_X,\alpha_{ZX})
+=\arg\min_{a_0,a_Z,a_X,a_{ZX}}
+\mathbb{E}\{Y-a_0-a_ZZ-a_X\tran X-a_{ZX}\tran XZ\}^2,
+\]
+即题目所要求的 OLS decomposition。
+
+\paragraph{Remark.}
+这个练习解释了为什么 fully interacted OLS 是 Lin estimator 的自然 population analog。若先分别投影 $Y(1)$ 和 $Y(0)$，再把 treatment indicator 放回 observed outcome，interaction coefficient 必然等于两组 projection slopes 的差 $\beta_1-\beta_0$。因此，在 \cref{sec::cre-superpop} 中，当 covariates 被中心化时，pooled interacted regression 中 $Z$ 的系数正好估计
+\[
+\gamma_1-\gamma_0,
+\]
+也就是 \citet{lin2013} 的 estimator 所对应的 population quantity。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Variance estimation of \citet{lin2013}'s estimator under the super population framework}{四种 standard errors 的 simulation 比较}
+这道题的目的不是证明一个新的闭式公式，而是用 simulation 看清楚 \cref{eq::lin-ehw-correction} 的来源。Finite population analysis 中，Lin estimator 的 EHW robust variance 主要反映 treatment assignment 的随机性；superpopulation analysis 中，covariate sample mean 本身也在随机波动。当 $\beta_1\neq\beta_0$ 时，这个额外波动的一阶贡献正是
+\[
+(\beta_1-\beta_0)\tran\text{var}(X)(\beta_1-\beta_0)/n,
+\]
+样本版本就是 \cref{eq::lin-ehw-correction}。
+
+下面给出一个完整可复现的 simulation design。取 two-dimensional covariate $X=(X_1,X_2)\tran$，令
+\[
+Y(0)=1+X_1+0.5X_2+u_0,
+\]
+\[
+Y(1)=1+\tau+2X_1-X_2+u_1.
+\]
+于是
+\[
+\beta_0=(1,\ 0.5)\tran,\qquad
+\beta_1=(2,\ -1)\tran,
+\]
+所以 $\beta_1\neq\beta_0$。为简单起见，设 $\tau=0$，且 $u_0,u_1$ 独立于 $X,Z$。CRE under superpopulation framework 使用 \cref{def::cre-superpopulation}：
+\[
+Z\ind\{Y(1),Y(0),X\}.
+\]
+
+对每个 Monte Carlo dataset，计算四个 variance estimates：
+\begin{enumerate}
+  \item $V_{\mathrm{EHW}}$：fully interacted OLS 中 $Z$ 系数的 EHW robust variance；
+  \item $V_{\mathrm{corr}}$：$V_{\mathrm{EHW}}$ 加上 \cref{eq::lin-ehw-correction}；
+  \item $V_{\mathrm{boot,fix}}$：bootstrap variance，其中 covariates 只在原始 dataset 中中心化一次，bootstrap sample 不重新中心化；
+  \item $V_{\mathrm{boot,recenter}}$：bootstrap variance，其中每个 bootstrap sample 都用该 sample 自身的 covariate mean 重新中心化。
+\end{enumerate}
+True variance 用 outer Monte Carlo repetitions 中 $\hat\tau_{\textsc{L}}$ 的 empirical variance 估计。
+
+可运行的 \ri{R} 代码如下。
+\begin{lstlisting}
+library(sandwich)
+
+make_data <- function(n = 500, pz = 0.5) {
+  X <- matrix(rnorm(n * 2), n, 2)
+  u0 <- rnorm(n, sd = 1)
+  u1 <- rnorm(n, sd = 1)
+  tau <- 0
+
+  Y0 <- 1 + X[, 1] + 0.5 * X[, 2] + u0
+  Y1 <- 1 + tau + 2 * X[, 1] - X[, 2] + u1
+  Z <- rbinom(n, 1, pz)
+  Y <- Z * Y1 + (1 - Z) * Y0
+
+  data.frame(Y = Y, Z = Z, X1 = X[, 1], X2 = X[, 2])
+}
+
+lin_fit <- function(dat, recenter = TRUE) {
+  X <- as.matrix(dat[, c("X1", "X2")])
+  if (recenter) {
+    X <- scale(X, center = TRUE, scale = FALSE)
+  }
+  fitdat <- data.frame(Y = dat$Y, Z = dat$Z,
+                       X1 = X[, 1], X2 = X[, 2])
+  fit <- lm(Y ~ Z * (X1 + X2), data = fitdat)
+  est <- coef(fit)["Z"]
+  vehw <- vcovHC(fit, type = "HC2")["Z", "Z"]
+  inter <- coef(fit)[c("Z:X1", "Z:X2")]
+  vcorr <- vehw + drop(t(inter) %*% cov(X) %*% inter) / nrow(dat)
+  c(est = est, vehw = vehw, vcorr = vcorr)
+}
+
+boot_var <- function(dat, B = 400, recenter_boot = TRUE) {
+  n <- nrow(dat)
+  X0 <- scale(as.matrix(dat[, c("X1", "X2")]),
+              center = TRUE, scale = FALSE)
+  dat0 <- data.frame(Y = dat$Y, Z = dat$Z,
+                     X1 = X0[, 1], X2 = X0[, 2])
+
+  vals <- replicate(B, {
+    id <- sample.int(n, n, replace = TRUE)
+    if (recenter_boot) {
+      lin_fit(dat[id, ], recenter = TRUE)["est"]
+    } else {
+      lin_fit(dat0[id, ], recenter = FALSE)["est"]
+    }
+  })
+  var(vals)
+}
+
+one_run <- function(n = 500, Bboot = 400) {
+  dat <- make_data(n)
+  lf <- lin_fit(dat, recenter = TRUE)
+  c(est = unname(lf["est"]),
+    vehw = unname(lf["vehw"]),
+    vcorr = unname(lf["vcorr"]),
+    vboot_fix = boot_var(dat, B = Bboot, recenter_boot = FALSE),
+    vboot_recenter = boot_var(dat, B = Bboot, recenter_boot = TRUE))
+}
+
+set.seed(20260606)
+M <- 1000
+ans <- replicate(M, one_run(n = 500, Bboot = 400))
+
+true_var <- var(ans["est", ])
+c(true_var = true_var,
+  mean_ehw = mean(ans["vehw", ]),
+  mean_corrected = mean(ans["vcorr", ]),
+  mean_boot_fix = mean(ans["vboot_fix", ]),
+  mean_boot_recenter = mean(ans["vboot_recenter", ]))
+
+cover <- c(
+  ehw = mean(abs(ans["est", ]) <=
+             1.96 * sqrt(ans["vehw", ])),
+  corrected = mean(abs(ans["est", ]) <=
+                   1.96 * sqrt(ans["vcorr", ])),
+  boot_fix = mean(abs(ans["est", ]) <=
+                  1.96 * sqrt(ans["vboot_fix", ])),
+  boot_recenter = mean(abs(ans["est", ]) <=
+                       1.96 * sqrt(ans["vboot_recenter", ]))
+)
+cover
+\end{lstlisting}
+
+这段 simulation 应呈现如下模式。第一，$V_{\mathrm{EHW}}$ 的平均值通常小于 \ri{true\_var}，因为它没有计入 random covariate mean 带来的 superpopulation variation。第二，$V_{\mathrm{corr}}$ 的平均值应接近 \ri{true\_var}；这正是 \cref{eq::lin-ehw-correction} 的作用。第三，若 bootstrap sample 不重新中心化 covariates，它在每个 bootstrap world 中把原始样本的 covariate center 当作固定对象，容易漏掉一部分 centering uncertainty。第四，每个 bootstrap sample 重新中心化时，bootstrap procedure 更忠实地模拟了实际估计步骤，因此其平均 variance 通常更接近 corrected variance 和 true variance。
+
+\paragraph{Remark.}
+这道题把 finite population 和 superpopulation 的差异压缩到一个可观察的现象：同一个 Lin regression，在 fixed covariates 的设计随机化分析中可以用 EHW robust variance；但当 covariates 也是从 superpopulation 抽出来时，$\bar X$ 的随机性不能忽略。只要 $\beta_1=\beta_0$，这个额外项消失；一旦 $\beta_1\neq\beta_0$，忽略它就会低估 uncertainty。
+\end{exercisesolution}

@@ -1,0 +1,329 @@
+\chapter{Solutions to Chapter 17: E-Value}
+\label{sol:chapter17}
+
+\begin{exercisesolution}{A technical lemma for the proof of \cref{thm::bounding-factor}}{线性分式函数的单调性}
+本题补全 \cref{thm::bounding-factor} 证明中用到的单调性事实。核心只有一行微分，但它的作用很关键：它说明在固定两个 sensitivity parameters 后，observed risk ratio 在 treated group 中 confounder prevalence 越高时越大。
+
+令
+\[
+f(x)=\frac{ax+1}{bx+1}.
+\]
+在 $bx+1\neq 0$ 的任一区间上，直接求导得到
+\[
+f'(x)
+=\frac{a(bx+1)-b(ax+1)}{(bx+1)^2}
+=\frac{a-b}{(bx+1)^2}.
+\]
+由于 $(bx+1)^2>0$，导数符号完全由 $a-b$ 决定。因此，当 $a>b$ 时，$f'(x)>0$，所以 $f$ 在该区间上单调递增；当 $a<b$ 时，$f'(x)<0$，所以 $f$ 在该区间上单调递减。
+
+在 \cref{thm::bounding-factor} 的应用中，
+\[
+a=\RR_{UY\mid x}-1,\qquad
+b=\frac{\RR_{UY\mid x}-1}{\RR_{ZU\mid x}},
+\]
+并且 $x=f_{1,x}\in[0,1]$。若 \cref{eq::largerthan1-evalue} 成立，则 $a>b\geq 0$，且 $bx+1>0$。所以 \cref{eq::identity-evalue} 的右侧确实随 $f_{1,x}$ 单调递增。
+
+\paragraph{Remark.}
+这个小引理把 \cref{thm::bounding-factor} 中的 worst-case argument 变成了一个透明的边界问题：既然 observed association 随 $f_{1,x}$ 增大而增大，最大 bias 就发生在 treated group 尽可能富集高风险 confounder 的情形，即 $f_{1,x}=1$。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Technical assumption for \cref{thm::bounding-factor}}{第三个正向关联条件的冗余性}
+本题解释为什么 \cref{eq::largerthan1-evalue} 中的 $\RR_{UY\mid x}>1$ 不是一个额外的实质假设。条件化在 $X=x$ 上，记
+\[
+p_z=\mathbb{P}(U=1\mid Z=z,X=x),\qquad
+q_u=\mathbb{P}(Y=1\mid U=u,X=x).
+\]
+由 $Z\ind Y\mid (X,U)$，
+\[
+\mathbb{P}(Y=1\mid Z=z,X=x)
+=q_1p_z+q_0(1-p_z)
+=q_0\{1+(\RR_{UY\mid x}-1)p_z\},
+\]
+其中
+\[
+\RR_{UY\mid x}=\frac{q_1}{q_0}.
+\]
+于是
+\[
+\RR_{ZY\mid x}^\obs
+=
+\frac{1+(\RR_{UY\mid x}-1)p_1}
+     {1+(\RR_{UY\mid x}-1)p_0}.
+\]
+如果 $\RR_{ZU\mid x}>1$，则
+\[
+\frac{p_1}{p_0}>1,
+\]
+所以 $p_1>p_0$。如果同时 $\RR_{UY\mid x}<1$，则 $\RR_{UY\mid x}-1<0$，从而
+\[
+1+(\RR_{UY\mid x}-1)p_1
+<
+1+(\RR_{UY\mid x}-1)p_0.
+\]
+两边都是 positive risks 除以 $q_0$ 后得到的数，因此
+\[
+\RR_{ZY\mid x}^\obs<1.
+\]
+
+这就证明了题目要求的结论。换句话说，在 $Z\ind Y\mid (X,U)$ 下，若 treatment 更倾向于出现在 $U=1$ 的人群中，而 $U=1$ 反而降低 outcome risk，则 treatment 与 outcome 的 observed association 必然朝 preventive 方向走。
+
+\paragraph{Remark.}
+因此，在 \cref{thm::bounding-factor} 中，如果我们已经通过重新标记 treatment levels 使 $\RR_{ZY\mid x}^\obs>1$，并且通过重新标记 $U$ 使 $\RR_{ZU\mid x}>1$，那么 $\RR_{UY\mid x}<1$ 会导致矛盾。所以 $\RR_{UY\mid x}>1$ 是由前两个方向性约定推出的，而不是一个新的 substantive restriction。
+\end{exercisesolution}
+
+\begin{exercisesolution}{\cref{lemma::betaw1w2}}{bounding factor 的四个基本性质}
+本题证明 \cref{lemma::betaw1w2}。记
+\[
+\beta(w_1,w_2)=\frac{w_1w_2}{w_1+w_2-1},
+\qquad w_1>1,\quad w_2>1.
+\]
+这个函数就是 \cref{thm::bounding-factor} 中两个 sensitivity parameters 共同产生的最大 confounding factor。
+
+首先，对称性是直接的：
+\[
+\beta(w_1,w_2)
+=\frac{w_1w_2}{w_1+w_2-1}
+=\frac{w_2w_1}{w_2+w_1-1}
+=\beta(w_2,w_1).
+\]
+
+其次，分别求偏导。对 $w_1$，
+\[
+\frac{\partial}{\partial w_1}\beta(w_1,w_2)
+=
+\frac{w_2(w_1+w_2-1)-w_1w_2}{(w_1+w_2-1)^2}
+=
+\frac{w_2(w_2-1)}{(w_1+w_2-1)^2}>0.
+\]
+同理，
+\[
+\frac{\partial}{\partial w_2}\beta(w_1,w_2)
+=
+\frac{w_1(w_1-1)}{(w_1+w_2-1)^2}>0.
+\]
+因此 $\beta(w_1,w_2)$ 分别随 $w_1$ 和 $w_2$ 单调递增。
+
+第三，证明 $\beta$ 不超过任一参数。因为 $w_1+w_2-1>0$，
+\[
+\beta(w_1,w_2)\leq w_1
+\Longleftrightarrow
+\frac{w_1w_2}{w_1+w_2-1}\leq w_1
+\Longleftrightarrow
+w_2\leq w_1+w_2-1
+\Longleftrightarrow
+w_1\geq 1.
+\]
+这在 $w_1>1$ 下成立。同理，
+\[
+\beta(w_1,w_2)\leq w_2
+\Longleftrightarrow
+w_2\geq 1,
+\]
+也成立。
+
+最后，令
+\[
+w=\max(w_1,w_2).
+\]
+由第二步的单调性，
+\[
+\beta(w_1,w_2)\leq \beta(w,w)=\frac{w^2}{2w-1}.
+\]
+这就是 \cref{lemma::betaw1w2} 的第四个结论。
+
+\paragraph{Remark.}
+\cref{lemma::betaw1w2} 的直觉是：两个 confounding links 必须一起强，单独一个强并不够。$\beta(w_1,w_2)\leq \min(w_1,w_2)$ 说明较弱的那条 link 是瓶颈；而 $\beta(w,w)=w^2/(2w-1)$ 则把``两条 link 至少有一条要多强''转化为 E-value 的闭式公式。
+\end{exercisesolution}
+
+\begin{exercisesolution}{\citet{Schlesselman::1978}'s formula}{homogeneous risk ratios 下的经典 sensitivity identity}
+本题证明 \citet{Schlesselman::1978} 的公式。为避免符号过重，本解答也隐含地条件化在 $X$ 上。记
+\[
+p_z=\mathbb{P}(U=1\mid Z=z),\qquad
+q_{zu}=\mathbb{P}(Y=1\mid Z=z,U=u).
+\]
+题设给出两个 homogeneity conditions：
+\[
+\frac{q_{10}}{q_{00}}=\frac{q_{11}}{q_{01}}
+\quad\text{and}\quad
+\frac{q_{01}}{q_{00}}=\frac{q_{11}}{q_{10}}=\gamma.
+\]
+令 common treatment risk ratio 为
+\[
+r=\RR_{ZY\mid U=0}=\RR_{ZY\mid U=1}.
+\]
+于是四个 cell risks 可以写成
+\[
+q_{00}=q,\qquad
+q_{01}=\gamma q,\qquad
+q_{10}=rq,\qquad
+q_{11}=r\gamma q.
+\]
+
+先验证题目 remark 中的 collapsibility。对任意共同的标准化权重 $s=\mathbb{P}(U=1)$，
+\begin{align*}
+\RR_{ZY}^{\true}
+&=
+\frac{q_{11}s+q_{10}(1-s)}
+     {q_{01}s+q_{00}(1-s)}\\
+&=
+\frac{r\gamma q\,s+rq(1-s)}
+     {\gamma q\,s+q(1-s)}\\
+&=r.
+\end{align*}
+因此
+\[
+\RR_{ZY}^{\true}=\RR_{ZY\mid U=0}=\RR_{ZY\mid U=1}=r.
+\]
+这一步只用了 common treatment risk ratio；它正是 risk ratio 的 collapsibility。
+
+现在计算 observed risk ratio。对 $Z=z$，
+\begin{align*}
+\mathbb{P}(Y=1\mid Z=z)
+&=q_{z1}p_z+q_{z0}(1-p_z)\\
+&=q_{z0}\{1+(\gamma-1)p_z\}.
+\end{align*}
+所以
+\begin{align*}
+\RR_{ZY}^{\obs}
+&=
+\frac{q_{10}\{1+(\gamma-1)p_1\}}
+     {q_{00}\{1+(\gamma-1)p_0\}}\\
+&=
+r\,
+\frac{1+(\gamma-1)\mathbb{P}(U=1\mid Z=1)}
+     {1+(\gamma-1)\mathbb{P}(U=1\mid Z=0)}.
+\end{align*}
+两边除以 $\RR_{ZY}^{\true}=r$，得到
+\[
+\frac{\RR_{ZY}^{\obs}}{\RR_{ZY}^{\true}}
+=
+\frac{1+(\gamma-1)\mathbb{P}(U=1\mid Z=1)}
+     {1+(\gamma-1)\mathbb{P}(U=1\mid Z=0)}.
+\]
+这正是题目中的公式。
+
+\paragraph{Remark.}
+\citet{Schlesselman::1978} 的公式与 \cref{eq::identity-evalue} 形状相近，但解释方式不同。这里的关键假设是 stratum-specific risk ratios 的 homogeneity；\cref{thm::bounding-factor} 则把目标换成只用两个更粗的 sensitivity parameters 给出上界。前者更精细，后者更容易用于报告和解释 E-value。
+\end{exercisesolution}
+
+\begin{exercisesolution}{E-value after logistic regression: data analysis}{\ri{preeclampsia} 的可复现 E-value 分析}
+本题要求把 \cref{eg::NCHS2003} 的 logistic-regression E-value 分析从 outcome \ri{PTbirth} 改成 \ri{preeclampsia}。项目目录中没有找到 \ri{NCHS2003.txt}，因此这里不编造数值；下面给出完整可复现代码。只要把 \ri{NCHS2003.txt} 放在运行目录，代码会输出 point estimate、confidence limits，以及对应的 E-values。
+
+\begin{lstlisting}
+evalue <- function(rr) {
+  ifelse(rr >= 1,
+         rr + sqrt(rr * (rr - 1)),
+         (1 / rr) + sqrt((1 / rr) * ((1 / rr) - 1)))
+}
+
+NCHS2003 <- read.table("NCHS2003.txt", header = TRUE, sep = "\t")
+
+y_logit <- glm(preeclampsia ~ ageabove35 +
+                 mar + smoking + drinking + somecollege +
+                 hispanic + black + nativeamerican + asian,
+               data = NCHS2003,
+               family = binomial)
+
+log_or <- summary(y_logit)$coef["ageabove35", 1:2]
+est <- exp(log_or[1])
+lower.ci <- exp(log_or[1] - 1.96 * log_or[2])
+upper.ci <- exp(log_or[1] + 1.96 * log_or[2])
+
+out <- data.frame(
+  quantity = c("point estimate", "lower 95% limit", "upper 95% limit"),
+  odds_ratio = c(est, lower.ci, upper.ci),
+  e_value = evalue(c(est, lower.ci, upper.ci))
+)
+print(out, row.names = FALSE)
+\end{lstlisting}
+
+解释这些输出时要注意两点。第一，\cref{eg::NCHS2003} 使用 logistic regression，因此 $\exp(\hat\beta_1)$ 是 conditional odds ratio；只有在 \ri{preeclampsia} 足够 rare 时，odds ratio 才能近似为 conditional risk ratio，从而可以直接套用 \cref{thm::bounding-factor} 与 E-value 的解释。第二，如果 estimate 小于 $1$，上面的 \ri{evalue} 函数会自动按 \cref{thm::general-evalue} 后的讨论，对 $1/\RR_{ZY\mid x}^\obs$ 计算 E-value；这对应于重新标记 treatment levels 后解释 preventive association。
+
+报告结果时建议使用下面的句式：
+\[
+\text{E-value for point estimate}
+=E(\widehat{\RR}_{ZY\mid x}^{\obs}),
+\qquad
+\text{E-value for confidence limit}
+=E(\widehat{\RR}_{\textup{limit}}).
+\]
+如果 $\widehat{\RR}_{ZY\mid x}^{\obs}>1$，用于 sensitivity interpretation 的 confidence limit 通常是 lower confidence limit；如果 $\widehat{\RR}_{ZY\mid x}^{\obs}<1$，则应使用 upper confidence limit，因为它离 null value $1$ 更近。
+
+\paragraph{Remark.}
+数据分析题的底线是可复现，而不是填一个看起来合理的数字。这里的代码和 \cref{eg::NCHS2003} 完全平行，只替换 outcome；当原始数据可用时，输出表格就是本题需要报告的数值结果。
+\end{exercisesolution}
+
+\begin{exercisesolution}{Cornfield-type inequalities for the risk difference}{binary confounder 下 RD 的乘积分解}
+本题说明 risk difference scale 上也有 Cornfield-type identity，只是它没有 risk ratio scale 上的 E-value 那么稳定。仍然隐含地条件化在 $X$ 上。记
+\[
+p_z=\mathbb{P}(U=1\mid Z=z),\qquad
+q_u=\mathbb{P}(Y=1\mid U=u).
+\]
+由 $Z\ind Y\mid U$，
+\[
+\mathbb{P}(Y=1\mid Z=z)
+=q_1p_z+q_0(1-p_z)
+=q_0+(q_1-q_0)p_z.
+\]
+因此 observed risk difference 为
+\begin{align*}
+\RD_{ZY}^{\obs}
+&=\mathbb{P}(Y=1\mid Z=1)-\mathbb{P}(Y=1\mid Z=0)\\
+&=\{q_0+(q_1-q_0)p_1\}
+  -\{q_0+(q_1-q_0)p_0\}\\
+&=(p_1-p_0)(q_1-q_0).
+\end{align*}
+另一方面，按照 \cref{sec::twobytwotables-withresume} 中 risk difference 的定义，
+\[
+\RD_{ZU}
+=\mathbb{P}(U=1\mid Z=1)-\mathbb{P}(U=1\mid Z=0)
+=p_1-p_0,
+\]
+并且
+\[
+\RD_{UY}
+=\mathbb{P}(Y=1\mid U=1)-\mathbb{P}(Y=1\mid U=0)
+=q_1-q_0.
+\]
+所以
+\[
+\RD_{ZY}^{\obs}=\RD_{ZU}\times \RD_{UY},
+\]
+即 \cref{eq::cornfield-rd}。
+
+若不失一般性地假设
+\[
+\RD_{ZY}^{\obs}>0,\qquad \RD_{ZU}>0,\qquad \RD_{UY}>0,
+\]
+则由于 $0\leq \RD_{ZU}\leq 1$ 且 $0\leq \RD_{UY}\leq 1$，乘积分解立即给出
+\[
+\RD_{ZY}^{\obs}
+=\RD_{ZU}\RD_{UY}
+\leq \RD_{ZU},
+\qquad
+\RD_{ZY}^{\obs}
+=\RD_{ZU}\RD_{UY}
+\leq \RD_{UY}.
+\]
+因此
+\[
+\min(\RD_{ZU},\RD_{UY})\geq \RD_{ZY}^{\obs}.
+\]
+另外，如果
+\[
+\max(\RD_{ZU},\RD_{UY})<\sqrt{\RD_{ZY}^{\obs}},
+\]
+那么
+\[
+\RD_{ZU}\RD_{UY}
+\leq \{\max(\RD_{ZU},\RD_{UY})\}^2
+<\RD_{ZY}^{\obs},
+\]
+与 \cref{eq::cornfield-rd} 矛盾。于是
+\[
+\max(\RD_{ZU},\RD_{UY})\geq \sqrt{\RD_{ZY}^{\obs}}.
+\]
+
+\paragraph{Remark.}
+这个结果展示了 risk difference 的简洁一面：在 binary $U$ 下，observed RD 被精确分解为两条路径强度的乘积。但它也暴露了 RD scale 的局限。若 $U$ 有多个 levels，这种简单乘积分解会退化为更松的不等式；这正是 \citet{ding2016sensitivity} 转向 risk ratio scale 并最终导向 E-value 的原因之一。
+\end{exercisesolution}
